@@ -14,18 +14,19 @@ namespace AspNetCore.Mvc.Extensions.Providers
 {
     public class ConventionsHtmlGenerator : DefaultHtmlGenerator, IHtmlGenerator
     {
-        private readonly Func<ViewContext, bool> _addAstertix;
-        public ConventionsHtmlGenerator(IAntiforgery antiforgery, IOptions<MvcViewOptions> optionsAccessor, IModelMetadataProvider metadataProvider, IUrlHelperFactory urlHelperFactory, HtmlEncoder htmlEncoder, ValidationHtmlAttributeProvider validationAttributeProvider, Func<ViewContext, bool> addAstertix)
+        private readonly ConventionsHtmlGeneratorOptions _options;
+
+        public ConventionsHtmlGenerator(IAntiforgery antiforgery, IOptions<MvcViewOptions> optionsAccessor, IModelMetadataProvider metadataProvider, IUrlHelperFactory urlHelperFactory, HtmlEncoder htmlEncoder, ValidationHtmlAttributeProvider validationAttributeProvider, IOptions<ConventionsHtmlGeneratorOptions> options)
             : base(antiforgery, optionsAccessor, metadataProvider, urlHelperFactory, htmlEncoder, validationAttributeProvider)
         {
-            _addAstertix = addAstertix;
+            _options = options.Value;
         }
 
         public override TagBuilder GenerateLabel(ViewContext viewContext, ModelExplorer modelExplorer, string expression, string labelText, object htmlAttributes)
         {
             var builder = base.GenerateLabel(viewContext, modelExplorer, expression, labelText, htmlAttributes);
 
-            if (modelExplorer.Metadata.IsRequired && _addAstertix(viewContext))
+            if (modelExplorer.Metadata.IsRequired && _options.AddAstertix(viewContext))
             {
                 var newLabelText = Render(builder.InnerHtml) + " *";
                 builder.InnerHtml.SetContent(newLabelText);
@@ -42,5 +43,10 @@ namespace AspNetCore.Mvc.Extensions.Providers
                 return writer.ToString();
             }
         }
+    }
+
+    public class ConventionsHtmlGeneratorOptions
+    {
+        public Func<ViewContext, bool> AddAstertix { get; set; } = ((viewContext) => true);
     }
 }

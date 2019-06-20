@@ -4,7 +4,6 @@ using AspNetCore.Mvc.Extensions.Providers;
 using AspNetCore.Mvc.Extensions.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.DataAnnotations;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -18,12 +17,17 @@ namespace AspNetCore.Mvc.Extensions
     {
         public static IServiceCollection AddAppendAsterixToRequiredFieldLabels(this IServiceCollection services)
         {
-            return AddAppendAsterixToRequiredFieldLabels(services, ((ActionContext) => true));
+            //Appends '*' to required fields
+            services.AddTransient(sp => sp.GetService<IOptions<ConventionsHtmlGeneratorOptions>>().Value);
+            return services.AddSingleton<IHtmlGenerator, ConventionsHtmlGenerator>();
         }
-         public static IServiceCollection AddAppendAsterixToRequiredFieldLabels(this IServiceCollection services, Func<ViewContext, bool> addAstertix)
+
+        public static IServiceCollection AddAppendAsterixToRequiredFieldLabels(this IServiceCollection services, Action<ConventionsHtmlGeneratorOptions> setupAction)
         {
             //Appends '*' to required fields
-            return services.AddSingleton<IHtmlGenerator>( sp => ActivatorUtilities.CreateInstance<ConventionsHtmlGenerator>(sp, addAstertix));
+            services.AddAppendAsterixToRequiredFieldLabels();
+            services.Configure(setupAction);
+            return services;
         }
 
         public static IServiceCollection AddMvcDisplayConventions(this IServiceCollection services, params IDisplayConventionFilter[] displayConventions)
@@ -35,7 +39,15 @@ namespace AspNetCore.Mvc.Extensions
 
             if (displayConventions.OfType<AppendAsterixToRequiredFieldLabels>().Any())
             {
-                services.AddAppendAsterixToRequiredFieldLabels(displayConventions.OfType<AppendAsterixToRequiredFieldLabels>().First().AddAstertix);
+                var addAsterix = displayConventions.OfType<AppendAsterixToRequiredFieldLabels>().FirstOrDefault().AddAstertix;
+                if (addAsterix != null)
+                {
+                    services.AddAppendAsterixToRequiredFieldLabels(options => options.AddAstertix = addAsterix);
+                }
+                else
+                {
+                    services.AddAppendAsterixToRequiredFieldLabels();
+                }
             }
 
             return services;
@@ -65,12 +77,8 @@ namespace AspNetCore.Mvc.Extensions
             return services;
         }
 
-        public static IServiceCollection AddFluentMetadata(this IServiceCollection services, Action<AssemblyProviderOptions> configureOptions = null)
+        public static IServiceCollection AddFluentMetadata(this IServiceCollection services)
         {
-            configureOptions = configureOptions ?? ((options) => { });
-
-            services.Configure(configureOptions);
-
             services.AddTransient(sp => sp.GetService<IOptions<AssemblyProviderOptions>>().Value);
 
             services.AddSingleton<IAssemblyProvider, AssemblyProvider>();
@@ -78,6 +86,12 @@ namespace AspNetCore.Mvc.Extensions
             services.AddSingleton<IMetadataConfiguratorProviderSingleton, MetadataConfiguratorProviderSingleton>();
             services.AddSingleton<IConfigureOptions<MvcOptions>, FluentMetadataConfigureMvcOptions>();
 
+            return services;
+        }
+        public static IServiceCollection AddFluentMetadata(this IServiceCollection services, Action<AssemblyProviderOptions> setupAction)
+        {
+            services.AddFluentMetadata();
+            services.Configure(setupAction);
             return services;
         }
     }
