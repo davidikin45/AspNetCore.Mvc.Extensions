@@ -1,0 +1,9 @@
+﻿@model ContactViewModel
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary()
+    @Html.EditorForModel()
+    <button type="submit">submit</button>
+}

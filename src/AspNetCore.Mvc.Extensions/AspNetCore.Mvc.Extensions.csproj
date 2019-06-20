@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>David Ikin</Authors>
+    <Description>ASP.NET Core library for extending Display and Validation ModelMetadata functionality</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Copyright>(c) David Ikin</Copyright>
+    <PackageProjectUrl>https://github.com/davidikin45/AspNetCore.Mvc.Extensions</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/davidikin45/AspNetCore.Mvc.Extensions</RepositoryUrl>
+    <PackageTags>ASP.NET Core Extensions Mvc</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.1</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.DataAnnotations" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Attributes\Validation\" />
+  </ItemGroup>
+
+</Project>
