@@ -4,6 +4,7 @@ using AspNetCore.Mvc.Extensions.Providers;
 using AspNetCore.Mvc.Extensions.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -17,8 +18,12 @@ namespace AspNetCore.Mvc.Extensions
     {
         public static IServiceCollection AddAppendAsterixToRequiredFieldLabels(this IServiceCollection services)
         {
+            return AddAppendAsterixToRequiredFieldLabels(services, ((ActionContext) => true));
+        }
+         public static IServiceCollection AddAppendAsterixToRequiredFieldLabels(this IServiceCollection services, Func<ViewContext, bool> addAstertix)
+        {
             //Appends '*' to required fields
-            return services.AddSingleton<IHtmlGenerator, ConventionsHtmlGenerator>();
+            return services.AddSingleton<IHtmlGenerator>( sp => ActivatorUtilities.CreateInstance<ConventionsHtmlGenerator>(sp, addAstertix));
         }
 
         public static IServiceCollection AddMvcDisplayConventions(this IServiceCollection services, params IDisplayConventionFilter[] displayConventions)
@@ -30,7 +35,7 @@ namespace AspNetCore.Mvc.Extensions
 
             if (displayConventions.OfType<AppendAsterixToRequiredFieldLabels>().Any())
             {
-                services.AddAppendAsterixToRequiredFieldLabels();
+                services.AddAppendAsterixToRequiredFieldLabels(displayConventions.OfType<AppendAsterixToRequiredFieldLabels>().First().AddAstertix);
             }
 
             return services;
