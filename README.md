@@ -167,6 +167,13 @@ public class PersonConfig : ModelMetadataConfiguration<Person>
 }
 ```
 
+## Render Razor Views as Html
+* Gives the ability to render Views, Partials, Display for Model or Editor for Model. 
+* Useful for using Razor to generate PDFs.
+```
+services.AddViewRenderer();
+```
+
 ## Authors
 
 * **Dave Ikin** - [davidikin45](https://github.com/davidikin45)

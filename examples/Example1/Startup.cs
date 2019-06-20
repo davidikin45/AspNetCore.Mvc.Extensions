@@ -40,12 +40,10 @@ namespace Example1
             new DisableConvertEmptyStringToNull());
 
             services.AddMvcValidationConventions();
-
             services.AddMvcDisplayAttributes();
-
             services.AddInheritanceValidationAttributeAdapterProvider();
-
             services.AddFluentMetadata();
+            services.AddViewRenderer();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

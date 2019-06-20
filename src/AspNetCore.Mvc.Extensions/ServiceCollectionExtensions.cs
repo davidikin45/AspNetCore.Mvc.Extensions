@@ -94,5 +94,11 @@ namespace AspNetCore.Mvc.Extensions
             services.Configure(setupAction);
             return services;
         }
+
+        public static IServiceCollection AddViewRenderer(this IServiceCollection services)
+        {
+            services.AddHttpContextAccessor();
+            return services.AddSingleton<IViewRenderService, ViewRenderService>();
+        }
     }
 }
