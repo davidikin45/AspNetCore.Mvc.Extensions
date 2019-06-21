@@ -1,6 +1,7 @@
 ﻿using AspNetCore.Mvc.Extensions.Conventions.Display;
 using AspNetCore.Mvc.Extensions.FluentMetadata;
 using AspNetCore.Mvc.Extensions.Providers;
+using AspNetCore.Mvc.Extensions.Razor;
 using AspNetCore.Mvc.Extensions.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.DataAnnotations;
