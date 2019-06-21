@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -9,8 +10,16 @@ namespace AspNetCore.Mvc.Extensions.Conventions.Display
 {
     public class LabelTextConventionFilter : IDisplayConventionFilter
     {
+        private readonly Func<DisplayMetadataProviderContext, bool> _applyConvention;
         public LabelTextConventionFilter()
+            : this((context) => true)
         {
+
+        }
+
+        public LabelTextConventionFilter(Func<DisplayMetadataProviderContext, bool> applyConvention)
+        {
+            _applyConvention = applyConvention;
         }
 
         public void TransformMetadata(DisplayMetadataProviderContext context)
@@ -20,7 +29,7 @@ namespace AspNetCore.Mvc.Extensions.Conventions.Display
             var propertyName = context.Key.Name;
 
 
-            if (IsTransformRequired(propertyName, modelMetadata, propertyAttributes))
+            if (IsTransformRequired(propertyName, modelMetadata, propertyAttributes) && _applyConvention(context))
             {
 
                 modelMetadata.DisplayName = () => GetStringWithSpaces(propertyName);

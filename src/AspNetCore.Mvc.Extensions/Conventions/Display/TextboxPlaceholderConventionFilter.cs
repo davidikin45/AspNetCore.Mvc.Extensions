@@ -1,12 +1,20 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
+using System;
 
 namespace AspNetCore.Mvc.Extensions.Conventions.Display
 {
     public class TextboxPlaceholderConventionFilter : IDisplayConventionFilter
     {
+        private readonly Func<DisplayMetadataProviderContext, bool> _applyConvention;
         public TextboxPlaceholderConventionFilter()
+            : this((context) => true)
         {
 
+        }
+
+        public TextboxPlaceholderConventionFilter(Func<DisplayMetadataProviderContext, bool> applyConvention)
+        {
+            _applyConvention = applyConvention;
         }
 
         public void TransformMetadata(DisplayMetadataProviderContext context)
@@ -26,7 +34,7 @@ namespace AspNetCore.Mvc.Extensions.Conventions.Display
             }
 
             if (!string.IsNullOrEmpty(displayName) &&
-                  string.IsNullOrEmpty(placeholder))
+                  string.IsNullOrEmpty(placeholder) && _applyConvention(context))
             {
                 context.DisplayMetadata.Placeholder = () => displayName + "...";
             }

@@ -40,7 +40,7 @@ namespace AspNetCore.Mvc.Extensions
 
             if (displayConventions.OfType<AppendAsterixToRequiredFieldLabels>().Any())
             {
-                var addAsterix = displayConventions.OfType<AppendAsterixToRequiredFieldLabels>().FirstOrDefault().AddAstertix;
+                var addAsterix = displayConventions.OfType<AppendAsterixToRequiredFieldLabels>().FirstOrDefault().ApplyConvention;
                 if (addAsterix != null)
                 {
                     services.AddAppendAsterixToRequiredFieldLabels(options => options.AddAstertix = addAsterix);
