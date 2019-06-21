@@ -1,5 +1,19 @@
 ﻿# ASP.NET Core MVC Extensions
 
+## Installation
+
+### NuGet
+```
+PM> Install-Package AspNetCore.Mvc.Extensions
+```
+
+### .Net CLI
+```
+> dotnet add package AspNetCore.Mvc.Extensions
+```
+
+## Usage
+
 ```
 services.AddMvcDisplayConventions(
 new AppendAsterixToRequiredFieldLabels(),
