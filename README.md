@@ -1,5 +1,7 @@
 ﻿# ASP.NET Core MVC Extensions
 
+[![nuget](https://img.shields.io/nuget/v/AspNetCore.Mvc.Extensions.svg)](https://www.nuget.org/packages/AspNetCore.Mvc.Extensions/)  ![Downloads](https://img.shields.io/nuget/dt/AspNetCore.Mvc.Extensions.svg "Downloads")
+
 ## Installation
 
 ### NuGet
