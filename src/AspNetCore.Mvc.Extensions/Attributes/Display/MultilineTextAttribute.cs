@@ -18,7 +18,7 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
         {
             Rows = rows;
         }
-        public void TransformMetadata(DisplayMetadataProviderContext context)
+        public void TransformMetadata(DisplayMetadataProviderContext context, IServiceProvider serviceProvider)
         {
             var propertyAttributes = context.Attributes;
             var modelMetadata = context.DisplayMetadata;

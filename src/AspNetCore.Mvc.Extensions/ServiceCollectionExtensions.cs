@@ -64,10 +64,22 @@ namespace AspNetCore.Mvc.Extensions
 
         public static IServiceCollection AddMvcDisplayAttributes(this IServiceCollection services)
         {
-            return services.Configure<MvcOptions>(options =>
+            return services.AddSingleton<IConfigureOptions<MvcOptions>, AttributeMetadataProviderSetup>();
+        }
+
+        public class AttributeMetadataProviderSetup : IConfigureOptions<MvcOptions>
+        {
+            private readonly IServiceProvider _serviceProvider;
+
+            public AttributeMetadataProviderSetup(IServiceProvider serviceProvider)
             {
-                options.ModelMetadataDetailsProviders.Add(new AttributeMetadataProvider());
-            });
+                _serviceProvider = serviceProvider;
+            }
+
+            public void Configure(MvcOptions options)
+            {
+                options.ModelMetadataDetailsProviders.Add(new AttributeMetadataProvider(_serviceProvider));
+            }
         }
 
         public static IServiceCollection AddInheritanceValidationAttributeAdapterProvider(this IServiceCollection services)

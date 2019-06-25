@@ -3,13 +3,12 @@ using System;
 
 namespace AspNetCore.Mvc.Extensions.Attributes.Display
 {
-    public class HelpTextAttribute : Attribute, IDisplayMetadataAttribute
+    public class AlignRightAttribute : Attribute, IDisplayMetadataAttribute
     {
-        public string HelpText { get; set; }
+        public bool AlignRight { get; set; } = true;
 
-        public HelpTextAttribute(string helpText)
+        public AlignRightAttribute()
         {
-            HelpText = helpText;
         }
 
         public void TransformMetadata(DisplayMetadataProviderContext context, IServiceProvider serviceProvider)
@@ -18,7 +17,7 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
             var modelMetadata = context.DisplayMetadata;
             var propertyName = context.Key.Name;
 
-            modelMetadata.AdditionalValues["HelpText"] = HelpText;
+            modelMetadata.AdditionalValues["AlignRight"] = AlignRight;
         }
     }
 }

@@ -21,7 +21,7 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
             Text = text;
         }
 
-        public void TransformMetadata(DisplayMetadataProviderContext context)
+        public void TransformMetadata(DisplayMetadataProviderContext context, IServiceProvider serviceProvider)
         {
             var propertyAttributes = context.Attributes;
             var modelMetadata = context.DisplayMetadata;

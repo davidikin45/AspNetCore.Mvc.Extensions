@@ -1,15 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace AspNetCore.Mvc.Extensions.Attributes.Display
 {
-    public class HelpTextAttribute : Attribute, IDisplayMetadataAttribute
+    public class OffsetRightAttribute : Attribute, IDisplayMetadataAttribute
     {
-        public string HelpText { get; set; }
+        public int OffSetColumns { get; set; } = 0;
 
-        public HelpTextAttribute(string helpText)
+        public OffsetRightAttribute(int offSetColumns)
         {
-            HelpText = helpText;
+            OffSetColumns = offSetColumns;
         }
 
         public void TransformMetadata(DisplayMetadataProviderContext context, IServiceProvider serviceProvider)
@@ -18,7 +20,7 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
             var modelMetadata = context.DisplayMetadata;
             var propertyName = context.Key.Name;
 
-            modelMetadata.AdditionalValues["HelpText"] = HelpText;
+            modelMetadata.AdditionalValues["OffsetRight"] = OffSetColumns;
         }
     }
 }
