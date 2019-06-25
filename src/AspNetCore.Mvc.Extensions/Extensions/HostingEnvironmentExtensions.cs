@@ -4,7 +4,7 @@ using System.IO;
 
 namespace AspNetCore.Mvc.Extensions.Extensions
 {
-    internal static class HostingEnvironmentExtensions
+    public static class HostingEnvironmentExtensions
     {
         public static string MapContentPath(this IHostingEnvironment hostingEnvironement, string path)
         {
