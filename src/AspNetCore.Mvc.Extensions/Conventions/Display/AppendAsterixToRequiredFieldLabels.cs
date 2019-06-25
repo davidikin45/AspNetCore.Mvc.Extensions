@@ -6,16 +6,16 @@ namespace AspNetCore.Mvc.Extensions.Conventions.Display
 {
     public class AppendAsterixToRequiredFieldLabels : IDisplayConventionFilter
     {
-        public Func<ViewContext, bool> ApplyConvention { get; }
+        public Func<ViewContext, bool> LimitConvention { get; }
         public AppendAsterixToRequiredFieldLabels()
             :this(((actionContext) => true))
         {
 
         }
 
-        public AppendAsterixToRequiredFieldLabels(Func<ViewContext, bool> applyConvention)
+        public AppendAsterixToRequiredFieldLabels(Func<ViewContext, bool> limitConvention)
         {
-            ApplyConvention = applyConvention;
+            LimitConvention = limitConvention;
         }
 
         public void TransformMetadata(DisplayMetadataProviderContext context)

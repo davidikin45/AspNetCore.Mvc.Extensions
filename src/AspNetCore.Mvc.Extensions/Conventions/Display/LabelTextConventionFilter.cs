@@ -10,16 +10,16 @@ namespace AspNetCore.Mvc.Extensions.Conventions.Display
 {
     public class LabelTextConventionFilter : IDisplayConventionFilter
     {
-        private readonly Func<DisplayMetadataProviderContext, bool> _applyConvention;
+        private readonly Func<DisplayMetadataProviderContext, bool> _limitConvention;
         public LabelTextConventionFilter()
             : this((context) => true)
         {
 
         }
 
-        public LabelTextConventionFilter(Func<DisplayMetadataProviderContext, bool> applyConvention)
+        public LabelTextConventionFilter(Func<DisplayMetadataProviderContext, bool> limitConvention)
         {
-            _applyConvention = applyConvention;
+            _limitConvention = limitConvention;
         }
 
         public void TransformMetadata(DisplayMetadataProviderContext context)
@@ -29,7 +29,7 @@ namespace AspNetCore.Mvc.Extensions.Conventions.Display
             var propertyName = context.Key.Name;
 
 
-            if (IsTransformRequired(propertyName, modelMetadata, propertyAttributes) && _applyConvention(context))
+            if (IsTransformRequired(propertyName, modelMetadata, propertyAttributes) && _limitConvention(context))
             {
 
                 modelMetadata.DisplayName = () => GetStringWithSpaces(propertyName);

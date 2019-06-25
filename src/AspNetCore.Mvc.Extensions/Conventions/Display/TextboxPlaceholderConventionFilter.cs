@@ -5,16 +5,16 @@ namespace AspNetCore.Mvc.Extensions.Conventions.Display
 {
     public class TextboxPlaceholderConventionFilter : IDisplayConventionFilter
     {
-        private readonly Func<DisplayMetadataProviderContext, bool> _applyConvention;
+        private readonly Func<DisplayMetadataProviderContext, bool> _limitConvention;
         public TextboxPlaceholderConventionFilter()
             : this((context) => true)
         {
 
         }
 
-        public TextboxPlaceholderConventionFilter(Func<DisplayMetadataProviderContext, bool> applyConvention)
+        public TextboxPlaceholderConventionFilter(Func<DisplayMetadataProviderContext, bool> limitConvention)
         {
-            _applyConvention = applyConvention;
+            _limitConvention = limitConvention;
         }
 
         public void TransformMetadata(DisplayMetadataProviderContext context)
@@ -34,7 +34,7 @@ namespace AspNetCore.Mvc.Extensions.Conventions.Display
             }
 
             if (!string.IsNullOrEmpty(displayName) &&
-                  string.IsNullOrEmpty(placeholder) && _applyConvention(context))
+                  string.IsNullOrEmpty(placeholder) && _limitConvention(context))
             {
                 context.DisplayMetadata.Placeholder = () => displayName + "...";
             }

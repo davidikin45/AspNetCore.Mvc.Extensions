@@ -7,19 +7,19 @@ namespace AspNetCore.Mvc.Extensions.Conventions.Display
 {
     public class TextAreaByNameConventionFilter : IDisplayConventionFilter
     {
-        private readonly Func<DisplayMetadataProviderContext, bool> _applyConvention;
+        private readonly Func<DisplayMetadataProviderContext, bool> _limitConvention;
         public TextAreaByNameConventionFilter()
             : this((context) => true)
         {
 
         }
 
-        public TextAreaByNameConventionFilter(Func<DisplayMetadataProviderContext, bool> applyConvention)
+        public TextAreaByNameConventionFilter(Func<DisplayMetadataProviderContext, bool> limitConvention)
         {
-            _applyConvention = applyConvention;
+            _limitConvention = limitConvention;
         }
 
-        private static readonly HashSet<string> TextAreaFieldNames =
+        public HashSet<string> TextAreaFieldNames =
 				new HashSet<string>
 						{
 							"body",
@@ -34,7 +34,7 @@ namespace AspNetCore.Mvc.Extensions.Conventions.Display
 
             if (!string.IsNullOrEmpty(propertyName) &&
                 string.IsNullOrEmpty(modelMetadata.DataTypeName) &&
-                TextAreaFieldNames.Any(propertyName.ToLower().Contains) && _applyConvention(context))
+                TextAreaFieldNames.Any(propertyName.ToLower().Contains) && _limitConvention(context))
             {
                 modelMetadata.DataTypeName = "MultilineText";
                 modelMetadata.AdditionalValues["MultilineTextRows"] = 7;

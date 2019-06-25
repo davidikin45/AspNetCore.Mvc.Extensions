@@ -1,5 +1,4 @@
-﻿using AspNetCore.Mvc.Extensions.Extensions;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -21,13 +20,13 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
     //Aggregation relationshiships(child can exist independently of the parent, reference relationship)
     public class FolderDropdownAttribute : DataboundAttribute
     {
-        public FolderDropdownAttribute(Func<IServiceProvider, string> folderPath, Boolean nullable = false)
+        public FolderDropdownAttribute(string folderPath, Boolean nullable = false)
             : this(folderPath, nameof(DirectoryInfo.FullName), nameof(DirectoryInfo.LastWriteTime),"desc", nullable)
         {
 
         }
 
-        public FolderDropdownAttribute(Func<IServiceProvider, string> folderPath, string displayExpression, string orderByProperty, string orderByType, Boolean nullable = false)
+        public FolderDropdownAttribute(string folderPath, string displayExpression, string orderByProperty, string orderByType, Boolean nullable = false)
             : base(folderPath, null, displayExpression, orderByProperty, orderByType, nullable)
         {
         }
@@ -36,13 +35,13 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
     //Aggregation relationshiships(child can exist independently of the parent, reference relationship)
     public class FileDropdownAttribute : DataboundAttribute
     {
-        public FileDropdownAttribute(Func<IServiceProvider, string> folderPath, Boolean nullable = false)
+        public FileDropdownAttribute(string folderPath, Boolean nullable = false)
             : this(folderPath, nameof(DirectoryInfo.Name), nameof(DirectoryInfo.LastWriteTime), "desc", nullable)
         {
 
         }
 
-        public FileDropdownAttribute(Func<IServiceProvider, string> folderPath, string displayExpression, string orderByProperty, string orderByType, Boolean nullable = false)
+        public FileDropdownAttribute(string folderPath, string displayExpression, string orderByProperty, string orderByType, Boolean nullable = false)
             : base(null, folderPath, displayExpression, orderByProperty, orderByType, nullable)
         {
         }
@@ -207,9 +206,9 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
         public string OrderByProperty { get; set; }
         public string OrderByTypeString { get; set; }
 
-        public Func<IServiceProvider, string> PhysicalFolderPath { get; set; }
+        public string PhysicalFolderPath { get; set; }
 
-        public Func<IServiceProvider, string> PhysicalFilePath { get; set; }
+        public string PhysicalFilePath { get; set; }
 
         public Boolean Nullable { get; set; }
 
@@ -217,7 +216,7 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
 
         public IEnumerable<string> Options { get; set; }
 
-        public DataboundAttribute(Func<IServiceProvider, string> folderFolderPath, Func<IServiceProvider, string> fileFolderPath, string displayExpression, string orderByProperty, string orderByType, Boolean nullable = false)
+        public DataboundAttribute(string folderFolderPath, string fileFolderPath, string displayExpression, string orderByProperty, string orderByType, Boolean nullable = false)
         {
 
             PhysicalFolderPath = folderFolderPath;
@@ -261,7 +260,7 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
             BindingProperty = "Id";
         }
 
-        public void TransformMetadata(DisplayMetadataProviderContext context, IServiceProvider serviceProvider)
+        public virtual void TransformMetadata(DisplayMetadataProviderContext context, IServiceProvider serviceProvider)
         {
             var propertyAttributes = context.Attributes;
             var modelMetadata = context.DisplayMetadata;
@@ -285,8 +284,9 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
 
             var hostingEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
 
-            modelMetadata.AdditionalValues["PhysicalFolderPath"] = PhysicalFolderPath?.Invoke(serviceProvider);
-            modelMetadata.AdditionalValues["PhysicalFilePath"] = PhysicalFilePath?.Invoke(serviceProvider);
+            modelMetadata.AdditionalValues["PhysicalFolderPath"] = hostingEnvironment.MapWwwPath(PhysicalFolderPath);
+            modelMetadata.AdditionalValues["PhysicalFilePath"] = hostingEnvironment.MapWwwPath(PhysicalFilePath);
+
             modelMetadata.AdditionalValues["Options"] = Options;
         }
     }

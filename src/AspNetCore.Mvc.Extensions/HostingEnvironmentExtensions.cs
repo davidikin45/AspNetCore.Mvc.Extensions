@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-namespace AspNetCore.Mvc.Extensions.Extensions
+namespace AspNetCore.Mvc.Extensions
 {
     public static class HostingEnvironmentExtensions
     {
