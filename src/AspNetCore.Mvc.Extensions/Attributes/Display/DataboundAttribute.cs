@@ -284,8 +284,17 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
 
             var hostingEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
 
-            modelMetadata.AdditionalValues["PhysicalFolderPath"] = hostingEnvironment.MapWwwPath(PhysicalFolderPath);
-            modelMetadata.AdditionalValues["PhysicalFilePath"] = hostingEnvironment.MapWwwPath(PhysicalFilePath);
+            if(!string.IsNullOrEmpty(PhysicalFolderPath))
+            {
+                PhysicalFolderPath = hostingEnvironment.MapWwwPath(PhysicalFolderPath);
+            }
+            modelMetadata.AdditionalValues["PhysicalFolderPath"] = PhysicalFolderPath;
+
+            if (!string.IsNullOrEmpty(PhysicalFilePath))
+            {
+                PhysicalFilePath = hostingEnvironment.MapWwwPath(PhysicalFilePath);
+            }
+            modelMetadata.AdditionalValues["PhysicalFilePath"] = PhysicalFilePath;
 
             modelMetadata.AdditionalValues["Options"] = Options;
         }
