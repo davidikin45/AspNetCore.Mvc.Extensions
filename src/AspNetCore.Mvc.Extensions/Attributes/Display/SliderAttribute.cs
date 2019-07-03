@@ -25,7 +25,7 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
             var modelMetadata = context.DisplayMetadata;
             var propertyName = context.Key.Name;
 
-            modelMetadata.DataTypeName = "Slider";
+            modelMetadata.TemplateHint = "Slider";
             modelMetadata.AdditionalValues["Min"] = Min;
             modelMetadata.AdditionalValues["Max"] = Max;
         }

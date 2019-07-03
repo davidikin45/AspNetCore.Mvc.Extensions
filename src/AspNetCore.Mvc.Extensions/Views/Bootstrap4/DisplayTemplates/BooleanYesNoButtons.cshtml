@@ -1,0 +1,17 @@
+﻿@model Boolean?
+@using System.Globalization
+@{
+    string value = "";
+    if (Html.ViewData.Model != null)
+    {
+        if(Convert.ToBoolean(Html.ViewData.Model, CultureInfo.InvariantCulture) == true)
+        {
+            value = "Yes";
+        }
+        else
+        {
+            value = "No";
+        }
+    }
+}
+@Html.Raw(value)

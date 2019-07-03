@@ -1,0 +1,3 @@
+﻿@model Int32?
+@Html.TextBox("", ViewData.TemplateInfo.FormattedModelValue,
+        new { @class = "custom-range", @type = "range", min = (int)ViewData.ModelMetadata.AdditionalValues["Min"], max = (int)ViewData.ModelMetadata.AdditionalValues["Max"] })

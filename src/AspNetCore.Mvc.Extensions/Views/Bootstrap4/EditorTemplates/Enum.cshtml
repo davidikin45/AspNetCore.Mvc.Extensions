@@ -1,0 +1,12 @@
+﻿@using AspNetCore.Mvc.Extensions.Helpers
+@using AspNetCore.Mvc.Extensions
+@model Enum
+
+@if (EnumHelper.IsValidForEnumHelper(ViewData.ModelMetadata))
+{
+    @Html.EnumDropDownListForStringValue(model => model, htmlAttributes: new { @class = "custom-select" })
+}
+else
+{
+    @Html.TextBoxFor(model => model, htmlAttributes: new { @class = "form-control" })
+}

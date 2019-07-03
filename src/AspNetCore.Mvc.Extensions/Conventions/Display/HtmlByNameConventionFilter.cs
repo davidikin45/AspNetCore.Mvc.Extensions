@@ -33,6 +33,7 @@ namespace AspNetCore.Mvc.Extensions.Conventions.Display
 
             if (!string.IsNullOrEmpty(propertyName) &&
                   string.IsNullOrEmpty(modelMetadata.DataTypeName) &&
+                  string.IsNullOrEmpty(modelMetadata.TemplateHint) &&
                   TextAreaFieldNames.Any(propertyName.ToLower().Contains) && _limitConvention(context))
             {
                 modelMetadata.DataTypeName = "Html";

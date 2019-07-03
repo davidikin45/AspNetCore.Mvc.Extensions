@@ -16,7 +16,7 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
             var modelMetadata = context.DisplayMetadata;
             var propertyName = context.Key.Name;
 
-            modelMetadata.DataTypeName = "BooleanTrueFalseButtons";
+            modelMetadata.TemplateHint = "BooleanTrueFalseButtons";
         }
     }
 }

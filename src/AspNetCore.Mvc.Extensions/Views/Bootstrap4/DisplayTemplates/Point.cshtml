@@ -1,0 +1,10 @@
+﻿@model NetTopologySuite.Geometries.Point
+@using System.Globalization
+@if (Model != null)
+{
+    @Html.TextBox("", Model.Y.ToString("G", CultureInfo.InvariantCulture) + "," + Model.X.ToString("G", CultureInfo.InvariantCulture), new { @class = "display-for-dbgeography form-control", disabled = true })
+}
+else
+{
+    @Html.TextBox("", "n/a", new { @class = "form-control", disabled = true })
+}

@@ -1,0 +1,48 @@
+﻿using System;
+using System.IO;
+using System.Threading;
+
+namespace AspNetCore.Mvc.Extensions.RepositoryFileSystem.File
+{
+    public class ImageInfoRepository : ImageInfoReadOnlyRepository, IImageInfoRepository
+    {
+        public ImageInfoRepository(string physicalPath, Boolean includeSubDirectories, CancellationToken cancellationToken = default(CancellationToken))
+            : base(physicalPath, includeSubDirectories, cancellationToken)
+        {
+        }
+
+        public void Delete(string path)
+        {
+            var file = GetByPath(path);
+            file.Delete();
+        }
+
+        public void Save(string path, byte[] bytes)
+        {
+            string physicalPath = _physicalPath + path;
+            System.IO.File.WriteAllBytes(physicalPath, bytes);
+        }
+
+        public void Save(string path, string text)
+        {
+            string physicalPath = _physicalPath + path;
+            System.IO.File.WriteAllText(physicalPath, text);
+        }
+
+        public void Move(string sourcePath, string destinationPath)
+        {
+            var file = GetByPath(sourcePath);
+            var destination = _physicalPath + destinationPath;
+            file.MoveTo(destinationPath);
+        }
+
+        public void Rename(string sourcePath, string newName)
+        {
+            var source = _physicalPath + sourcePath;
+            var directory = Path.GetDirectoryName(source);
+            var destinationPath = Path.Combine(directory, newName);
+            System.IO.File.Move(source, destinationPath);
+        }
+    }
+
+}

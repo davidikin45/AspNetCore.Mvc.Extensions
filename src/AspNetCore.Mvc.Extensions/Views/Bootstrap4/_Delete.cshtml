@@ -1,0 +1,24 @@
+﻿@model dynamic
+
+@Html.DisplayForModel()
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <div class="form-group row">
+        <div class="offset-md-2 col-md-10">
+            @if (((Type)Model.GetType()).GetProperties().Where(p => p.Name.Equals("RowVersion")).Any())
+            {
+                if (((Type)Model.GetType()).GetProperties().Where(p => p.Name.Equals("RowVersion")).First().PropertyType.FullName == "System.Byte[]")
+                {
+                    @Html.Editor("RowVersion", "ByteArray")
+                }
+                else
+                {
+                    @Html.Hidden("RowVersion")
+                }
+            }
+            <input type="submit" value="Delete" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this?');" />
+        </div>
+    </div>
+}

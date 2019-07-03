@@ -1,0 +1,47 @@
+﻿@using AspNetCore.Mvc.SelectList;
+
+@model dynamic
+@{
+    string displayName = String.Empty;
+
+    foreach (SelectListItem item in Html.SelectList("", null, true))
+    {
+        if (item.Selected)
+        {
+            if (!string.IsNullOrEmpty(displayName))
+            {
+                displayName = displayName + ", ";
+            }
+            displayName = displayName + item.Text ?? item.Value;
+        }
+    }
+
+    // Handle the unexpected case that nothing is selected
+    if (String.IsNullOrEmpty(displayName))
+    {
+        if (Model == null)
+        {
+            displayName = String.Empty;
+        }
+        else
+        {
+            if (Model.GetType() != typeof(string) && new List<Type>(Model.GetType().GetInterfaces()).Contains(typeof(System.Collections.IEnumerable)))
+            {
+                foreach (var item in (System.Collections.IEnumerable)Model)
+                {
+                    if (!string.IsNullOrEmpty(displayName))
+                    {
+                        displayName = displayName + ", ";
+                    }
+                    displayName = displayName + item.ToString();
+                }
+            }
+            else
+            {
+                displayName = Model.ToString();
+            }
+        }
+    }
+
+    @Html.DisplayTextFor(model => displayName)
+}

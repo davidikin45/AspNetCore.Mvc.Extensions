@@ -1,0 +1,20 @@
+﻿@using AspNetCore.Mvc.Extensions
+@model dynamic
+
+<partial name="_Details" />
+
+<p>
+    @if (ViewBag.DisableEdit == null ? true : !ViewBag.DisableEdit)
+    {
+        @Html.ActionLink("Edit", "Edit", new { id = Model.Id })<text>|</text>
+    }
+
+    @if (ViewBag.Collection == null)
+    {
+        @Html.ActionLink("Back to List", "Index")
+    }
+    else
+    {
+        @Html.Raw(Html.ActionLink("Back to List", "Collection", new { id = ViewBag.Id, collection = ViewBag.Collection }).Render().Replace("%2F", "/"))
+    }
+</p>

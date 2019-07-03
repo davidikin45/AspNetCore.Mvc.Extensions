@@ -1,0 +1,24 @@
+﻿@using AspNetCore.Mvc.Extensions
+@model dynamic;
+@{
+    var id = Guid.NewGuid().ToString().Replace("-", "");
+    var collectionItemUrl = (Url.Action("CreateCollectionItem", Url.ActionContext.RouteData.Values["controller"].ToString(), new { collection = (string)ViewBag.Collection.Replace(".", "/") }, Url.ActionContext.HttpContext.Request.Scheme).Replace("%2F", "/"));
+}
+
+<div class="form-group row">
+    <div class="col-md-12">
+        <button type="button" class="btn btn-success btn-sm mt-2" onclick="createCollectionItem('@(id)','@(collectionItemUrl)')"><span class="fa fa-plus" aria-hidden="true"></span> Create New</button>
+    </div>
+</div>
+
+<div id="@(id)">
+    @if (Model != null)
+    {
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            var htmlHelper = HtmlHelperExtensions.For(Html, Model[i]);
+            @(((IHtmlHelper)htmlHelper).EditorForModel("ModelOwnedCollectionItem", new { Collection = (string)ViewBag.Collection, CollectionIndex = i.ToString(), EditMode = true, CreateMode = false }));
+        }
+
+    }
+</div>

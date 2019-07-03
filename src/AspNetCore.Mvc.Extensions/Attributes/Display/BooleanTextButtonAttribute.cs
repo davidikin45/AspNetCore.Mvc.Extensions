@@ -27,7 +27,7 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
             var modelMetadata = context.DisplayMetadata;
             var propertyName = context.Key.Name;
 
-            modelMetadata.DataTypeName = "BooleanTextButton";
+            modelMetadata.TemplateHint = "BooleanTextButton";
             modelMetadata.AdditionalValues["BooleanText"] = Text;
         }
     }

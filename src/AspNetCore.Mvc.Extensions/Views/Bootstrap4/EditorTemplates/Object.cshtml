@@ -1,0 +1,173 @@
+﻿@using AspNetCore.Mvc.Extensions
+@model dynamic
+@{
+    if (!ViewData.ContainsKey("EditMode") && !ViewData.ContainsKey("CreateMode"))
+    {
+        ViewBag.EditMode = false;
+        ViewBag.CreateMode = true;
+    }
+    else if (ViewData.ContainsKey("CreateMode"))
+    {
+        ViewBag.EditMode = !ViewBag.CreateMode;
+    }
+    else if (ViewData.ContainsKey("EditMode"))
+    {
+        ViewBag.CreateMode = !ViewBag.EditMode;
+    }
+
+    var collections = ViewData.ModelMetadata.Properties.Where(p => p.TemplateHint == "ModelOwnedCollection" && (((bool)ViewBag.EditMode && p.ShowForEdit) || ((bool)ViewBag.CreateMode && (!p.AdditionalValues.ContainsKey("ShowForCreate") || (bool)p.AdditionalValues["ShowForCreate"]))));
+    var hasCollections = collections.Count() > 0;
+
+    string guid = Guid.NewGuid().ToString();
+    var guids = collections.ToDictionary(metadata => metadata, metadata => Guid.NewGuid().ToString());
+    var htmlFieldPrefix = Html.ViewContext.ViewData.TemplateInfo.HtmlFieldPrefix;
+}
+
+@* Navigation *@
+@if (hasCollections)
+{
+    <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+            <a class="nav-item nav-link active" id="nav-@guid-tab" data-toggle="tab" href="#nav-@guid" role="tab" aria-controls="nav-@guid" aria-selected="true">Details</a>
+            @foreach (var prop in collections)
+            {
+                <a class="nav-item nav-link" id="nav-@guids[prop]-tab" data-toggle="tab" href="#nav-@guids[prop]" role="tab" aria-controls="nav-@guids[prop]" aria-selected="false">@Html.DisplayName(prop.PropertyName)</a>
+            }
+        </div>
+    </nav>
+}
+
+@if (hasCollections)
+{
+    @:<div class="tab-content" id="nav-tabContent">
+        @:<div class="tab-pane fade show active" id="nav-@guid" role="tabpanel" aria-labelledby="nav-@guid-tab">
+        }
+
+        @* Details *@
+@foreach (var prop in ViewData.ModelMetadata.Properties.Where(p => p.TemplateHint != "ModelOwnedCollection" && (((bool)ViewBag.EditMode && p.ShowForEdit) || ((bool)ViewBag.CreateMode && (!p.AdditionalValues.ContainsKey("ShowForCreate") || (bool)p.AdditionalValues["ShowForCreate"])))))
+{
+    var readOnlyHiddenInput = false;
+
+    if (((bool)ViewBag.CreateMode && prop.AdditionalValues.ContainsKey("ReadOnlyHiddenInputCreate") && (bool)prop.AdditionalValues["ReadOnlyHiddenInputCreate"]) || ((bool)ViewBag.EditMode && prop.AdditionalValues.ContainsKey("ReadOnlyHiddenInputEdit") && (bool)prop.AdditionalValues["ReadOnlyHiddenInputEdit"]))
+    {
+        readOnlyHiddenInput = true;
+    }
+
+    var hiddenInput = false;
+
+    if (prop.TemplateHint == "HiddenInput" || readOnlyHiddenInput)
+    {
+        hiddenInput = true;
+        if (prop.ModelType.FullName == "System.Byte[]")
+        {
+
+            @Html.Editor(prop.PropertyName, "ByteArray")
+        }
+        else
+        {
+            @Html.Hidden(prop.PropertyName)
+        }
+    }
+
+    if (!hiddenInput || (prop.IsReadOnly) || readOnlyHiddenInput)
+    {
+        bool showLabel = !(prop.AdditionalValues.ContainsKey("NoLabel") && (bool)prop.AdditionalValues["NoLabel"]);
+        bool showData = true;
+        int labelCols = showData ? 2 : 12;
+        int dataCols = showLabel ? 10 : 12;
+
+        string helpText = prop.AdditionalValues.ContainsKey("HelpText") ? (string)prop.AdditionalValues["HelpText"] : null;
+        //Display to user
+        <div id="FormGroup_@(Html.Id(prop.PropertyName))" class="form-group row">
+            @if (showLabel)
+            {
+                @Html.BootstrapLabel(prop.PropertyName, labelCols)
+            }
+            @if (showData)
+            {
+                <div class="@(prop.AdditionalValues.ContainsKey("OffsetRight") && (int)prop.AdditionalValues["OffsetRight"] > 0 ? "offset-md-" + (dataCols - (int)prop.AdditionalValues["OffsetRight"]).ToString() + " col-md-" + prop.AdditionalValues["OffsetRight"].ToString() : "col-md-"+ dataCols.ToString()) @(prop.AdditionalValues.ContainsKey("AlignRight") && (bool)prop.AdditionalValues["AlignRight"] ? "text-right" : "")">
+                    @if (readOnlyHiddenInput)
+                    {
+                        @Html.Editor(prop.PropertyName, "ReadOnly")
+                    }
+                    else
+                    {
+                        @if (ViewData.ContainsKey("DetailsMode") && ViewBag.DetailsMode)
+                        {
+                            <p class="form-control-plaintext">@Html.Display(prop.PropertyName)</p>
+                        }
+                        else
+                        {
+                            @Html.Editor(prop.PropertyName)
+                            @if (!string.IsNullOrEmpty(helpText))
+                            {
+                                @Html.HelpText(helpText)
+                            }
+                        }
+                    }
+                    @Html.ValidationMessage(prop.PropertyName)
+                </div>
+            }
+        </div>
+    }
+}
+
+@if (hasCollections)
+{
+@:</div>
+}
+
+@* Collections *@
+@foreach (var prop in collections)
+{
+    @:<div class="tab-pane fade" id="nav-@guids[prop]" role="tabpanel" aria-labelledby="nav-@guids[prop]-tab">
+
+
+        var readOnlyHiddenInput = false;
+
+        if (((bool)ViewBag.CreateMode && prop.AdditionalValues.ContainsKey("ReadOnlyHiddenInputCreate") && (bool)prop.AdditionalValues["ReadOnlyHiddenInputCreate"]) || ((bool)ViewBag.EditMode && prop.AdditionalValues.ContainsKey("ReadOnlyHiddenInputEdit") && (bool)prop.AdditionalValues["ReadOnlyHiddenInputEdit"]))
+        {
+            readOnlyHiddenInput = true;
+        }
+
+        var hiddenInput = false;
+
+        if (prop.TemplateHint == "HiddenInput" || readOnlyHiddenInput)
+        {
+            hiddenInput = true;
+            if (prop.ModelType.FullName == "System.Byte[]")
+            {
+
+                @Html.Editor(prop.PropertyName, "ByteArray")
+            }
+            else
+            {
+                @Html.Hidden(prop.PropertyName)
+            }
+        }
+
+        if (!hiddenInput || (prop.IsReadOnly) || readOnlyHiddenInput)
+        {
+            //Display to user
+            <div class="form-group row">
+                <div class="col-md-12">
+                    @if (readOnlyHiddenInput)
+                    {
+                        @Html.Editor(prop.PropertyName, "ReadOnly")
+                    }
+                    else
+                    {
+                        @Html.Editor(prop.PropertyName, new { Collection = !string.IsNullOrWhiteSpace(htmlFieldPrefix) ? htmlFieldPrefix + "." + prop.PropertyName : prop.PropertyName })
+                    }
+                    @Html.ValidationMessage(prop.PropertyName)
+                </div>
+            </div>
+        }
+
+    @:</div>
+}
+
+@if (hasCollections)
+{
+@:</div>
+}

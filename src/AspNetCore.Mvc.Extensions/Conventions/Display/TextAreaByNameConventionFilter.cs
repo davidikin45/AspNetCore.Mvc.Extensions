@@ -34,9 +34,10 @@ namespace AspNetCore.Mvc.Extensions.Conventions.Display
 
             if (!string.IsNullOrEmpty(propertyName) &&
                 string.IsNullOrEmpty(modelMetadata.DataTypeName) &&
+                string.IsNullOrEmpty(modelMetadata.TemplateHint) &&
                 TextAreaFieldNames.Any(propertyName.ToLower().Contains) && _limitConvention(context))
             {
-                modelMetadata.DataTypeName = "MultilineText";
+                modelMetadata.TemplateHint = "MultilineText";
                 modelMetadata.AdditionalValues["MultilineTextRows"] = 7;
                 modelMetadata.AdditionalValues["MultilineTextHTML"] = false;
             }

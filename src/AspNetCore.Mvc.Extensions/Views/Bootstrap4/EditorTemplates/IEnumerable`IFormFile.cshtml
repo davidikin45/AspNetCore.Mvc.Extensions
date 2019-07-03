@@ -1,0 +1,17 @@
+﻿@using Microsoft.AspNetCore.Http
+
+@model IEnumerable<IFormFile>
+@{
+    var htmlAttributes = HtmlHelper.AnonymousObjectToHtmlAttributes(ViewData["htmlAttributes"]);
+    htmlAttributes["type"] = "file";
+    htmlAttributes["multiple"] = "multiple";
+    htmlAttributes["class"] = "form-control-file";
+    if(Html.ViewData.ModelMetadata.AdditionalValues.ContainsKey("Accept"))
+    {
+        htmlAttributes["accept"] = Html.ViewData.ModelMetadata.AdditionalValues["Accept"];
+    }
+}
+@*<div class="custom-file">*@
+    @Html.TextBox(null, Html.ViewData, null, htmlAttributes)
+    @*<label class="custom-file-label">Choose files</label>
+</div>*@

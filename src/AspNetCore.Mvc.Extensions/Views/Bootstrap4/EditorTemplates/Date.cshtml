@@ -1,0 +1,3 @@
+﻿@model DateTime?
+@Html.TextBox("", ViewData.Model != null ? ViewData.Model.Value.ToString("yyyy-MM-dd") : "",
+        new { @class = "form-control", @placeholder = "dd/mm/yyyy", @type = "date" })

@@ -1,0 +1,10 @@
+﻿@model int?
+@{ 
+    var value = Html.ViewData.TemplateInfo.FormattedModelValue;
+    var displayValue = "";
+    if (value != null)
+    {
+        displayValue = value.ToString();
+    }
+}
+@Html.Raw(displayValue)

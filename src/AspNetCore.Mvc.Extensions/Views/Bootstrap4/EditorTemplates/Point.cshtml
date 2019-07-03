@@ -1,0 +1,10 @@
+﻿@model NetTopologySuite.Geometries.Point
+@using System.Globalization
+@if (Model != null)
+{
+    @Html.TextBox("", Model.Y.ToString("G", CultureInfo.InvariantCulture) + "," + Model.X.ToString("G", CultureInfo.InvariantCulture), new { @class = "editor-for-dbgeography form-control" })
+}
+else
+{
+    @Html.TextBox("", "", new { @class = "editor-for-dbgeography form-control" })
+}

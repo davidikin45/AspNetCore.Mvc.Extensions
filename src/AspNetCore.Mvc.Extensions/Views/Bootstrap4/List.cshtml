@@ -1,0 +1,35 @@
+﻿@using AspNetCore.Mvc.Extensions
+
+@if (ViewBag.DisableCreate == null ? true : !ViewBag.DisableCreate)
+{
+    <p>
+        @Html.IconLink("Create New", "Create", new { }, "fa fa-plus", new { @class = "btn btn-success btn-sm" })
+    </p>
+}
+@if (ViewBag.DisableSearch == null ? true : !ViewBag.DisableSearch)
+{
+    @using (Html.BeginForm(Html.Action(), Html.Controller(), FormMethod.Get, new { @class = "form-inline" }))
+    {
+        <p>
+            Find: @Html.TextBox("search", ViewBag.Search as string)
+            <input type="submit" value="Search" />
+        </p>
+    }
+}
+@{
+    Func<int, string> link = null;
+    if (ViewBag.Collection == null)
+    {
+        link = pageIndex => Url.Action("Index", new { page = pageIndex, pageSize = Model.PageSize, orderColumn = Model.OrderColumn, orderType = Model.OrderType, search = Model.Search });
+    }
+    else
+    {
+        link = pageIndex => Url.Action("Collection", new { id = ViewBag.Id, collection = ViewBag.Collection, page = pageIndex, pageSize = Model.PageSize, orderColumn = Model.OrderColumn, orderType = Model.OrderType, search = Model.Search });
+    }
+}
+@HtmlHelperPartialExtensions.Partial(Html, "_List", Model.Data, Html.ViewData)
+@if (ViewBag.Collection != null)
+{
+    @Html.ActionLink("Back to List", "Index")
+}
+@HtmlHelperPagerExtensions.BootstrapPager(Html, Model.Page, link, Model.TotalItems, Model.PageSize, 5)

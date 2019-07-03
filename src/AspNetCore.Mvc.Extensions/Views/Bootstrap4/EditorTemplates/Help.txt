@@ -1,0 +1,24 @@
+﻿http://stackoverflow.com/questions/11011444/asp-net-mvc-4-define-display-template-for-string-only
+
+There are 9 built-in display templates: "Boolean", "Decimal", "EmailAddress", "HiddenInput", "Html", "Object", "String", "Text", and "Url".
+
+The following template names are tried in order:
+
+TemplateHint from ModelMetadata
+DataTypeName from ModelMetadata
+The name of the type (see notes below)
+If the object is not complex: "String"
+If the object is complex and an interface: "Object"
+If the object is complex and not an interface: Recurse through the inheritance hiearchy for the type, trying every type name
+
+
+DataType is generally used to make it known that this is a very specific version of a property, such as price.
+
+The most common example of DataType is the [DataType(DataTypes.EmailAddress)] which usually is a string but we're saying that this is a very specific type of string.
+
+They're both helpful and the UIHint overrides the DataType. So if you have a certain DataType but you want to override the editor for that specific property you can use a UIHint.
+
+
+https://favicon.io/
+http://www.favicomatic.com/
+https://haacked.com/archive/2008/10/23/model-binding-to-a-list.aspx/

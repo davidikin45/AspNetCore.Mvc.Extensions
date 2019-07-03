@@ -1,0 +1,14 @@
+﻿@model decimal?
+@{ 
+    if((decimal)Html.ViewData.TemplateInfo.FormattedModelValue == Html.ViewData.Model)
+    {
+        Html.ViewData.TemplateInfo.FormattedModelValue = string.Format(System.Threading.Thread.CurrentThread.CurrentCulture, "{0:0.00}", Html.ViewData.Model);
+    }
+}
+<div class="input-group mb-3">
+    <div class="input-group-prepend">
+        <span class="input-group-text">@System.Globalization.CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol</span>
+    </div>
+    @Html.TextBox("", Html.ViewData.TemplateInfo.FormattedModelValue,
+         new { @class = "form-control", placeholder = ViewData.ModelMetadata.Placeholder })
+</div>

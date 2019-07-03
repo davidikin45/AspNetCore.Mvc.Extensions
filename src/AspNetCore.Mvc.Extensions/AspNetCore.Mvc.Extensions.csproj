@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -11,15 +11,139 @@
     <RepositoryUrl>https://github.com/davidikin45/AspNetCore.Mvc.Extensions</RepositoryUrl>
     <PackageTags>ASP.NET Core Extensions Mvc</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.11</Version>
-    <FileVersion>1.0.11.0</FileVersion>
-    <AssemblyVersion>1.0.11.0</AssemblyVersion>
+    <Version>1.0.12</Version>
+    <FileVersion>1.0.12.0</FileVersion>
+    <AssemblyVersion>1.0.12.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.DataAnnotations" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
+    <Content Remove="Views\Bootstrap4\Create.cshtml" />
+    <Content Remove="Views\Bootstrap4\Delete.cshtml" />
+    <Content Remove="Views\Bootstrap4\Details.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\Boolean.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\BooleanTextButton.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\BooleanTrueFalseButtons.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\BooleanYesNoButtons.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\Enum.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\FileInfo.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\IFormFile.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\ModelCheckboxOrRadio.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\ModelCheckboxOrRadioButtons.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\ModelDropdown.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\ModelOwnedCollection.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\Object.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\Point.cshtml" />
+    <Content Remove="Views\Bootstrap4\DisplayTemplates\Slider.cshtml" />
+    <Content Remove="Views\Bootstrap4\Edit.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\Boolean.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\BooleanTextButton.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\BooleanTrueFalseButtons.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\BooleanYesNoButtons.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\ByteArray.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\Currency.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\Date.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\DateTime.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\EmailAddress.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\Enum.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\FileInfo.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\Html.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\IEnumerable`IFormFile.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\IFormFile.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\Int32.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\ModelCheckboxOrRadio.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\ModelCheckboxOrRadioButtons.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\ModelDropdown.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\ModelOwnedCollection.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\ModelOwnedCollectionItem.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\MultilineText.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\Object.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\PhoneNumber.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\Point.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\ReadOnly.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\Slider.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\String.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\SubmitButton.cshtml" />
+    <Content Remove="Views\Bootstrap4\EditorTemplates\Url.cshtml" />
+    <Content Remove="Views\Bootstrap4\List.cshtml" />
+    <Content Remove="Views\Bootstrap4\_Create.cshtml" />
+    <Content Remove="Views\Bootstrap4\_CreateCollectionItem.cshtml" />
+    <Content Remove="Views\Bootstrap4\_Delete.cshtml" />
+    <Content Remove="Views\Bootstrap4\_Details.cshtml" />
+    <Content Remove="Views\Bootstrap4\_Edit.cshtml" />
+    <Content Remove="Views\Bootstrap4\_List.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Views\Bootstrap4\EditorTemplates\Help.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Views\Bootstrap4\Create.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\Delete.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\Details.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\Boolean.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\BooleanTextButton.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\BooleanTrueFalseButtons.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\BooleanYesNoButtons.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\Enum.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\FileInfo.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\IFormFile.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\ModelCheckboxOrRadio.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\ModelCheckboxOrRadioButtons.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\ModelDropdown.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\ModelOwnedCollection.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\Object.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\Point.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\DisplayTemplates\Slider.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\Edit.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\Boolean.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\BooleanTextButton.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\BooleanTrueFalseButtons.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\BooleanYesNoButtons.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\ByteArray.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\Currency.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\Date.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\DateTime.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\EmailAddress.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\Enum.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\FileInfo.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\Help.txt" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\Html.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\IEnumerable`IFormFile.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\IFormFile.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\Int32.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\ModelCheckboxOrRadio.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\ModelCheckboxOrRadioButtons.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\ModelDropdown.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\ModelOwnedCollection.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\ModelOwnedCollectionItem.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\MultilineText.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\Object.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\PhoneNumber.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\Point.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\ReadOnly.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\Slider.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\String.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\SubmitButton.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\EditorTemplates\Url.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\List.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\_Create.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\_CreateCollectionItem.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\_Delete.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\_Details.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\_Edit.cshtml" />
+    <EmbeddedResource Include="Views\Bootstrap4\_List.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.Mvc.SelectList" Version="1.0.6" />
+    <PackageReference Include="HtmlTags.AspNetCore" Version="7.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.4" />
+    <PackageReference Include="NetTopologySuite" Version="1.15.2" />
+    <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
   </ItemGroup>
 
 </Project>

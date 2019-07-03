@@ -1,0 +1,10 @@
+﻿@model Boolean?
+@using System.Globalization
+@{
+    string value = "";
+    if (Html.ViewData.Model != null)
+    {
+        value = Convert.ToBoolean(Html.ViewData.Model, CultureInfo.InvariantCulture).ToString();
+    }
+}
+@Html.Raw(value)

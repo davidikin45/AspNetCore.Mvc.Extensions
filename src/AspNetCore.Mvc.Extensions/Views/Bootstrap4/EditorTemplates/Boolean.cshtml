@@ -1,0 +1,11 @@
+﻿@using AspNetCore.Mvc.Extensions
+@model Boolean?
+@using System.Globalization
+@{
+    bool value = false;
+    if (Html.ViewData.Model != null)
+    {
+        value = Convert.ToBoolean(Html.ViewData.Model, CultureInfo.InvariantCulture);
+    }
+}
+@Html.BooleanCheckbox("", "", value, new { @class = "form-check" }, new { @class = "form-check-input" }, new { @class = "form-check-label" })

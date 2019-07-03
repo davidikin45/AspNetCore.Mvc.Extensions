@@ -1,0 +1,17 @@
+﻿@using AspNetCore.Mvc.Extensions
+@model dynamic
+@{
+    var htmlHelper = HtmlHelperExtensions.For(Html, Model);
+    var templateName = (string)ViewBag.Collection + "[" + (string)ViewBag.CollectionIndex + "]";
+
+}
+
+<div>
+    <input type="hidden" name="@((string)ViewBag.Collection).Index" value="@((string)ViewBag.CollectionIndex)" />
+    @(((IHtmlHelper)htmlHelper).EditorForModel("Object", templateName, new { EditMode = (bool)ViewBag.EditMode, CreateMode = (bool)ViewBag.CreateMode }))
+    <div class="form-group row">
+        <div class="offset-md-2 col-md-10">
+            <button type="button" class="btn btn-danger btn-sm" onclick="if (confirm('Are you sure you want to delete this?')) { this.parentNode.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode.parentNode); }"><span class="fa fa-trash" aria-hidden="true"></span> Delete</button>
+        </div>
+    </div>
+</div>
