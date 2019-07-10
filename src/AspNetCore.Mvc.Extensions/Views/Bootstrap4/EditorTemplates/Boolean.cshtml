@@ -1,4 +1,4 @@
-﻿@using AspNetCore.Mvc.Extensions
+﻿@using AspNetCore.Mvc.SelectList
 @model Boolean?
 @using System.Globalization
 @{
@@ -8,4 +8,4 @@
         value = Convert.ToBoolean(Html.ViewData.Model, CultureInfo.InvariantCulture);
     }
 }
-@Html.BooleanCheckbox("", "", value, new { @class = "form-check" }, new { @class = "form-check-input" }, new { @class = "form-check-label" })
+@Html.CheckboxBoolean("", "", value, new { @class = "form-check" }, new { @class = "form-check-input" }, new { @class = "form-check-label" })

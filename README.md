@@ -194,6 +194,15 @@ public class PersonConfig : ModelMetadataConfiguration<Person>
 }
 ```
 
+## Delimited Query Strings
+```
+[DelimitedQueryString(',', '|')]
+public async Task<ActionResult<List<Model>>> BulkGetByIds(IEnumerable<string> ids)
+{
+
+}
+```
+
 ## Authors
 
 * **Dave Ikin** - [davidikin45](https://github.com/davidikin45)

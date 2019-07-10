@@ -11,9 +11,9 @@
     <RepositoryUrl>https://github.com/davidikin45/AspNetCore.Mvc.Extensions</RepositoryUrl>
     <PackageTags>ASP.NET Core Extensions Mvc</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.16</Version>
-    <FileVersion>1.0.16.0</FileVersion>
-    <AssemblyVersion>1.0.16.0</AssemblyVersion>
+    <Version>1.0.18</Version>
+    <FileVersion>1.0.18.0</FileVersion>
+    <AssemblyVersion>1.0.18.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -136,6 +136,7 @@
 
   <ItemGroup>
     <Folder Include="FileUploader\" />
+    <Folder Include="ValueProviders\" />
   </ItemGroup>
 
 </Project>
