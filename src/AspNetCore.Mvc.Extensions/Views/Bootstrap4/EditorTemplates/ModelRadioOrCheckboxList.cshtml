@@ -1,0 +1,24 @@
+﻿@using AspNetCore.Mvc.SelectList
+@model dynamic
+@{
+    bool inline = true;
+    if (ViewData.ModelMetadata.AdditionalValues.ContainsKey("ModelCheckboxOrRadioInline"))
+    {
+        inline = ((bool)ViewData.ModelMetadata.AdditionalValues["ModelCheckboxOrRadioInline"]);
+    }
+
+    var checkbox = false;
+    if (ViewData.ModelMetadata.AdditionalValues.ContainsKey("Checkbox"))
+    {
+        checkbox = ((bool)ViewData.ModelMetadata.AdditionalValues["Checkbox"]);
+    }
+}
+
+@if (checkbox)
+{
+    @(Html.CheckboxList("", inline, null, new { @class = "form-control" }))
+}
+else
+{
+    @(Html.RadioOrCheckboxList("", inline, null, new { @class = "form-control" }))
+}

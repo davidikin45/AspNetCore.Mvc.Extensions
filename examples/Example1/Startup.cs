@@ -28,22 +28,20 @@ namespace Example1
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-
-            services.AddMvcDisplayConventions(
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+            .AddMvcDisplayConventions(
             new AppendAsterixToRequiredFieldLabels(),
             new HtmlByNameConventionFilter(),
             new LabelTextConventionFilter(),
             new TextAreaByNameConventionFilter(),
             new TextboxPlaceholderConventionFilter(),
-            new DisableConvertEmptyStringToNull());
+            new DisableConvertEmptyStringToNull())
+            .AddMvcValidationConventions()
+            .AddMvcDisplayAttributes()
+            .AddMvcInheritanceValidationAttributeAdapterProvider()
+            .AddMvcViewRenderer();
 
-            services.AddMvcValidationConventions();
-            services.AddMvcDisplayAttributes();
-            services.AddInheritanceValidationAttributeAdapterProvider();
             services.AddFluentMetadata();
-            services.AddViewRenderer();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace AspNetCore.Mvc.Extensions
 {
-    public static class ServiceCollectionExtensions
+    public static class ConfigurationExtensions
     {
         public static IServiceCollection AddAppendAsterixToRequiredFieldLabels(this IServiceCollection services)
         {
@@ -31,8 +31,14 @@ namespace AspNetCore.Mvc.Extensions
             return services;
         }
 
-        public static IServiceCollection AddMvcDisplayConventions(this IServiceCollection services, params IDisplayConventionFilter[] displayConventions)
+
+        /// <summary>
+        /// Adds MVC display conventions services to the application.
+        /// </summary>
+        public static IMvcBuilder AddMvcDisplayConventions(this IMvcBuilder builder, params IDisplayConventionFilter[] displayConventions)
         {
+            var services = builder.Services;
+
             services.Configure<MvcOptions>(options =>
             {
                 options.ModelMetadataDetailsProviders.Add(new DisplayConventionsMetadataProvider(displayConventions));
@@ -51,20 +57,34 @@ namespace AspNetCore.Mvc.Extensions
                 }
             }
 
-            return services;
+            return builder;
         }
 
-        public static IServiceCollection AddMvcValidationConventions(this IServiceCollection services, params IValidationConventionFilter[] validationConventions)
+        /// <summary>
+        /// Adds MVC validation conventions services to the application.
+        /// </summary>
+        public static IMvcBuilder AddMvcValidationConventions(this IMvcBuilder builder, params IValidationConventionFilter[] validationConventions)
         {
-            return services.Configure<MvcOptions>(options =>
+            var services = builder.Services;
+
+            services.Configure<MvcOptions>(options =>
             {
                 options.ModelMetadataDetailsProviders.Add(new ValidationConventionsMetadataProvider(validationConventions));
             });
+
+            return builder;
         }
 
-        public static IServiceCollection AddMvcDisplayAttributes(this IServiceCollection services)
+        /// <summary>
+        /// Adds MVC display attribute services to the application.
+        /// </summary>
+        public static IMvcBuilder AddMvcDisplayAttributes(this IMvcBuilder builder)
         {
-            return services.AddSingleton<IConfigureOptions<MvcOptions>, AttributeMetadataProviderSetup>();
+            var services = builder.Services;
+
+             services.AddSingleton<IConfigureOptions<MvcOptions>, AttributeMetadataProviderSetup>();
+
+            return builder;
         }
 
         public class AttributeMetadataProviderSetup : IConfigureOptions<MvcOptions>
@@ -82,14 +102,22 @@ namespace AspNetCore.Mvc.Extensions
             }
         }
 
-        public static IServiceCollection AddInheritanceValidationAttributeAdapterProvider(this IServiceCollection services)
+        /// <summary>
+        /// Adds MVC Inheritance Validation services to the application.
+        /// </summary>
+        public static IMvcBuilder AddMvcInheritanceValidationAttributeAdapterProvider(this IMvcBuilder builder)
         {
+            var services = builder.Services;
+
             services.RemoveAll<IValidationAttributeAdapterProvider>();
             services.AddSingleton<IValidationAttributeAdapterProvider, InheritanceValidationAttributeAdapterProvider>();
 
-            return services;
+            return builder;
         }
 
+        /// <summary>
+        /// Adds the fluent metadata services.
+        /// </summary>
         public static IServiceCollection AddFluentMetadata(this IServiceCollection services)
         {
             services.AddTransient(sp => sp.GetService<IOptions<AssemblyProviderOptions>>().Value);
@@ -108,10 +136,17 @@ namespace AspNetCore.Mvc.Extensions
             return services;
         }
 
-        public static IServiceCollection AddViewRenderer(this IServiceCollection services)
+        /// <summary>
+        /// Adds MVC IViewRenderService service to the application.
+        /// </summary>
+        public static IMvcBuilder AddMvcViewRenderer(this IMvcBuilder builder)
         {
+            var services = builder.Services;
+
             services.AddHttpContextAccessor();
-            return services.AddSingleton<IViewRenderService, ViewRenderService>();
+            services.AddSingleton<IViewRenderService, ViewRenderService>();
+
+            return builder;
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿@using AspNetCore.Mvc.Extensions
+﻿@using AspNetCore.Mvc.SelectList
 @model dynamic
 @{
     string displayName = String.Empty;
-    foreach (SelectListItem item in Html.SelectList("", true))
+    foreach (SelectListItem item in Html.SelectList("", null, true))
     {
         if (item.Selected)
         {

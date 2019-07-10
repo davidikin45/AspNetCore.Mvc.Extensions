@@ -2,10 +2,10 @@
 
 namespace AspNetCore.Mvc.Extensions.Attributes.Display
 {
-    public class CheckboxOrRadioTrueFalseAttribute : CheckboxOrRadioOptionsAttribute
+    public class CheckboxOrRadioTrueFalseAttribute : RadioOrCheckboxOptionsAttribute
     {
         public CheckboxOrRadioTrueFalseAttribute()
-         : base(new List<string>() { "True", "False" })
+         : base(new List<string>() { "True", "False" }, new List<string>() { "true", "false" })
         {
 
         }

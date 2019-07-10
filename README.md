@@ -17,19 +17,18 @@ PM> Install-Package AspNetCore.Mvc.Extensions
 ## Usage
 
 ```
-services.AddMvcDisplayConventions(
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.AddMvcDisplayConventions(
 new AppendAsterixToRequiredFieldLabels(),
-new HtmlByNameConventionFilter(), 
-new LabelTextConventionFilter(), 
-new TextAreaByNameConventionFilter(), 
+new HtmlByNameConventionFilter(),
+new LabelTextConventionFilter(),
+new TextAreaByNameConventionFilter(),
 new TextboxPlaceholderConventionFilter(),
-new DisableConvertEmptyStringToNull());
-
-services.AddMvcValidationConventions();
-
-services.AddMvcDisplayAttributes();
-
-services.AddInheritanceValidationAttributeAdapterProvider();
+new DisableConvertEmptyStringToNull())
+.AddMvcValidationConventions()
+.AddMvcDisplayAttributes()
+.AddMvcInheritanceValidationAttributeAdapterProvider()
+.AddMvcViewRenderer();
 
 services.AddFluentMetadata();
 ```
@@ -37,11 +36,12 @@ services.AddFluentMetadata();
 ## Display Conventions
 * IDisplayConventionFilter classes transform the display metadata by convention.
 ```
-services.AddMvcDisplayConventions(
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.AddMvcDisplayConventions(
 new AppendAsterixToRequiredFieldLabels(),
-new HtmlByNameConventionFilter(), 
-new LabelTextConventionFilter(), 
-new TextAreaByNameConventionFilter(), 
+new HtmlByNameConventionFilter(),
+new LabelTextConventionFilter(),
+new TextAreaByNameConventionFilter(),
 new TextboxPlaceholderConventionFilter(),
 new DisableConvertEmptyStringToNull());
 ```
@@ -59,13 +59,15 @@ new DisableConvertEmptyStringToNull());
 ## Validation Conventions
 * IValidationConventionFilter classes transform the validation metadata by convention.
 ```
-services.AddMvcValidationConventions();
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.AddMvcValidationConventions();
 ```
 
 ## Display Attributes
 * IDisplayMetadataAttribute classes are a good way to define new editor/display types or pass additional information for existing via AdditionalValues.
 ```
-services.AddMvcDisplayAttributes();
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.AddMvcDisplayAttributes();
 ```
 
 * SliderAttribute
@@ -133,7 +135,8 @@ public class ViewModel
 * By default the [ValidationAttributeAdapterProdiver](https://github.com/aspnet/AspNetCore/blob/c565386a3ed135560bc2e9017aa54a950b4e35dd/src/Mvc/Mvc.DataAnnotations/src/ValidationAttributeAdapterProvider.cs) doesn't perform client side validation if you inherit from an existing validation attribute.
 * The below service collection extensions overrides the existing IValidationAttributeAdapterProvider enabling client side validation for inherited types. 
 ```
-services.AddInheritanceValidationAttributeAdapterProvider();
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.AddMvcInheritanceValidationAttributeAdapterProvider();
 ```
 
 | Attribute                  |
@@ -165,6 +168,14 @@ public class NumberValidatorAttribute : RangeAttribute
 }
 ```
 
+## Render Razor Views as Html
+* Gives the ability to render Views, Partials, Display for Model or Editor for Model. 
+* Useful for using Razor to generate PDFs.
+```
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.AddMvcViewRenderer();
+```
+
 ## Fluent Metadata
 * Allows modelmetadata to be configured via fluent syntax rather than attributes.
 ```
@@ -181,13 +192,6 @@ public class PersonConfig : ModelMetadataConfiguration<Person>
 		Configure<string>("Name").Required();
 	}
 }
-```
-
-## Render Razor Views as Html
-* Gives the ability to render Views, Partials, Display for Model or Editor for Model. 
-* Useful for using Razor to generate PDFs.
-```
-services.AddViewRenderer();
 ```
 
 ## Authors

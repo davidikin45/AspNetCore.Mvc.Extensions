@@ -6,16 +6,18 @@ using System.Collections.Generic;
 namespace AspNetCore.Mvc.Extensions.Attributes.Display
 {
     //Aggregation relationshiships(child can exist independently of the parent, reference relationship)
-    public class CheckboxOrRadioOptionsAttribute : SelectListOptionsAttribute
+    public class RadioOrCheckboxOptionsAttribute : SelectListOptionsAttribute
     {
-        public bool Inline { get; set; }
+        public bool Checkbox { get; set; } = false;
+        public bool Inline { get; set; } = true;
+        public bool Group { get; set; } = false;
 
-        public CheckboxOrRadioOptionsAttribute(params object[] text)
+        public RadioOrCheckboxOptionsAttribute(params object[] text)
             :base(text)
         {
 
         }
-        public CheckboxOrRadioOptionsAttribute(object[] text, object[] values)
+        public RadioOrCheckboxOptionsAttribute(object[] text, object[] values)
            : base(text, values)
         {
 
@@ -27,8 +29,10 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
             var modelMetadata = context.DisplayMetadata;
             var propertyName = context.Key.Name;
 
-            modelMetadata.TemplateHint = "ModelCheckboxOrRadio";
-            modelMetadata.AdditionalValues["ModelCheckboxOrRadioInline"] = Inline;
+            modelMetadata.TemplateHint = "ModelRadioOrCheckboxList";
+            modelMetadata.AdditionalValues["ModelRadioOrCheckboxInline"] = Inline;
+            modelMetadata.AdditionalValues["ModelRadioOrCheckboxGroup"] = Group;
+            modelMetadata.AdditionalValues["Checkbox"] = Checkbox;
         }
     }
 }

@@ -5,23 +5,25 @@ using System;
 namespace AspNetCore.Mvc.Extensions.Attributes.Display
 {
     //Aggregation relationshiships(child can exist independently of the parent, reference relationship)
-    public class CheckboxOrRadioDbAttribute : SelectListDbAttribute, IDisplayMetadataAttribute
+    public class RadioOrCheckboxDbAttribute : SelectListDbAttribute, IDisplayMetadataAttribute
     {
-        public bool Inline { get; set; }
+        public bool Checkbox { get; set; } = false;
+        public bool Inline { get; set; } = true;
+        public bool Group { get; set; } = false;
 
-        public CheckboxOrRadioDbAttribute(Type dbContextType, Type modelType)
+        public RadioOrCheckboxDbAttribute(Type dbContextType, Type modelType)
            : base(dbContextType, modelType)
         {
 
         }
 
-        public CheckboxOrRadioDbAttribute(Type dbContextType, Type modelType, string dataTextFieldExpression)
+        public RadioOrCheckboxDbAttribute(Type dbContextType, Type modelType, string dataTextFieldExpression)
             : base(dbContextType, modelType, dataTextFieldExpression)
         {
 
         }
 
-        public CheckboxOrRadioDbAttribute(Type dbContextType, Type modelType, string dataTextFieldExpression, string dataValueField)
+        public RadioOrCheckboxDbAttribute(Type dbContextType, Type modelType, string dataTextFieldExpression, string dataValueField)
             : base(dbContextType, modelType, dataTextFieldExpression)
         {
             DataValueField = dataValueField;
@@ -34,8 +36,10 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
             var modelMetadata = context.DisplayMetadata;
             var propertyName = context.Key.Name;
 
-            modelMetadata.TemplateHint = "ModelCheckboxOrRadio";
-            modelMetadata.AdditionalValues["ModelCheckboxOrRadioInline"] = Inline;
+            modelMetadata.TemplateHint = "ModelRadioOrCheckboxList";
+            modelMetadata.AdditionalValues["ModelRadioOrCheckboxInline"] = Inline;
+            modelMetadata.AdditionalValues["ModelRadioOrCheckboxGroup"] = Group;
+            modelMetadata.AdditionalValues["Checkbox"] = Checkbox;
         }
     }
 }

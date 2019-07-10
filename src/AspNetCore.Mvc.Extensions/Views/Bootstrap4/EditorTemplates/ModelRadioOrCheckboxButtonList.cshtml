@@ -1,0 +1,25 @@
+﻿@using AspNetCore.Mvc.SelectList
+@model dynamic
+
+@{
+    bool group = false;
+    if (ViewData.ModelMetadata.AdditionalValues.ContainsKey("ModelCheckboxOrRadioGroup"))
+    {
+        group = ((bool)ViewData.ModelMetadata.AdditionalValues["ModelCheckboxOrRadioGroup"]);
+    }
+
+    var checkbox = false;
+    if (ViewData.ModelMetadata.AdditionalValues.ContainsKey("Checkbox"))
+    {
+        checkbox = ((bool)ViewData.ModelMetadata.AdditionalValues["Checkbox"]);
+    }
+}
+
+@if (checkbox)
+{
+    @(Html.CheckboxButtonList("", group))
+}
+else
+{
+    @(Html.RadioOrCheckboxButtonList("", group))
+}
