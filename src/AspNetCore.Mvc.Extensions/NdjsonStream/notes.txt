@@ -1,0 +1,37 @@
+﻿http://deanhume.com/experimenting-with-the-streams-api/
+https://www.tpeczek.com/2019/04/fetch-api-streams-api-ndjson-and-aspnet.html?fbclid=IwAR1C3yeg-xczWA519EPdqvljU4JacPuN_K9Xrhyn6taQn0HEk9QVOYc7raM
+https://github.com/tpeczek/Demo.AspNetCore.Mvc.FetchStreaming
+
+[HttpGet("stream")]
+public NdjsonStreamResult GetStream()
+{
+    NdjsonStreamResult result = new NdjsonStreamResult();
+
+    _ = StreamAsync(result);
+
+    return result;
+}
+
+private async Task StreamAsync(NdjsonStreamResult result)
+{
+    Random rng = new Random();
+
+    for (int index = 1; index <= 10; index++)
+    {
+        await Task.Delay(100);
+
+        await result.WriteAsync(CreateWeatherForecast(index, rng));
+    };
+
+    result.Complete();
+}
+
+private static WeatherForecast CreateWeatherForecast(int index, Random rng)
+{
+    return new WeatherForecast
+    {
+        DateFormatted = DateTime.Now.AddDays(index).ToString("d"),
+        TemperatureC = rng.Next(-20, 55),
+        Summary = SUMMARIES[rng.Next(SUMMARIES.Length)]
+    };
+}

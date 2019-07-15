@@ -1,10 +1,15 @@
-﻿using AspNetCore.Mvc.Extensions.Conventions.Display;
+﻿using AspNetCore.Mvc.Extensions.AmbientRouteData;
+using AspNetCore.Mvc.Extensions.Conventions.Display;
 using AspNetCore.Mvc.Extensions.FluentMetadata;
+using AspNetCore.Mvc.Extensions.Internal;
+using AspNetCore.Mvc.Extensions.NdjsonStream;
 using AspNetCore.Mvc.Extensions.Providers;
 using AspNetCore.Mvc.Extensions.Razor;
 using AspNetCore.Mvc.Extensions.Reflection;
+using AspNetCore.Mvc.Extensions.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -16,19 +21,25 @@ namespace AspNetCore.Mvc.Extensions
 {
     public static class ConfigurationExtensions
     {
-        public static IServiceCollection AddAppendAsterixToRequiredFieldLabels(this IServiceCollection services)
+        public static IMvcBuilder AddAppendAsterixToRequiredFieldLabels(this IMvcBuilder builder)
         {
+            var services = builder.Services;
             //Appends '*' to required fields
             services.AddTransient(sp => sp.GetService<IOptions<ConventionsHtmlGeneratorOptions>>().Value);
-            return services.AddSingleton<IHtmlGenerator, ConventionsHtmlGenerator>();
+            services.AddSingleton<IHtmlGenerator, ConventionsHtmlGenerator>();
+
+            return builder;
         }
 
-        public static IServiceCollection AddAppendAsterixToRequiredFieldLabels(this IServiceCollection services, Action<ConventionsHtmlGeneratorOptions> setupAction)
+        public static IMvcBuilder AddAppendAsterixToRequiredFieldLabels(this IMvcBuilder builder, Action<ConventionsHtmlGeneratorOptions> setupAction)
         {
+            var services = builder.Services;
+
             //Appends '*' to required fields
-            services.AddAppendAsterixToRequiredFieldLabels();
+            builder.AddAppendAsterixToRequiredFieldLabels();
             services.Configure(setupAction);
-            return services;
+
+            return builder;
         }
 
 
@@ -49,11 +60,11 @@ namespace AspNetCore.Mvc.Extensions
                 var addAsterix = displayConventions.OfType<AppendAsterixToRequiredFieldLabels>().FirstOrDefault().LimitConvention;
                 if (addAsterix != null)
                 {
-                    services.AddAppendAsterixToRequiredFieldLabels(options => options.AddAstertix = addAsterix);
+                    builder.AddAppendAsterixToRequiredFieldLabels(options => options.AddAstertix = addAsterix);
                 }
                 else
                 {
-                    services.AddAppendAsterixToRequiredFieldLabels();
+                    builder.AddAppendAsterixToRequiredFieldLabels();
                 }
             }
 
@@ -145,6 +156,76 @@ namespace AspNetCore.Mvc.Extensions
 
             services.AddHttpContextAccessor();
             services.AddSingleton<IViewRenderService, ViewRenderService>();
+
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds the system.text.json ndjson services to the application.
+        /// </summary>
+        public static IMvcBuilder AddNdjsonStreamResult(this IMvcBuilder builder)
+        {
+            builder.Services.TryAddSingleton<INdjsonWriterFactory, NdjsonWriterFactory>();
+
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds the newtonsoft ndjson services to the application.
+        /// </summary>
+        public static IMvcBuilder AddNewtonsoftNdjsonStreamResult(this IMvcBuilder builder)
+        {
+            builder.Services.TryAddSingleton<INdjsonWriterFactory, NewtonsoftNdjsonWriterFactory>();
+
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds MVC feature services to the application.
+        /// </summary>
+        public static IMvcBuilder AddMvcFeatureService(this IMvcBuilder builder)
+        {
+            var services = builder.Services;
+
+            services.AddSingleton<FeatureService>();
+
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds bundleconfig service to the application.
+        /// </summary>
+        public static IServiceCollection AddBundleConfigService(this IServiceCollection services)
+        {
+            return services.AddSingleton<BundleConfigService>();
+        }
+
+        /// <summary>
+        /// Adds MVC json navigation service to the application.
+        /// </summary>
+        public static IMvcBuilder AddMvcJsonNavigationService(this IMvcBuilder builder, Action<JsonNavigationServiceOptions> setupAction = null)
+        {
+            var services = builder.Services;
+
+            services.AddSingleton<JsonNavigationService>();
+
+            if(setupAction != null)
+                services.Configure(setupAction);
+
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds ambient route data URL helper factory service to the application.
+        /// </summary>
+        public static IMvcBuilder AddAmbientRouteDataUrlHelperFactory(this IMvcBuilder builder, Action<AmbientRouteDataUrlHelperFactoryOptions> setupAction = null)
+        {
+            var services = builder.Services;
+
+            if (setupAction != null)
+                services.Configure(setupAction);
+
+            services.Decorate<IUrlHelperFactory, AmbientRouteDataUrlHelperFactory>();
 
             return builder;
         }
