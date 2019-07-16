@@ -13,6 +13,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System.Threading.Tasks;
 using AspNetCore.Mvc.Extensions.AmbientRouteData;
+using AspNetCore.Mvc.Extensions.FeatureFolders;
+using System;
 
 namespace LocalizationAspNetCore3
 {
@@ -34,6 +36,14 @@ namespace LocalizationAspNetCore3
                 options.CheckConsentNeeded = context => true;
             });
 
+            Action<FeatureFolderOptions> featureFoldersSetup = (options) =>
+            {
+                options.SharedViewFolders.Add("Bundles");
+                options.SharedViewFolders.Add("Navigation");
+                options.SharedViewFolders.Add("Footer");
+                options.SharedViewFolders.Add("CookieConsent");
+            };
+
             services.AddControllersWithViews(options =>
             {
                 options.EnableEndpointRouting = true;
@@ -46,6 +56,8 @@ namespace LocalizationAspNetCore3
                 //Middleware Pipeline - Wraps MVC
                 options.Filters.Add(new MiddlewareFilterAttribute(typeof(LocalizationPipeline)));
             }).SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+             .AddFeatureFolders(featureFoldersSetup)
+             .AddAreaFeatureFolders(featureFoldersSetup)
              .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
              .AddDataAnnotationsLocalization()
              //If EnableEndpointRouting is enabled (enabled by default from 2.2) ambient route data is required. 
@@ -104,14 +116,13 @@ namespace LocalizationAspNetCore3
 
                 if (AlwaysIncludeCultureInUrl)
                 {
-                    endpoints.Map("{culture:cultureCheck}/{*path}", ctx =>
+                    endpoints.MapMiddlewareGet("{culture:cultureCheck}/{*path}", appBuilder =>
                     {
-                        ctx.Response.StatusCode = StatusCodes.Status404NotFound;
-                        return Task.CompletedTask;
+                       
                     });
 
                     //redirect culture-less routes
-                    endpoints.Map("{*path}", (RequestDelegate)(ctx =>
+                    endpoints.MapGet("{*path}", ctx =>
                     {
                         var defaultCulture = localizationOptions.Value.DefaultRequestCulture.Culture.Name;
 
@@ -123,7 +134,7 @@ namespace LocalizationAspNetCore3
                         var culturedPath = $"{ctx.Request.PathBase}/{actualCulture}/{path}{ctx.Request.QueryString.ToString()}";
                         ctx.Response.Redirect(culturedPath);
                         return Task.CompletedTask;
-                    }));
+                    });
                 }
             });
         }

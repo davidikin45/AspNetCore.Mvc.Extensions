@@ -1,6 +1,7 @@
 ﻿using AspNetCore.Base.Localization;
 using AspNetCore.Mvc.Extensions;
 using AspNetCore.Mvc.Extensions.AmbientRouteData;
+using AspNetCore.Mvc.Extensions.FeatureFolders;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using System;
 
 namespace Localization
 {
@@ -36,6 +38,14 @@ namespace Localization
 
             services.AddLocalization(options => options.ResourcesPath = "Resources");
 
+            Action<FeatureFolderOptions> featureFoldersSetup = (options) =>
+            {
+                options.SharedViewFolders.Add("Bundles");
+                options.SharedViewFolders.Add("Navigation");
+                options.SharedViewFolders.Add("Footer");
+                options.SharedViewFolders.Add("CookieConsent");
+            };
+
             services.AddMvc(options =>
             {
                 //https://docs.microsoft.com/en-us/aspnet/core/fundamentals/routing?view=aspnetcore-2.2
@@ -54,6 +64,8 @@ namespace Localization
                 options.Filters.Add(new MiddlewareFilterAttribute(typeof(LocalizationPipeline)));
 
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+             .AddFeatureFolders(featureFoldersSetup)
+             .AddAreaFeatureFolders(featureFoldersSetup)
              .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
              .AddDataAnnotationsLocalization()
              //If EnableEndpointRouting is enabled (enabled by default from 2.2) ambient route data is required. 

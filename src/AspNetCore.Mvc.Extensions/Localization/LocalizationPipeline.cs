@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace AspNetCore.Base.Localization
+namespace AspNetCore.Mvc.Extensions.Localization
 {
     //Middleware can only use data that has been added by preceding components in the pipeline, but we need access to routing information(the RouteData segments). 
     //Routing doesn't happen till the MVC middleware runs, which we need to run to extract the RouteData segments from the url. 

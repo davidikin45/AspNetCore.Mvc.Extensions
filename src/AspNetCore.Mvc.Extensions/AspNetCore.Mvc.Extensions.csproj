@@ -11,9 +11,9 @@
     <RepositoryUrl>https://github.com/davidikin45/AspNetCore.Mvc.Extensions</RepositoryUrl>
     <PackageTags>ASP.NET Core Extensions Mvc</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.20</Version>
-    <FileVersion>1.0.20.0</FileVersion>
-    <AssemblyVersion>1.0.20.0</AssemblyVersion>
+    <Version>1.0.21</Version>
+    <FileVersion>1.0.21.0</FileVersion>
+    <AssemblyVersion>1.0.21.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -125,22 +125,28 @@
 
   <ItemGroup>
     <PackageReference Include="AspNetCore.Mvc.SelectList" Version="1.1.0" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.4" />
+    <PackageReference Include="Hangfire.Initialization" Version="1.0.28" />
     <PackageReference Include="HtmlTags.AspNetCore" Version="7.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Localization.Routing" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="3.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.6" />
     <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="2.2.0" />
+    <PackageReference Include="NCrontab" Version="3.3.1" />
     <PackageReference Include="NetTopologySuite" Version="1.15.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.0.0-rc2" />
     <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
     <PackageReference Include="System.Text.Json" Version="4.6.0-preview6.19303.8" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="FileUploader\" />
+    <Folder Include="Security\" />
     <Folder Include="Routing\" />
     <Folder Include="ValueProviders\" />
   </ItemGroup>

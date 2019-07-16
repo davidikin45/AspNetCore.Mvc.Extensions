@@ -176,6 +176,11 @@ services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
 .AddMvcViewRenderer();
 ```
 
+## Type Finder
+```
+services.AddTypeFinder();
+```
+
 ## Fluent Metadata
 * Allows modelmetadata to be configured via fluent syntax rather than attributes.
 ```
@@ -320,6 +325,93 @@ app.UseEndpoints(endpoints =>
 {
 	endpoints.MapAllRoutes("/all-routes");
 }
+```
+
+## Model Binders + Input Formatters
+```
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.AddMvcPointModelBinder()
+.AddMvcRawStringRequestBodyInputFormatter()
+.AddMvcRawBytesRequestBodyInputFormatter();
+
+OR
+
+services.AddMvc(options =>{
+    options.InputFormatters.Insert(0, new RawStringRequestBodyInputFormatter());
+    options.InputFormatters.Insert(0, new RawBytesRequestBodyInputFormatter());
+});
+```
+
+## Feature Folders
+* Business Component (Functional) organization over Categorical organization. It's very easy to stick with the standard structure but organizing into business components makes it alot easier to maintain and gives ability to easily copy/paste an entire piece of functionality.
+* Seach for Non Area views in the following locations /{RootFeatureFolder}/{Controller}/{View}.cshtml, /{RootFeatureFolder}/{Controller}/Views/{View}.cshtml and /{RootFeatureFolder}/Shared/Views/{View}.cshtml
+* Seach for Area views in the following locations /Areas/{Area}/{RootFeatureFolder}/{Controller}/{View}.cshtml, /Areas/{Area}/{RootFeatureFolder}/{Controller}/Views/{View}.cshtml, /Areas/{Area}/{RootFeatureFolder}/Shared/Views/{View}.cshtml, /Areas/{Area}/Shared/Views/{View}.cshtml and /{RootFeatureFolder}/Shared/Views/{View}.cshtml
+
+```
+Action<FeatureFolderOptions> featureFoldersSetup = (options) =>
+{
+    options.SharedViewFolders.Add("Bundles");
+    options.SharedViewFolders.Add("Navigation");
+    options.SharedViewFolders.Add("Footer");
+    options.SharedViewFolders.Add("CookieConsent");
+};
+
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.AddFeatureFolders(featureFoldersSetup)
+.AddAreaFeatureFolders(featureFoldersSetup);
+```
+
+## Disable Model Validation
+```
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.DisableModelValidation();
+```
+
+## User must be Authorized
+```
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.UserMustBeAuthorized();
+```
+
+## UrlHelperService as Service
+```
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.AddUrlHelperService();
+```
+
+## Api Versioning + Swagger
+```
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.AddApiVersioning()
+.AddSwaggerWithApiVersioning();
+```
+
+```
+app.UseSwaggerWithApiVersioning();
+```
+```
+[ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/auth")]
+public class AuthController : ControllerBase
+{
+    public AuthController()
+    {
+
+    }
+}
+```
+
+## Variable Resource Representations
+```
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+.ConfigureMvcVariableResourceRepresentations(options => {
+    options.JsonInputMediaTypes.Add("application/vnd.app.bookforcreation+json");
+    options.JsonInputMediaTypes.Add("application/vnd.app.bookforcreationwithamountofpages+json");
+
+    options.JsonOutputMediaTypes.Add("application/vnd.app.book+json");
+    options.JsonOutputMediaTypes.Add("application/vnd.app.bookwithconcatenatedauthorname+json");
+});
 ```
 
 ## Localization ASP.NET Core 2.2
@@ -528,14 +620,13 @@ public class Startup
 
             if (AlwaysIncludeCultureInUrl)
             {
-                endpoints.Map("{culture:cultureCheck}/{*path}", ctx =>
+                endpoints.MapMiddlewareGet("{culture:cultureCheck}/{*path}", appBuilder =>
                 {
-                    ctx.Response.StatusCode = StatusCodes.Status404NotFound;
-                    return Task.CompletedTask;
+                    
                 });
 
                 //redirect culture-less routes
-                endpoints.Map("{*path}", (RequestDelegate)(ctx =>
+                endpoints.MapGet("{*path}", (RequestDelegate)(ctx =>
                 {
                     var defaultCulture = localizationOptions.Value.DefaultRequestCulture.Culture.Name;
 
@@ -552,6 +643,80 @@ public class Startup
         });
     }
 }
+```
+
+## Db Initialization
+
+![alt text](img/asyncmain.png "CDN")
+
+```
+public class Program
+{
+    public static async Task Main (string[] args)
+    {
+        var webHost = CreateWebHostBuilder(args).Build();
+
+        using (var scope = webHost.Services.CreateScope())
+        {
+            var serviceProvider = scope.ServiceProvider;
+
+            var hostingEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
+            var appLifetime = serviceProvider.GetRequiredService<IApplicationLifetime>();
+            
+            if (hostingEnvironment.IsDevelopment())
+            {
+                var ctx = serviceProvider.GetRequiredService<TennisBookingDbContext>();
+                await ctx.Database.MigrateAsync(appLifetime.ApplicationStopping);
+
+                try
+                {
+                    var userManager = serviceProvider.GetRequiredService<UserManager<TennisBookingsUser>>();
+                    var roleManager = serviceProvider.GetRequiredService<RoleManager<TennisBookingsRole>>();
+
+                    await SeedData.SeedUsersAndRoles(userManager, roleManager);
+                }
+                catch (Exception ex)
+                {
+                    var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("UserInitialisation");
+                    logger.LogError(ex, "Failed to seed user data");
+                }
+            }
+        }
+
+        webHost.Run();
+    }
+
+    public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+        WebHost.CreateDefaultBuilder(args)
+            .ConfigureServices(services => services.AddAutofac())
+            .UseStartup<Startup>();
+}
+```
+
+## Cron Hosted Services
+```
+services.AddHostedServiceCronJob<Job2>("* * * * *"); //Every minute
+```
+
+## Hosted Service Background Task Queue
+```
+//Inject IBackgroundTaskQueue into Controller to trigger background tasks.
+//Queue.QueueBackgroundWorkItem(async token => {});
+services.AddHostedServiceBackgroundTaskQueue();
+```
+
+## Hangfire
+```
+services.AddHangfire(connectionString, initializeDatabase);
+services.AddHangfireInMemory(connectionString);
+services.AddHangfireSqlServer(connectionString, initializeDatabase);
+services.AddHangfireSqlLite(connectionString, initializeDatabase);
+```
+
+* [Each server has it's own queue](https://discuss.hangfire.io/t/one-queue-for-the-whole-farm-and-one-queue-by-server/490)
+```
+//Adds Hangfire Dashboard and starts Server
+app.UseHangfire(serverName)
 ```
 
 ## Authors

@@ -18,6 +18,10 @@
 
 
   <ItemGroup>
+    <Folder Include="Controllers\Shared\Views\Bundles\" />
+    <Folder Include="Controllers\Shared\Views\Navigation\" />
+    <Folder Include="Controllers\Shared\Views\CookieConsent\" />
+    <Folder Include="Controllers\Shared\Views\Footer\" />
     <Folder Include="Resources\" />
   </ItemGroup>
 

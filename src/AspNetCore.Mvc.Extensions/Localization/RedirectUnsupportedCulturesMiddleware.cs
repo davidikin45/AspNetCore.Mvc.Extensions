@@ -7,7 +7,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Base.Localization
+namespace AspNetCore.Mvc.Extensions.Localization
 {
     public static class ApplicationBuilderExtensions
     {

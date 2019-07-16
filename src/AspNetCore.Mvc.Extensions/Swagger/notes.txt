@@ -1,0 +1,22 @@
+﻿[ProducesReponseType(StatusCodes.Status404NotFound)]]
+[ProducesReponseType(StatusCodes.Status400BadRequest)]]
+[ProducesReponseType(StatusCodes.Status200OK)]]
+
+Microsoft.AspNetCore.Mvc.Api.Analyzers
+
+[ProducesResponseType(StatusCodes.Status400BadRequest)]
+[ProducesResponseType(StatusCodes.Status406NotAcceptable)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+OR
+[ApiConventionType(typeof(DefaultApiConventions))] on base controller
+Only work if you use the default naming conventions of api actions.
+OR
+[assembly: ApiConventionType(typeof(DefaultApiConventions))] above startup namespace
+
+Microsoft.AspNetCore.Mvc.Versioning
+Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer
+
+<remarks>
+	example markdown code
+***emphasize***
+</remarks>

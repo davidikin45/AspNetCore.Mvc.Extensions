@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AspNetCore.Base.Localization
+namespace AspNetCore.Mvc.Extensions.Localization
 {
     //https://andrewlock.net/url-culture-provider-using-middleware-as-mvc-filter-in-asp-net-core-1-1-0/
     //https://andrewlock.net/applying-the-routedatarequest-cultureprovider-globally-with-middleware-as-filters/

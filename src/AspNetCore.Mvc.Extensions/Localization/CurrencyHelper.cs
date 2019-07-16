@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace AspNetCore.Base.Localization
+namespace AspNetCore.Mvc.Extensions.Localization
 {
     public static class CurrencyHelper
     {

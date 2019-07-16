@@ -1,13 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Primitives;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace AspNetCore.Mvc.Extensions.Attributes.Validation
 {
+    //options.Filters.Add<ValidatableAttribute>();
     public class ValidatableAttribute : ActionFilterAttribute
     {
         private const string HeaderName = "x-action-intent";
