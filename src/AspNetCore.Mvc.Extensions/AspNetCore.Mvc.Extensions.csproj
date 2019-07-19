@@ -11,9 +11,9 @@
     <RepositoryUrl>https://github.com/davidikin45/AspNetCore.Mvc.Extensions</RepositoryUrl>
     <PackageTags>ASP.NET Core Extensions Mvc</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.21</Version>
-    <FileVersion>1.0.21.0</FileVersion>
-    <AssemblyVersion>1.0.21.0</AssemblyVersion>
+    <Version>1.0.22</Version>
+    <FileVersion>1.0.22.0</FileVersion>
+    <AssemblyVersion>1.0.22.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -125,8 +125,8 @@
 
   <ItemGroup>
     <PackageReference Include="AspNetCore.Mvc.SelectList" Version="1.1.0" />
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.4" />
-    <PackageReference Include="Hangfire.Initialization" Version="1.0.28" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.5" />
+    <PackageReference Include="Hangfire.Initialization" Version="1.1.2" />
     <PackageReference Include="HtmlTags.AspNetCore" Version="7.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
@@ -135,7 +135,10 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="3.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Azure.KeyVault" Version="3.0.3" />
+    <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="1.2.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.6" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.AzureKeyVault" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="2.2.0" />
     <PackageReference Include="NCrontab" Version="3.3.1" />
     <PackageReference Include="NetTopologySuite" Version="1.15.3" />
@@ -146,6 +149,7 @@
 
   <ItemGroup>
     <Folder Include="FileUploader\" />
+    <Folder Include="Azure\" />
     <Folder Include="Security\" />
     <Folder Include="Routing\" />
     <Folder Include="ValueProviders\" />

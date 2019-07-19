@@ -13,19 +13,24 @@ using AspNetCore.Mvc.Extensions.Razor;
 using AspNetCore.Mvc.Extensions.Reflection;
 using AspNetCore.Mvc.Extensions.Routing.Constraints;
 using AspNetCore.Mvc.Extensions.Services;
+using AspNetCore.Mvc.Extensions.Settings;
 using AspNetCore.Mvc.Extensions.Swagger;
 using AspNetCore.Mvc.Extensions.Validation;
 using AspNetCore.Mvc.Extensions.VariableResourceRepresentation;
 using Database.Initialization;
 using Hangfire;
+using Hangfire.Client;
+using Hangfire.Common;
 using Hangfire.Initialization;
 using Hangfire.MemoryStorage;
 using Hangfire.Server;
 using Hangfire.SQLite;
 using Hangfire.SqlServer;
+using Hangfire.States;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
@@ -42,6 +47,10 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Azure.KeyVault;
+using Microsoft.Azure.Services.AppAuthentication;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.AzureKeyVault;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -709,93 +718,169 @@ namespace AspNetCore.Mvc.Extensions
         /// <summary>
         /// Adds the hangfire services to the application.
         /// </summary>
-        public static IServiceCollection AddHangfire(this IServiceCollection services, string connectionString, bool initializeDatabase)
+        public static IServiceCollection AddHangfire(this IServiceCollection services, string serverName, string connectionString = "", Action<JobStorageOptions> configJobStorage = null, Action <BackgroundJobServerOptions> configAction = null, IEnumerable<IBackgroundProcess> additionalProcesses = null)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
+            services.AddHangfire(config =>
             {
-                return services.AddHangfireInMemory();
-            }
-            else if (ConnectionStringHelper.IsSQLite(connectionString))
-            {
-                return services.AddHangfireSqlLite(connectionString, initializeDatabase);
-            }
-            else
-            {
-                return services.AddHangfireSqlServer(connectionString, initializeDatabase);
-            }
-        }
+                config
+                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                 .UseSimpleAssemblyNameTypeSerializer()
+                 .UseRecommendedSerializerSettings();
 
-        /// <summary>
-        /// Adds the hangfire services to the application.
-        /// </summary>
-        public static IServiceCollection AddHangfireInMemory(this IServiceCollection services)
-        {
-            return services.AddHangfire(config =>
-            {
                 config.UseFilter(new HangfireLoggerAttribute());
                 config.UseFilter(new HangfirePreserveOriginalQueueAttribute());
 
-                var options = new MemoryStorageOptions
+                if(connectionString != null)
                 {
+                    //Initializes Hangfire Schema if PrepareSchemaIfNecessary = true
+                    var storage = HangfireJobStorage.GetJobStorage(connectionString, configJobStorage).JobStorage;
 
+                    config.UseStorage(storage);
+                    //config.UseMemoryStorage();
+                    //config.UseSqlServerStorage(connectionString);
+                    //config.UseSQLiteStorage(connectionString);
+                }
+            });
+
+            if(connectionString != null)
+            {
+                //Launches Server as IHostedService
+                services.AddHangfireServer(serverName, configAction, additionalProcesses);
+            }
+
+            return services;
+        }
+
+        //IBackgroundJobClient and IRecurringJobManager will only work when storage setup via services.AddHangfire
+        public static IServiceCollection AddHangfireServer(this IServiceCollection services, string serverName, Action<BackgroundJobServerOptions> configAction = null, IEnumerable<IBackgroundProcess> additionalProcesses = null, JobStorage storage = null)
+        {
+            return services.AddTransient<IHostedService, BackgroundJobServerHostedService>(provider =>
+            {
+                ThrowIfNotConfigured(provider);
+
+                var options = new BackgroundJobServerOptions
+                {
+                    ServerName = serverName,
+                    Queues = new[] { serverName, "default" }
                 };
 
-                config.UseMemoryStorage(options);
+                if (configAction != null)
+                    configAction(options);
+
+                storage = storage ?? provider.GetService<JobStorage>() ?? JobStorage.Current;
+                additionalProcesses = additionalProcesses ?? provider.GetServices<IBackgroundProcess>();
+
+                options.Activator = options.Activator ?? provider.GetService<JobActivator>();
+                options.FilterProvider = options.FilterProvider ?? provider.GetService<IJobFilterProvider>();
+                options.TimeZoneResolver = options.TimeZoneResolver ?? provider.GetService<ITimeZoneResolver>();
+
+                GetInternalServices(provider, out var factory, out var stateChanger, out var performer);
+
+#pragma warning disable 618
+                return new BackgroundJobServerHostedService(
+#pragma warning restore 618
+                    storage, options, additionalProcesses, factory, performer, stateChanger);
             });
         }
 
-        /// <summary>
-        /// Adds the hangfire services to the application.
-        /// </summary>
-        public static IServiceCollection AddHangfireSqlServer(this IServiceCollection services, string connectionString, bool initializeDatabase)
+        public static IServiceCollection AddHangfireServerServices(this IServiceCollection services, Action<BackgroundJobServerOptions> configAction = null, JobStorage storage = null)
         {
-            return services.AddHangfire(config =>
-            {
-                config.UseFilter(new HangfireLoggerAttribute());
-                config.UseFilter(new HangfirePreserveOriginalQueueAttribute());
-                var options = new SqlServerStorageOptions
-                {
-                    PrepareSchemaIfNecessary = initializeDatabase,
-                    QueuePollInterval = TimeSpan.FromSeconds(15) // Default value
-                };
+            var options = new BackgroundJobServerOptions();
+            if (configAction != null)
+                configAction(options);
 
-                //Initializes Hangfire Schema if PrepareSchemaIfNecessary = true
-                config.UseSqlServerStorage(connectionString, options);
+            services.AddSingleton<IBackgroundJobClient>(x =>
+            {
+                ThrowIfNotConfigured(x);
+
+                if (GetInternalServices(x, out var factory, out var stateChanger, out _))
+                {
+                    return new BackgroundJobClient(storage ?? x.GetRequiredService<JobStorage>(), factory, stateChanger);
+                }
+
+                return new BackgroundJobClient(
+                    storage ?? x.GetRequiredService<JobStorage>(),
+                    options.FilterProvider ?? x.GetRequiredService<IJobFilterProvider>());
             });
+
+            services.AddSingleton<IRecurringJobManager>(x =>
+            {
+                ThrowIfNotConfigured(x);
+
+                if (GetInternalServices(x, out var factory, out _, out _))
+                {
+                    return new RecurringJobManager(
+                        storage ?? x.GetRequiredService<JobStorage>(),
+                        factory,
+                         options.TimeZoneResolver ?? x.GetService<ITimeZoneResolver>());
+                }
+
+                return new RecurringJobManager(
+                   storage ?? x.GetRequiredService<JobStorage>(),
+                    options.FilterProvider ?? x.GetRequiredService<IJobFilterProvider>(),
+                    options.TimeZoneResolver ?? x.GetService<ITimeZoneResolver>());
+            });
+
+            return services;
+        }
+
+        internal static void ThrowIfNotConfigured(IServiceProvider serviceProvider)
+        {
+            var configuration = serviceProvider.GetService<IGlobalConfiguration>();
+            if (configuration == null)
+            {
+                throw new InvalidOperationException(
+                    "Unable to find the required services. Please add all the required services by calling 'IServiceCollection.AddHangfire' inside the call to 'ConfigureServices(...)' in the application startup code.");
+            }
+        }
+
+        internal static bool GetInternalServices(
+           IServiceProvider provider,
+           out IBackgroundJobFactory factory,
+           out IBackgroundJobStateChanger stateChanger,
+           out IBackgroundJobPerformer performer)
+        {
+            factory = provider.GetService<IBackgroundJobFactory>();
+            performer = provider.GetService<IBackgroundJobPerformer>();
+            stateChanger = provider.GetService<IBackgroundJobStateChanger>();
+
+            if (factory != null && performer != null && stateChanger != null)
+            {
+                return true;
+            }
+
+            factory = null;
+            performer = null;
+            stateChanger = null;
+
+            return false;
         }
 
         /// <summary>
-        /// Adds the hangfire services to the application.
+        /// Exposes hangfire dashboard.
         /// </summary>
-        public static IServiceCollection AddHangfireSqlLite(this IServiceCollection services, string connectionString, bool initializeDatabase)
+        public static IApplicationBuilder UseHangfireDashboard(this IApplicationBuilder builder, string route = "/hangfire", Action<DashboardOptions> configAction = null, JobStorage storage = null)
         {
-            return services.AddHangfire(config =>
+            var options = new DashboardOptions
             {
-                config.UseFilter(new HangfireLoggerAttribute());
-                config.UseFilter(new HangfirePreserveOriginalQueueAttribute());
-
-                var options = new SQLiteStorageOptions
-                {
-                    PrepareSchemaIfNecessary = initializeDatabase,
-                    QueuePollInterval = TimeSpan.FromSeconds(15) // Default value
-                };
-
-                //Initializes Hangfire Schema if PrepareSchemaIfNecessary = true
-                config.UseSQLiteStorage(connectionString, options);
-            });
-        }
-
-        /// <summary>
-        /// Exposes hangfire dashboard and starts server.
-        /// </summary>
-        public static IApplicationBuilder UseHangfire(this IApplicationBuilder builder, string serverName, string route = "/hangfire", IEnumerable<IBackgroundProcess> additionalProcesses = null, JobStorage storage = null)
-        {
-            builder.UseHangfireDashboard(route, new DashboardOptions
-            {
-                Authorization = new[] { new HangfireRoleAuthorizationfilter() },
+                //must be set otherwise only local access allowed
+                //Authorization = new[] { new HangfireRoleAuthorizationfilter() },
                 AppPath = route.Replace("/hangfire", "")
-            }, storage);
+            };
 
+            if (configAction != null)
+                configAction(options);
+
+            builder.UseHangfireDashboard(route, options, storage);
+
+            return builder;
+        }
+
+        /// <summary>
+        /// Starts the hangfire server. Better to use AddHangfireServer.
+        /// </summary>
+        public static IApplicationBuilder UseHangfireServer(this IApplicationBuilder builder, string serverName, IEnumerable<IBackgroundProcess> additionalProcesses = null, JobStorage storage = null)
+        {
             //each microserver has its own queue. Queue by using the Queue attribute.
             //https://discuss.hangfire.io/t/one-queue-for-the-whole-farm-and-one-queue-by-server/490
             var options = new BackgroundJobServerOptions
@@ -1001,6 +1086,53 @@ namespace AspNetCore.Mvc.Extensions
             return routes;
         }
 
+        #endregion
+
+        #region Azure Key Vault
+        //https://joonasw.net/view/azure-ad-managed-service-identity
+        //https://joonasw.net/view/aspnet-core-azure-keyvault-msi
+        /// <summary>
+        /// Uses the azure key vault. Looks for AppSettings.Json KeyVaultSettings > Name. Each environment should have a seperate vaultName. See https://joonasw.net/view/azure-ad-managed-service-identity for enabling MSI.
+        /// </summary>
+        public static IWebHostBuilder UseAzureKeyVault(this IWebHostBuilder webHostBuilder, string vaultName = null, bool useOnlyInProduction = true)
+        {
+            return webHostBuilder.ConfigureAppConfiguration((ctx, builder) =>
+            {
+                var config = builder.Build();
+
+                if (vaultName == null)
+                {
+                    var keyVaultSettings = GetKeyVaultSettings(config);
+                    if (keyVaultSettings != null)
+                    {
+                        vaultName = keyVaultSettings.Name;
+                    }
+                }
+
+                //If used outside Azure, it will authenticate as the developer's user. It will try using Azure CLI 2.0 (install from here). The second option is AD Integrated Authentication.
+                //After installing the CLI, remember to run az login, and login to your Azure account before running the app.Another important thing is that you need to also select the subscription where the Key Vault is.So if you have access to more than one subscription, also run az account set - s "My Azure Subscription name or id"
+                //Then you need to make sure your user has access to a Key Vault(does not have to be the production vault...).
+                if (!string.IsNullOrWhiteSpace(vaultName) && (!useOnlyInProduction || ctx.HostingEnvironment.IsProduction()))
+                {
+                    //Section--Name
+                    var tokenProvider = new AzureServiceTokenProvider();
+                    var kvClient = new KeyVaultClient((authority, resource, scope) => tokenProvider.KeyVaultTokenCallback(authority, resource, scope));
+                    builder.AddAzureKeyVault($"https://{vaultName}.vault.azure.net", kvClient, new DefaultKeyVaultSecretManager());
+                }
+            });
+        }
+
+        private static KeyVaultSettings GetKeyVaultSettings(IConfigurationRoot config)
+        {
+            var sectionKey = "KeyVaultSettings";
+            var hasKeyVaultSettings = config.GetChildren().Any(item => item.Key == sectionKey);
+
+            if (!hasKeyVaultSettings)
+                return null;
+
+            var settingsSection = config.GetSection(sectionKey);
+            return settingsSection.Get<KeyVaultSettings>();
+        }
         #endregion
     }
 }

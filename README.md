@@ -707,16 +707,28 @@ services.AddHostedServiceBackgroundTaskQueue();
 
 ## Hangfire
 ```
-services.AddHangfire(connectionString, initializeDatabase);
-services.AddHangfireInMemory(connectionString);
-services.AddHangfireSqlServer(connectionString, initializeDatabase);
-services.AddHangfireSqlLite(connectionString, initializeDatabase);
+services.AddHangfire("web-background", "");
+services.AddHangfire("web-background", "Server=(localdb)\\mssqllocaldb;Database=HangfireMultitenant;Trusted_Connection=True;MultipleActiveResultSets=true;");
+services.AddHangfire("web-background", "Data Source=tenant0.db;");
+services.AddHangfire("web-background", "Data Source=:memory:;");
 ```
 
 * [Each server has it's own queue](https://discuss.hangfire.io/t/one-queue-for-the-whole-farm-and-one-queue-by-server/490)
 ```
-//Adds Hangfire Dashboard and starts Server
-app.UseHangfire(serverName)
+//Adds Hangfire Dashboard
+app.UseHangfireDashboard();
+```
+
+## Azure Key Vault with MSI
+* https://joonasw.net/view/azure-ad-managed-service-identity
+* https://joonasw.net/view/aspnet-core-azure-keyvault-msi
+* By default key vault only used in production environment when deployed to Azure.
+
+```
+public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+WebHost.CreateDefaultBuilder(args)
+.UseAzureKeyVault("productKeyVaultName")
+.UseStartup<Startup>();
 ```
 
 ## Authors
