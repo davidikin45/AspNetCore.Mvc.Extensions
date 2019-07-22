@@ -414,6 +414,14 @@ services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
 });
 ```
 
+## Set App Culture when not using Request Localization
+```
+var cultureInfo = new CultureInfo("en-AU");
+
+CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+```
+
 ## Localization ASP.NET Core 2.2
 * [Endpoint Routing](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/routing?view=aspnetcore-2.2) (enabled by default from 2.2 onwards) changes how links are generated. Previously all ambient route data was passed to action links. Now ambient route data is only reused if generating link for the same controller/action. I have extended the UrlHelper implementation so route keys can be reqgistered as being globally ambient.
 * https://andrewlock.net/url-culture-provider-using-middleware-as-mvc-filter-in-asp-net-core-1-1-0/
@@ -730,6 +738,19 @@ WebHost.CreateDefaultBuilder(args)
 .UseAzureKeyVault("productKeyVaultName")
 .UseStartup<Startup>();
 ```
+
+## Client Timezone
+```
+<script>
+    var timezone = String(new Date());
+    var timezoneId = timezone.substring(timezone.lastIndexOf('(') + 1).replace(')', '').trim();
+    document.cookie = 'timezone=' + encodeURIComponent(timezoneId) + ';path=/';
+</script>
+```
+```
+ var timeZone = System.Net.WebUtility.UrlDecode(Request.Cookies["timezone"]);
+```
+
 
 ## Authors
 
