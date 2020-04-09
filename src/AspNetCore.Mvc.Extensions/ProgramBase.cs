@@ -60,18 +60,21 @@ namespace AspNetCore.Mvc.Extensions
         }
 
         //.NET Core 3.0
-        public static IHostBuilder CreateHostBuilder(string[] args) => 
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+
            //https://nblumhardt.com/2019/10/serilog-in-aspnetcore-3/?fbclid=IwAR2SZoIsGjtTfwCd5bEG9n0mpnbo-3ERVCYZk6snBDnbIHwKC5dYbIoj_vY
            .UseSerilog()
-           .UseAutofacMultitenant((context, options) => {
-                options.ValidateOnBuild = false;
-                options.MapDefaultTenantToAllRootAndSubDomains();
-                options.AddTenantsFromConfig(context.Configuration);
-                options.ConfigureTenants(builder => {
-                    builder.MapToTenantIdSubDomain();
-                });
-            })
+           .UseAutofacMultitenant((context, options) =>
+           {
+               options.ValidateOnBuild = false;
+               options.MapDefaultTenantToAllRootAndSubDomains();
+               options.AddTenantsFromConfig(context.Configuration);
+               options.ConfigureTenants(builder =>
+               {
+                   builder.MapToTenantIdSubDomain();
+               });
+           })
 
             //builder.UseDefaultServiceProvider((context, options) => {
             //    options.ValidateScopes = context.HostingEnvironment.IsDevelopment();
@@ -117,7 +120,7 @@ namespace AspNetCore.Mvc.Extensions
 
         //    .ConfigureAppConfiguration((context, config) =>
         //        {
-                 
+
         //            // JSON files, User secrets, environment variables and command line arguments
         //        })
         //    .ConfigureServices((hostContext, services) =>
@@ -132,8 +135,8 @@ namespace AspNetCore.Mvc.Extensions
             // These two settings allow an error page to be shown rather than throwing exception on startup
             // Need to be careful putting code after IWebHostBuilder.Build()
             .CaptureStartupErrors(true)
+            //.UseSetting(WebHostDefaults.DetailedErrorsKey, "true") // Better to put this in appsettings. When enabled, or when the environment is Development, the app captures detailed errors.
             .UseShutdownTimeout(TimeSpan.FromSeconds(20))
-            //.UseSetting("detailedErrors", "true") // Better to put this in appsettings
             .ConfigureKestrel((context, options) =>
             {
                 if (context.HostingEnvironment.IsDevelopment() || context.HostingEnvironment.IsIntegration())
@@ -149,8 +152,9 @@ namespace AspNetCore.Mvc.Extensions
                 options.AllowSynchronousIO = true;
                 options.AddServerHeader = false;
             }
-            ).
-            UseConfiguration(Configuration) ////IWebHostBuilder configuration is added to the app's configuration, but the converse isn't true. ConfigureAppConfiguration doesn't affect the IWebHostBuilder configuration.
+            )
+            //https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-3.1
+            .UseConfiguration(Configuration) //IWebHostBuilder configuration is added to the app's configuration, but the converse isn't true. ConfigureAppConfiguration doesn't affect the IWebHostBuilder configuration.
             .UseIISIntegration()
             .UseAzureKeyVault()
             .ConfigureAppConfiguration((hostingContext, config) =>

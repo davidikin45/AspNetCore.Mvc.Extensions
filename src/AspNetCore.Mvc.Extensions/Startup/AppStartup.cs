@@ -131,15 +131,16 @@ namespace AspNetCore.Mvc.Extensions
         public AppStartup(IConfiguration configuration, Microsoft.AspNetCore.Hosting.IWebHostEnvironment hostingEnvironment, Action<AppStartupOptions> config = null)
         {
             AssemblyHelper.EntryAssembly = this.GetType().Assembly;
-
+    
             Options = new AppStartupOptions();
             if (config != null)
                 config(Options);
 
             Logger = new SerilogLoggerFactory().CreateLogger("Startup");
             //Logger = loggerFactory.CreateLogger("Startup");
-
+  
             Configuration = configuration;
+
             AppSettings = GetSettings<AppSettings>("AppSettings");
 
             HostingEnvironment = hostingEnvironment;
