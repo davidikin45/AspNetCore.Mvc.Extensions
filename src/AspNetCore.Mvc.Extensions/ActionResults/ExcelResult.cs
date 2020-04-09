@@ -26,7 +26,7 @@ namespace AspNetCore.Mvc.Extensions.ActionResults
         {
             using (var workbook = new XLWorkbook())
             {
-                var worksheet = workbook.Worksheets.Add("Users");
+                var worksheet = workbook.Worksheets.Add(name);
                 var currentRow = 1;
 
                 var headerIncluded = false;
@@ -110,7 +110,7 @@ namespace AspNetCore.Mvc.Extensions.ActionResults
                 var currentRow = 1;
 
                 var properties = typeof(T).GetProperties();
-                if (includeHeader &&)
+                if (includeHeader)
                 {
                     for (int i = 0; i < properties.Length; i++)
                     {
