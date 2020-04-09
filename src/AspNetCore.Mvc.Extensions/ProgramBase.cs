@@ -66,7 +66,7 @@ namespace AspNetCore.Mvc.Extensions
            .UseSerilog()
            .UseAutofacMultitenant((context, options) => {
                 options.ValidateOnBuild = false;
-                options.MapDefaultTenantToAllRootDomains();
+                options.MapDefaultTenantToAllRootAndSubDomains();
                 options.AddTenantsFromConfig(context.Configuration);
                 options.ConfigureTenants(builder => {
                     builder.MapToTenantIdSubDomain();
