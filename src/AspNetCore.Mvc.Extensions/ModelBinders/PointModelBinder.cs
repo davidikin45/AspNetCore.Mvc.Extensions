@@ -9,7 +9,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Base.ModelBinders
+namespace AspNetCore.Mvc.Extensions.ModelBinders
 {
     public class PointModelBinder : IModelBinder
     {

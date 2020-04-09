@@ -113,7 +113,8 @@ namespace AspNetCore.Mvc.Extensions.Authentication
             if (username.Equals("username", StringComparison.InvariantCultureIgnoreCase) && password.Equals("password"))
             {
                 var claims = new[] {
-                        new Claim(ClaimTypes.NameIdentifier, username)};
+                        new Claim(ClaimTypes.NameIdentifier, username)
+                };
                 var identity = new ClaimsIdentity(claims, Scheme.Name);
                 return Task.FromResult(identity);
             }

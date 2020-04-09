@@ -1,0 +1,50 @@
+[
+  {
+    "Area": "Frontend",
+    "Controller": "Blog",
+    "Action": "Posts",
+    "LinkText": "BLOG"
+  },
+  {
+    "Area": "Frontend",
+    "Controller": "Gallery",
+    "Action": "Index",
+    "LinkText": "GALLERY"
+  },
+  {
+    "Area": "Frontend",
+    "Controller": "Videos",
+    "Action": "Index",
+    "LinkText": "VIDEOS"
+  },
+  {
+    "Area": "Frontend",
+    "Controller": "BucketList",
+    "Action": "Index",
+    "LinkText": "BUCKET LIST"
+  },
+  {
+    "Area": "Frontend",
+    "Controller": "TravelMap",
+    "Action": "Index",
+    "LinkText": "TRAVEL MAP"
+  },
+  {
+    "Area": "Frontend",
+    "Controller": "Home",
+    "Action": "About",
+    "LinkText": "ABOUT"
+  },
+  {
+    "Area": "Frontend",
+    "Controller": "Home",
+    "Action": "WorkWithMe",
+    "LinkText": "WORK WITH ME"
+  },
+  {
+    "Area": "Frontend",
+    "Controller": "Home",
+    "Action": "Contact",
+    "LinkText": "CONTACT"
+  }
+]

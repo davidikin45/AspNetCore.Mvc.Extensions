@@ -7,11 +7,11 @@ namespace AspNetCore.Mvc.Extensions.Services
 {
     public class FeatureService
     {
-        private IHostingEnvironment _hostingEnvironment;
+        private IWebHostEnvironment _hostingEnvironment;
 
         private Dictionary<string, bool> featureStates = new Dictionary<string, bool>();
 
-        public FeatureService(IHostingEnvironment environment)
+        public FeatureService(IWebHostEnvironment environment)
         {
             this._hostingEnvironment = environment;
             var path = Path.Combine(_hostingEnvironment.ContentRootPath, "features.json");

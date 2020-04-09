@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
 using System.Collections.Generic;
@@ -24,7 +24,7 @@ namespace AspNetCore.Mvc.Extensions.Routing
                 Template = a?.AttributeRouteInfo?.Template,
                 Path = a.GetRoutePath(),
                 HttpMethods = a?.ActionConstraints?.OfType<HttpMethodActionConstraint>().FirstOrDefault()?.HttpMethods,
-                Authorized = a.GetCustomAttributes<AuthorizeAttribute>().Any()
+                Authorized = a.GetAuthorizeAttributes().Any()
             });
 
             return new RouteInfo
@@ -51,15 +51,31 @@ namespace AspNetCore.Mvc.Extensions.Routing
             return path;
         }
 
-        private static IEnumerable<T> GetCustomAttributes<T>(this ActionDescriptor actionDescriptor) where T : Attribute
+        private static IEnumerable<AuthorizeAttribute> GetAuthorizeAttributes(this ActionDescriptor actionDescriptor)
         {
             var controllerActionDescriptor = actionDescriptor as ControllerActionDescriptor;
             if (controllerActionDescriptor != null)
             {
-                return controllerActionDescriptor.MethodInfo.ReflectedType.GetCustomAttributes(typeof(T), true).Select(a => (T)a);
+                var methodInfo = controllerActionDescriptor.MethodInfo;
+
+                //AllowAnonymous at Controller or Action level always takes priority!
+                var allowAnonymous = methodInfo.ReflectedType.GetCustomAttributes(true)
+               .Union(methodInfo.GetCustomAttributes(true))
+               .OfType<AllowAnonymousAttribute>().Any();
+
+                if(allowAnonymous)
+                    return Enumerable.Empty<AuthorizeAttribute>();
+
+                //https://github.com/domaindrivendev/Swashbuckle.AspNetCore
+                //AuthorizeAttributes are AND not OR.
+                var authAttributes = methodInfo.ReflectedType.GetCustomAttributes(true)
+                .Union(methodInfo.GetCustomAttributes(true))
+                .OfType<AuthorizeAttribute>();
+
+                return authAttributes;
             }
 
-            return Enumerable.Empty<T>();
+            return Enumerable.Empty<AuthorizeAttribute>();
         }
     }
 

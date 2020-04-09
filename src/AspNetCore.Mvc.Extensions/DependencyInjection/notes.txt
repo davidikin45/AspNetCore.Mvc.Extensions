@@ -1,0 +1,3 @@
+﻿https://stackoverflow.com/questions/40844151/when-are-net-core-dependency-injected-instances-disposed
+
+When injecting IServiceProvider into a singleton it is the root provider so can't get scoped services.

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 
 namespace Solution.Base.Validation
 {    public class FileSizeAttribute : ValidationAttribute
@@ -57,7 +58,6 @@ namespace Solution.Base.Validation
         }
         private ValidationResult DisallowedFileSizeError(IFormFile file)
         {
-            string fileName = file.FileName;
             return new ValidationResult($"The file size should not exceed {MaxMegabytes} MB.");
         }
     }

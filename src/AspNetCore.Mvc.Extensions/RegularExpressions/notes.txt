@@ -1,0 +1,24 @@
+﻿https://app.pluralsight.com/library/courses/dot-net-regular-expressions/table-of-contents
+
+aplphanumberic = \w
+nonalphanumeric = \W
+range = [a-Z]
+digit = \d
+0+ = *
+1+ = +
+0 or 1 = ? 
+Start of string or line in multiline mode = ^
+End of string or line in multiline mode = $
+Escape char = "\\?" or @"\?" or Regex.Escape("?")
+Matches yes if expression matches = (?(\wi\w)him|her)
+SubExpression Groups. Starts with index 1 = (\d) 
+SubExpression Non-Group = (?:\d) 
+Look Ahead + = (?=expression)
+Look Ahead - = (?!expression)
+Look Behind + = (?<=expression)
+Look Behind + = (?<!expression)
+
+Use compiled regex when using the same pattern many times
+var regex = new Regex("", RegexOptions.Compiled);
+
+Consider using Regex timeout

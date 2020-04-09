@@ -1,8 +1,8 @@
-﻿using AspNetCore.Base.Notifications;
+﻿using AspNetCore.Mvc.Extensions.Notifications;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Base.Notifications
+namespace AspNetCore.Mvc.Extensions.Notifications
 {
     public class CompositeNotificationService : INotificationService
     {

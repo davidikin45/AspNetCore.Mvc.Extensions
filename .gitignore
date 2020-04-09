@@ -320,4 +320,6 @@ ASALocalRun/
 # MSBuild Binary and Structured Log
 *.binlog
 
+appsettings.Production.json
+appsettings.Staging.json
 .db

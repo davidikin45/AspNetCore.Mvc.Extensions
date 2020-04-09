@@ -1,8 +1,11 @@
-﻿using HtmlTags;
+﻿using AspNetCore.Mvc.SelectList;
+using HtmlTags;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using NetTopologySuite.Geometries;
@@ -32,6 +35,10 @@ namespace AspNetCore.Mvc.Extensions
 
             var theadTr = new TagBuilder("tr");
 
+            string controllerName = html.ViewContext.RouteData.Values["controller"] as string;
+            string actionName = html.ViewContext.RouteData.Values["action"] as string;
+
+
             Dictionary<string, List<string>> actions = new Dictionary<string, List<string>>();
 
             //if (entityActions)
@@ -52,36 +59,25 @@ namespace AspNetCore.Mvc.Extensions
                 var th = new TagBuilder("th");
 
                 var orderType = "desc";
-                if (html.ViewBag.OrderColumn.ToLower() == prop.PropertyName.ToLower() && html.ViewBag.OrderType != "asc")
-                {
+                if (((string)html.ViewBag.OrderBy.ToLower()).StartsWith(prop.PropertyName.ToLower() + " ") && !((string)html.ViewBag.OrderBy.ToLower()).EndsWith("asc"))
                     orderType = "asc";
-                }
-
 
                 string linkText = ModelHelperExtensions.DisplayName(html.ViewData.Model, prop.PropertyName, provider).ToString();
                 string link;
 
                 Boolean enableSort = sorting;
                 if (prop.AdditionalValues.ContainsKey("AllowSortForGrid"))
-                {
                     enableSort = (Boolean)prop.AdditionalValues["AllowSortForGrid"];
-                }
 
                 if (enableSort)
                 {
                     if (html.ViewBag.Collection != null)
-                    {
-                        link = html.ActionLink(linkText, "Collection", new { id = html.ViewBag.Id, collection = html.ViewBag.Collection, page = html.ViewBag.Page, pageSize = html.ViewBag.PageSize, search = html.ViewBag.Search, orderColumn = prop.PropertyName, orderType = orderType }).Render().Replace("%2F", "/");
-                    }
+                        link = html.ActionLink(linkText, "Collection", controllerName, new { id = html.ViewBag.Id, collection = html.ViewBag.Collection, p = html.ViewBag.Page, pageSize = html.ViewBag.PageSize, search = html.ViewBag.Search, orderBy = prop.PropertyName + " " + orderType }).Render().Replace("%2F", "/");
                     else
-                    {
-                        link = html.ActionLink(linkText, "Index", new { page = html.ViewBag.Page, pageSize = html.ViewBag.PageSize, search = html.ViewBag.Search, orderColumn = prop.PropertyName, orderType = orderType }).Render();
-                    }
+                        link = html.ActionLink(linkText, actionName, controllerName, new { p = (int)html.ViewBag.Page, pageSize = (int)html.ViewBag.PageSize, search = html.ViewBag.Search, orderBy = prop.PropertyName + " " + orderType }, null).Render();
                 }
                 else
-                {
                     link = linkText;
-                }
 
                 // th.InnerHtml = ModelHelperExtensions.DisplayName(html.ViewData.Model, prop.PropertyName).ToString();
                 th.InnerHtml.AppendHtml(link);
@@ -110,24 +106,28 @@ namespace AspNetCore.Mvc.Extensions
                 {
                     var td = new TagBuilder("td");
 
+                    var databound = false;
+                    if (prop is DefaultModelMetadata defaultModelMetadata)
+                    {
+                        databound = defaultModelMetadata.Attributes.PropertyAttributes.OfType<SelectListAttribute>().Any();
+                    }
+                    
                     var propertyType = GetNonNullableModelType(prop);
                     var linkToCollection = propertyType.IsCollection() && prop.AdditionalValues.ContainsKey("LinkToCollectionInGrid") && (Boolean)prop.AdditionalValues["LinkToCollectionInGrid"];
 
-
-                    //Folder, File, Dropdown, Repeater
-                    if (prop.AdditionalValues.ContainsKey("IsDatabound"))
+                    //Folder, File, Dropdown, ModelOwnedCollection
+                    if (databound)
                     {
                         if (linkToCollection)
                         {
                             string linkText = "";
                             if (prop.AdditionalValues.ContainsKey("LinkText"))
-                            {
                                 linkText = (string)prop.AdditionalValues["LinkText"];
-                            }
 
                             if (string.IsNullOrWhiteSpace(linkText))
                             {
-                                linkText = ModelHelperExtensions.Display(html, item, prop.PropertyName).Render();
+                                IHtmlContent content = ModelHelperExtensions.Display(html, item, prop.PropertyName);
+                                linkText = content.Render();
                             }
 
                             var collectionLink = html.ActionLink(linkText, "Collection", new { id = item.Id, collection = html.ViewBag.Collection != null ? html.ViewBag.Collection + "/" + prop.PropertyName.ToLower() : prop.PropertyName.ToLower() }).Render().Replace("%2F", "/");
@@ -140,10 +140,11 @@ namespace AspNetCore.Mvc.Extensions
                                 var linkText = (string)prop.AdditionalValues["LinkText"];
                                 if (string.IsNullOrWhiteSpace(linkText))
                                 {
-                                    linkText = ModelHelperExtensions.Display(html, item, prop.PropertyName).Render();
+                                    IHtmlContent content = ModelHelperExtensions.Display(html, item, prop.PropertyName);
+                                    linkText = content.Render();
                                 }
-                                var actionName = (string)prop.AdditionalValues["ActionName"];
-                                var controllerName = (string)prop.AdditionalValues["ControllerName"];
+                                var linkActionName = (string)prop.AdditionalValues["ActionName"];
+                                var linkControllerName = (string)prop.AdditionalValues["ControllerName"];
 
                                 RouteValueDictionary routeValues = null;
                                 if (prop.AdditionalValues.ContainsKey("RouteValueDictionary"))
@@ -155,11 +156,11 @@ namespace AspNetCore.Mvc.Extensions
                                 string collectionLink = "";
                                 if (routeValues == null)
                                 {
-                                    collectionLink = html.ActionLink(linkText, actionName, controllerName).Render().Replace("%2F", "/");
+                                    collectionLink = html.ActionLink(linkText, linkActionName, linkControllerName).Render().Replace("%2F", "/");
                                 }
                                 else
                                 {
-                                    collectionLink = html.ActionLink(linkText, actionName, controllerName, routeValues).Render().Replace("%2F", "/");
+                                    collectionLink = html.ActionLink(linkText, linkActionName, linkControllerName, routeValues).Render().Replace("%2F", "/");
                                 }
 
                                 HtmlContentBuilderExtensions.SetHtmlContent(td.InnerHtml, collectionLink);
@@ -217,7 +218,10 @@ namespace AspNetCore.Mvc.Extensions
 
                     if (entityActions)
                     {
-                        var postUrl = html.Url().Action("TriggerAction", new { id = item.Id });
+                        var urlHelperFactory = html.ViewContext.HttpContext.RequestServices.GetRequiredService<IUrlHelperFactory>();
+                        var url = urlHelperFactory.GetUrlHelper(html.ViewContext);
+
+                        var postUrl = url.Action("TriggerAction", new { id = item.Id });
 
                         tdActions.InnerHtml.AppendHtml("<div class='btn-group mr-2 mb-2'>");
                         tdActions.InnerHtml.AppendHtml("<form action ='" + postUrl + "' method='POST' />");

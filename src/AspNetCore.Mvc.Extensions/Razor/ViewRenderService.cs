@@ -2,21 +2,24 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.Razor.Compilation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.AspNetCore.Razor.Language;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.Razor
 {
+    //https://blog.elmah.io/generate-a-pdf-from-asp-net-core-for-free/?fbclid=IwAR0PONCCu6U83mYUGhwhxG6eADag-IRwsAejgrcGtzpvd1npBclfESoA8IQ
+    //https://wkhtmltopdf.org/
+    //Wkhtmltopdf.NetCore
+
     //https://github.com/aspnet/AspNetCore/blob/c565386a3ed135560bc2e9017aa54a950b4e35dd/src/Mvc/Mvc.ViewFeatures/src/ViewResultExecutor.cs
     //https://github.com/aspnet/AspNetCore/blob/c565386a3ed135560bc2e9017aa54a950b4e35dd/src/Mvc/Mvc.ViewFeatures/src/ViewExecutor.cs
 
@@ -31,6 +34,7 @@ namespace AspNetCore.Mvc.Extensions.Razor
         private readonly ITempDataProvider _tempDataProvider;
         private readonly IServiceProvider _serviceProvider;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly UpdateableFileProvider _updateableFileProvider;
 
         protected MvcViewOptions ViewOptions { get; }
 
@@ -40,7 +44,8 @@ namespace AspNetCore.Mvc.Extensions.Razor
             IHttpContextAccessor httpContextAccessor,
             ITempDataProvider tempDataProvider,
             IServiceProvider serviceProvider,
-            IOptions<MvcViewOptions> viewOptions)
+            IOptions<MvcViewOptions> viewOptions,
+            UpdateableFileProvider updateableFileProvider)
         {
             _modelMetadataProvider = modelMetadataProvider;
             _viewEngine = viewEngine;
@@ -48,24 +53,37 @@ namespace AspNetCore.Mvc.Extensions.Razor
             _tempDataProvider = tempDataProvider;
             _serviceProvider = serviceProvider;
             ViewOptions = viewOptions.Value;
+            _updateableFileProvider = updateableFileProvider;
         }
 
-        public async Task<string> ViewAsync(string templateName, object additionalViewData = null)
+        public async Task<string> ViewAsync(string viewName, object additionalViewData = null)
         {
             using (var writer = new StringWriter())
             {
-                await RenderToStringAsync(writer, templateName, null, true, false, false, additionalViewData);
+                await RenderToStringAsync(writer, viewName, null, true, false, false, additionalViewData);
                 return writer.ToString();
             }
         }
 
-        public async Task<string> ViewAsync(string templateName, object model, object additionalViewData = null)
+        public async Task<string> ViewAsync(string viewName, object model, object additionalViewData = null)
         {
             using (var writer = new StringWriter())
             {
-                await RenderToStringAsync(writer, templateName, model, true, false, false, additionalViewData);
+                await RenderToStringAsync(writer, viewName, model, true, false, false, additionalViewData);
                 return writer.ToString();
             }
+        }
+
+        public Task<string> ViewHtmlAsync(string viewHtml, object model, object additionalViewData = null)
+        {
+            _updateableFileProvider.UpdateContent(viewHtml);
+            return ViewAsync("/Views/FakeView.cshtml", model, additionalViewData);
+        }
+
+        public Task<string> ViewHtmlAsync(string viewHtml, object additionalViewData = null)
+        {
+            _updateableFileProvider.UpdateContent(viewHtml);
+            return ViewAsync("/Views/FakeView.cshtml", additionalViewData);
         }
 
         public async Task<string> PartialViewAsync(string templateName, object additionalViewData = null)
@@ -122,22 +140,34 @@ namespace AspNetCore.Mvc.Extensions.Razor
             }
         }
 
-        public string View(string templateName, object additionalViewData = null)
+        public string View(string viewName, object additionalViewData = null)
         {
             using (var writer = new StringWriter())
             {
-                RenderToStringAsync(writer, templateName, null, true, false, false, additionalViewData).GetAwaiter().GetResult();
+                RenderToStringAsync(writer, viewName, null, true, false, false, additionalViewData).GetAwaiter().GetResult();
                 return writer.ToString();
             }
         }
 
-        public string View(string templateName, object model, object additionalViewData = null)
+        public string View(string viewName, object model, object additionalViewData = null)
         {
             using (var writer = new StringWriter())
             {
-                RenderToStringAsync(writer, templateName, model, true, false, false, additionalViewData).GetAwaiter().GetResult();
+                RenderToStringAsync(writer, viewName, model, true, false, false, additionalViewData).GetAwaiter().GetResult();
                 return writer.ToString();
             }
+        }
+
+        public string ViewHtml(string viewHtml, object model, object additionalViewData = null)
+        {
+            _updateableFileProvider.UpdateContent(viewHtml);
+            return View("/Views/FakeView.cshtml", model, additionalViewData);
+        }
+
+        public string ViewHtml(string viewHtml, object additionalViewData = null)
+        {
+            _updateableFileProvider.UpdateContent(viewHtml);
+            return View("/Views/FakeView.cshtml", additionalViewData);
         }
 
         public string PartialView(string templateName, object additionalViewData = null)
@@ -297,6 +327,35 @@ namespace AspNetCore.Mvc.Extensions.Razor
 
             return newHelper;
         }
+
+
+        public void AddView(string path, string viewHtml)
+        {
+            if (ExistsView(path))
+            {
+                throw new Exception($"View {path} already exists");
+            }
+
+            _updateableFileProvider.Views.Add($"/Views/{path}.cshtml", new ViewFileInfo(viewHtml));
+        }
+
+        public bool ExistsView(string path)
+        {
+            return _updateableFileProvider.Views.Any(x => x.Key == $"/Views/{path}.cshtml");
+        }
+
+        public void UpdateView(string path, string viewHtml)
+        {
+            if (ExistsView(path))
+            {
+                _updateableFileProvider.UpdateContent(viewHtml, $"/Views/{path}.cshtml");
+            }
+            else
+            {
+                throw new Exception($"View {path} does not exists");
+            }
+        }
+
     }
 }
 

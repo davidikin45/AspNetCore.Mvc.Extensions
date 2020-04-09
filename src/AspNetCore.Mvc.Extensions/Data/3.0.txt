@@ -1,0 +1,45 @@
+﻿Need to specify join tables with many-to-many relationships. 
+AddRange will only do bulk inserts > 4 objects
+Can add Person and Customer to dbContext.Add(). Dont need to use dbContext.Persons.Add(person) and dbContext.Customers.Add(customer). Useful for join tables.
+Update will set status to modified which will update ALL properties. Also update ALL related objects. Use .Entry(entity).State instead for single object update.
+
+Projecting: 
+.Select(s => new {s.Id, s.Name, S.Quotes.Count}).ToList();
+.Select(s => new {Entity =s ,HappyQuotes = s.Quotes.Where(q => q.Text.Contains("happy") }).ToList(). Entity is tracked.
+
+Explicit Loading for Existing Entity:
+.Entry(entity).Collection(s => s.Quotes).Load()
+.Entry(entity).Collection(s => s.Quotes).Query().Where(q => q.Quote.Contains("Happy")).ToList()
+.Entry(entity).Reference(s => s.Horse).Load()
+
+
+DbSet<Query>
+modelBuilder.Entity<Query>().HasNoKey().ToView("ViewName");
+
+InMemory doesnt migrate until EnsureCreated is called
+
+
+https://gunnarpeipman.com/ef-core-dbcontext-repository/
+
+Typically in DDD you create the repository/query interfaces in the domain layer so both the application services and domain services have access. I have only ever injected them into application services but from doing reading it can be beneficial to also inject them into domain services at times.
+In Gunnars example I initially thought it would be a limitation you wouldn't be able to use the repositories individually in Domain Services but I guess they would still work if a DbContext had also been injected within the DI scope?
+
+http://domain-driven-design.3010926.n2.nabble.com/Repository-interfaces-Domain-Layer-or-Application-Layer-td7579445.html
+https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/seedwork-domain-model-base-classes-interfaces
+
+If going for approach of turning DbContext into Repository/Query Container you could just instantiate the repositories in the DbContext constructor?
+
+public class SalesDbContext : DbContext
+{
+    public SalesDbContext(DbContextOptions<SalesDbContext> options) : base(options)
+    {
+        CustomerQueries = new CustomerQueries(this);
+    }
+ 
+    public DbSet<Customer> Customers { get; set; }
+    public ICustomerQueries CustomerQueries { get; set; }
+}
+
+- It wouldn't allow you to change the Repository implementation but how often do you need to do that?
+- Could still mock the ICustomerQueries using the setter
+- As in gunnars example the Repository couldn't be injected into a Domain Service, but by leaving the repository with DbContext constuctor param it could still be injected by registering it in the DI container?

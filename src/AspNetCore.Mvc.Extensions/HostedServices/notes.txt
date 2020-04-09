@@ -1,0 +1,7 @@
+﻿<ItemGroup>
+	<None Include="appsettings.json">
+		<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+		<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	</None>
+</ItemGroup>

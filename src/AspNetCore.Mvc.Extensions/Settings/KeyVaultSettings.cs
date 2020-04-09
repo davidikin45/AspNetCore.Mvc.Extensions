@@ -1,6 +1,8 @@
-﻿namespace AspNetCore.Mvc.Extensions.Settings
+﻿using AspNetCore.Mvc.Extensions.Validation.Settings;
+
+namespace AspNetCore.Mvc.Extensions.Settings
 {
-    public class KeyVaultSettings
+    public class KeyVaultSettings : IValidateSettings
     {
         public string Name { get; set; }
     }

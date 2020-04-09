@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace AspNetCore.Mvc.Extensions.Security
@@ -50,19 +51,17 @@ namespace AspNetCore.Mvc.Extensions.Security
         public static JwtToken CreateJwtTokenSigningWithCertificateSecurityKey(string userId, string userName, IEnumerable<string> roles, int? minuteExpiry, X509SecurityKey key, string issuer, string audience, params string[] scopes)
         {
             var claims = GetClaims(userId, userName, roles, scopes);
-
-            var creds = new SigningCredentials(key, SecurityAlgorithms.RsaSha256);
+            var creds = new X509SigningCredentials(key.Certificate, SecurityAlgorithms.RsaSha256); // JwtSecurityTokenHandler will serialize X509SigningCredentials kid=key.KeyId(Thumbprint) and x5t=key.X5t(cert hash), it wont serialize x5t for SigningCredentials
+            creds.Key.KeyId = key.KeyId;
 
             return CreateJwtToken(minuteExpiry, issuer, audience, claims, creds);
         }
 
         //Symmetric
-        public static JwtToken CreateJwtTokenSigningWithKey(string userId, string userName, IEnumerable<string> roles, int? minuteExpiry, string hmacKey, string issuer, string audience, params string[] scopes)
+        public static JwtToken CreateJwtTokenSigningWithKey(string userId, string userName, IEnumerable<string> roles, int? minuteExpiry, SymmetricSecurityKey key, string issuer, string audience, params string[] scopes)
         {
             var claims = GetClaims(userId, userName, roles, scopes);
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(hmacKey));
-
+     
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             return CreateJwtToken(minuteExpiry, issuer, audience, claims, creds);
@@ -79,6 +78,7 @@ namespace AspNetCore.Mvc.Extensions.Security
 
             var results = new JwtToken
             {
+                //https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/blob/d895860414398b74727a7ef59c43626d2f51dd5f/src/System.IdentityModel.Tokens.Jwt/JwtSecurityTokenHandler.cs
                 Token = new JwtSecurityTokenHandler().WriteToken(token),
                 Expiration = token.ValidTo
             };
@@ -88,6 +88,7 @@ namespace AspNetCore.Mvc.Extensions.Security
 
         public static JwtSecurityToken DecodeJwtToken(string jwt)
         {
+            //https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/blob/d895860414398b74727a7ef59c43626d2f51dd5f/src/System.IdentityModel.Tokens.Jwt/JwtSecurityTokenHandler.cs
             var handler = new JwtSecurityTokenHandler();
             var token = handler.ReadJwtToken(jwt);
             return token;

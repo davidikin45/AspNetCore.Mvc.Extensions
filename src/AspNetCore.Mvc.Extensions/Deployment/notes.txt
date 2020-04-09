@@ -1,0 +1,5 @@
+﻿https://gunnarpeipman.com/dotnet-core-self-contained-executable/
+<PublishTrimmed>true</PublishTrimmed>
+<PublishReadyToRun>true</PublishReadyToRun>
+<PublishSingleFile>true</PublishSingleFile>
+<RuntimeIdentifier>win-x64</RuntimeIdentifier>

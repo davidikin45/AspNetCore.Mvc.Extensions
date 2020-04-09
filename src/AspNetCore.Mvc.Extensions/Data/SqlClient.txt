@@ -1,0 +1,4 @@
+﻿https://devblogs.microsoft.com/dotnet/introducing-the-new-microsoftdatasqlclient/
+
+System.Data.SqlClient = OLD
+Microsoft.Data.SqlClient = NEW

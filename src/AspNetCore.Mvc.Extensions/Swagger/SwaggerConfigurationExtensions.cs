@@ -1,4 +1,5 @@
 ﻿using AspNetCore.Mvc.Extensions.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
@@ -46,13 +47,16 @@ namespace AspNetCore.Mvc.Extensions.Swagger
                 c.SwaggerDoc(apiDescription.GroupName, new OpenApiInfo { Title = _options.ApiTitle, Description = _options.ApiDescription, Contact = new OpenApiContact() { Name = _options.ContactName, Email = _options.ContactEmail, Url = _options.ContactWebsite != null ?  new System.Uri(_options.ContactWebsite) : null }, Version = apiDescription.ApiVersion.ToString(), License = _options.License });
             }
 
-            c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, SwaggerSecuritySchemes.Bearer);
+            if(_options.EnableBearerAuth)
+                c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, SwaggerSecuritySchemes.Bearer);
 
-            c.AddSecurityDefinition(BasicAuthenticationDefaults.AuthenticationScheme, SwaggerSecuritySchemes.Basic);
+            if (_options.EnableBasicAuth)
+                c.AddSecurityDefinition(BasicAuthenticationDefaults.AuthenticationScheme, SwaggerSecuritySchemes.Basic);
 
-            //c.AddSecurityDefinition(CookieAuthenticationDefaults.AuthenticationScheme, SwaggerSecuritySchemes.Cookies);
+            if (_options.EnableCookieAuth)
+                c.AddSecurityDefinition(CookieAuthenticationDefaults.AuthenticationScheme, SwaggerSecuritySchemes.Cookies);
 
-            c.DocInclusionPredicate((documentName, apiDescription) =>
+                c.DocInclusionPredicate((documentName, apiDescription) =>
             {
                 var actionApiVersionModel = apiDescription.ActionDescriptor
                 .GetApiVersionModel(ApiVersionMapping.Explicit | ApiVersionMapping.Implicit);
@@ -75,11 +79,10 @@ namespace AspNetCore.Mvc.Extensions.Swagger
             //Accept Header Operation Filter
             c.OperationFilter<SwaggerAssignSecurityRequirements>();
 
-
-            c.SchemaFilter<SwaggerModelExamples>();
+            c.SchemaFilter<SwaggerJsonPatchDocumentExample>();
 
             c.IncludeXmlComments(_options.XmlCommentsFullPath);
-            c.DescribeAllEnumsAsStrings();
+            //c.DescribeAllEnumsAsStrings(); // options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 
             c.DescribeAllParametersInCamelCase();
         }

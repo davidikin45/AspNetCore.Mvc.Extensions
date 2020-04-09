@@ -2,11 +2,11 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.AspNetCore.Mvc.ViewFeatures.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text.Encodings.Web;
@@ -91,10 +91,10 @@ namespace AspNetCore.Mvc.Extensions
             return DisplayTextSimple(html, html.ViewData.Model, propertyName);
         }
 
-
         public static HtmlString DisplayTextSimple(this IHtmlHelper html, object model, string propertyName)
         {
             var newViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary()) { Model = model };
+
             var modelExporer = ExpressionMetadataProvider.FromStringExpression(propertyName, newViewData, html.MetadataProvider);
 
             string value = "";

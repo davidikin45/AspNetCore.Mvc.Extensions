@@ -1,8 +1,10 @@
-using AspNetCore.Base.Localization;
 using AspNetCore.Mvc.Extensions;
+using AspNetCore.Mvc.Extensions.AmbientRouteData;
+using AspNetCore.Mvc.Extensions.FeatureFolders;
+using AspNetCore.Mvc.Extensions.Localization;
+using AspNetCore.Mvc.Extensions.Swagger;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -11,10 +13,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using System.Threading.Tasks;
-using AspNetCore.Mvc.Extensions.AmbientRouteData;
-using AspNetCore.Mvc.Extensions.FeatureFolders;
 using System;
+using System.Threading.Tasks;
 
 namespace LocalizationAspNetCore3
 {
@@ -44,6 +44,10 @@ namespace LocalizationAspNetCore3
                 options.SharedViewFolders.Add("CookieConsent");
             };
 
+
+            services.AddLocalization(options => options.ResourcesPath = "Resources");
+            services.AddUrlLocalization();
+
             services.AddControllersWithViews(options =>
             {
                 options.EnableEndpointRouting = true;
@@ -63,12 +67,18 @@ namespace LocalizationAspNetCore3
              //If EnableEndpointRouting is enabled (enabled by default from 2.2) ambient route data is required. 
              .AddAmbientRouteDataUrlHelperFactory(options =>
               {
-                  options.AmbientRouteDataKeys.Add(new AmbientRouteData("area", false));
-                  options.AmbientRouteDataKeys.Add(new AmbientRouteData("culture", true));
-                  options.AmbientRouteDataKeys.Add(new AmbientRouteData("ui-culture", true));
-              });
+                  options.AmbientRouteDataKeys.Add(new AmbientRouteDataKey("area", false));
+                  options.AmbientRouteDataKeys.Add(new AmbientRouteDataKey("culture", true));
+                  options.AmbientRouteDataKeys.Add(new AmbientRouteDataKey("ui-culture", true));
+              })
+             .AddActionLinkLocalization()
+             .AddApiVersioning();
+
+            services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
             services.AddRazorPages();
+
+            services.AddSwaggerWithApiVersioning();
 
             services.AddCultureRouteConstraint("cultureCheck");
 
@@ -78,7 +88,7 @@ namespace LocalizationAspNetCore3
                supportAllLanguagesFormatting: false,
                supportUICultureFormatting: true,
                allowDefaultCultureLanguage: true,
-               supportedUICultures: "en");
+               supportedUICultures: new string[] { "en", "es" });
 
             services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
         }
@@ -100,6 +110,7 @@ namespace LocalizationAspNetCore3
             app.UseHttpsRedirection();
 
             app.UseRequestLocalization(localizationOptions.Value);
+            app.UseUrlLocalization();
 
             app.UseStaticFiles();
 
@@ -135,6 +146,7 @@ namespace LocalizationAspNetCore3
                         ctx.Response.Redirect(culturedPath);
                         return Task.CompletedTask;
                     });
+
                 }
             });
         }

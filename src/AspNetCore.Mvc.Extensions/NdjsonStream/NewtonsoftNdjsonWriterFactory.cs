@@ -85,10 +85,10 @@ namespace AspNetCore.Mvc.Extensions.NdjsonStream
         }.ToString();
 
         private readonly IHttpResponseStreamWriterFactory _httpResponseStreamWriterFactory;
-        private readonly MvcJsonOptions _options;
         private readonly NewtonsoftNdjsonArrayPool _jsonArrayPool;
 
-        public NewtonsoftNdjsonWriterFactory(IHttpResponseStreamWriterFactory httpResponseStreamWriterFactory, IOptions<MvcJsonOptions> options, ArrayPool<char> innerJsonArrayPool)
+        private readonly MvcNewtonsoftJsonOptions _options;
+        public NewtonsoftNdjsonWriterFactory(IHttpResponseStreamWriterFactory httpResponseStreamWriterFactory, IOptions<MvcNewtonsoftJsonOptions> options, ArrayPool<char> innerJsonArrayPool)
         {
             _httpResponseStreamWriterFactory = httpResponseStreamWriterFactory ?? throw new ArgumentNullException(nameof(httpResponseStreamWriterFactory));
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
@@ -100,7 +100,20 @@ namespace AspNetCore.Mvc.Extensions.NdjsonStream
 
             _jsonArrayPool = new NewtonsoftNdjsonArrayPool(innerJsonArrayPool);
         }
+        //.NET Core 2.2 
+        //private readonly MvcJsonOptions _options;
+        //public NewtonsoftNdjsonWriterFactory(IHttpResponseStreamWriterFactory httpResponseStreamWriterFactory, IOptions<MvcJsonOptions> options, ArrayPool<char> innerJsonArrayPool)
+        //{
+        //    _httpResponseStreamWriterFactory = httpResponseStreamWriterFactory ?? throw new ArgumentNullException(nameof(httpResponseStreamWriterFactory));
+        //    _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
+        //    if (innerJsonArrayPool == null)
+        //    {
+        //        throw new ArgumentNullException(nameof(innerJsonArrayPool));
+        //    }
+
+        //    _jsonArrayPool = new NewtonsoftNdjsonArrayPool(innerJsonArrayPool);
+        //}
         public INdjsonWriter CreateWriter(ActionContext context, NdjsonStreamResult result)
         {
             if (context == null)
@@ -129,11 +142,19 @@ namespace AspNetCore.Mvc.Extensions.NdjsonStream
 
         private static void DisableResponseBuffering(HttpContext context)
         {
-            IHttpBufferingFeature bufferingFeature = context.Features.Get<IHttpBufferingFeature>();
+            IHttpResponseBodyFeature bufferingFeature = context.Features.Get<IHttpResponseBodyFeature>();
             if (bufferingFeature != null)
             {
-                bufferingFeature.DisableResponseBuffering();
+                bufferingFeature.DisableBuffering();
             }
+
+            //.NET Core 2.2 
+            //IHttpBufferingFeature bufferingFeature = context.Features.Get<IHttpBufferingFeature>();
+            //if (bufferingFeature != null)
+            //{
+            //    bufferingFeature.DisableResponseBuffering();
+            //}
+
         }
     }
 }

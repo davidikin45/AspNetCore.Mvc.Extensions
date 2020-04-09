@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace AspNetCore.Base.Notifications
+namespace AspNetCore.Mvc.Extensions.Notifications
 {
     public interface INotificationService
     {

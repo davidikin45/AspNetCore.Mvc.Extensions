@@ -46,8 +46,9 @@ namespace AspNetCore.Mvc.Extensions.ActionResults
 
             var csvBytes = Encoding.ASCII.GetBytes(writer.ToString());
 
-            context.HttpContext.Response.Headers["content-disposition"]
-            = "attachment; filename=" + name + ".csv";
+
+            context.HttpContext.Response.Headers["content-type"] = "text/csv";
+            context.HttpContext.Response.Headers["content-disposition"] = "attachment; filename=" + name + ".csv";
             return context.HttpContext.Response.Body.WriteAsync(csvBytes, 0, csvBytes.Length);
         }
 
@@ -123,8 +124,8 @@ namespace AspNetCore.Mvc.Extensions.ActionResults
 
             var csvBytes = Encoding.ASCII.GetBytes(writer.ToString());
 
-            context.HttpContext.Response.Headers["content-disposition"]
-            = "attachment; filename=" + name + ".csv";
+            context.HttpContext.Response.Headers["content-type"] = "text/csv";
+            context.HttpContext.Response.Headers["content-disposition"] = "attachment; filename=" + name + ".csv";
             return context.HttpContext.Response.Body.WriteAsync(csvBytes, 0, csvBytes.Length);
         }
 

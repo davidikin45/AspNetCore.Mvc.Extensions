@@ -1,0 +1,149 @@
+[
+  {
+    "Area": "Admin",
+    "Controller": "Home",
+    "Action": "Index",
+    "LinkText": "Admin"
+  },
+  {
+    "Area": "Identity",
+    "Controller": "Manage",
+    "Action": "Index",
+    "LinkText": "User Profile"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "Authors",
+    "Action": "Index",
+    "LinkText": "Authors"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "Categories",
+    "Action": "Index",
+    "LinkText": "Categories"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "Tags",
+    "Action": "Index",
+    "LinkText": "Tags"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "Locations",
+    "Action": "Index",
+    "LinkText": "Locations"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "BlogPosts",
+    "Action": "Index",
+    "LinkText": "Posts"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "CarouselItems",
+    "Action": "Index",
+    "LinkText": "Carousel"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "ContentHtmls",
+    "Action": "Index",
+    "LinkText": "Content Html"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "ContentTexts",
+    "Action": "Index",
+    "LinkText": "Content Text"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "Projects",
+    "Action": "Index",
+    "LinkText": "Projects"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "Testimonials",
+    "Action": "Index",
+    "LinkText": "Testimonials"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "MailingList",
+    "Action": "Index",
+    "LinkText": "Mailing List"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "MailingList",
+    "Action": "Email",
+    "LinkText": "Email Mailing List"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "Faqs",
+    "Action": "Index",
+    "LinkText": "FAQ"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "Home",
+    "Action": "FileManager",
+    "LinkText": "File Manager"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "FolderMetadata",
+    "Action": "Index",
+    "LinkText": "Folder Metadata"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "FileMetadata",
+    "Action": "Index",
+    "LinkText": "File Metadata"
+  },
+  {
+    "Area": "Admin",
+    "Active": true,
+    "Controller": "Metadata",
+    "Action": "Index",
+    "LinkText": "Image Metadata"
+  },
+  {
+    "Area": "Admin",
+    "Controller": "Home",
+    "Action": "ClearCache",
+    "LinkText": "Clear Cache"
+  },
+  {
+    "Controller": "",
+    "Action": "/admin/hangfire",
+    "LinkText": "Hangfire Jobs"
+  },
+  {
+    "Controller": "",
+    "Action": "/api",
+    "LinkText": "Swagger Api"
+  }
+]

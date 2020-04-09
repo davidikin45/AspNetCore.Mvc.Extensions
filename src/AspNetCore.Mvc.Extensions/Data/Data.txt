@@ -1,0 +1,5 @@
+﻿1. Never have Many-To-Many relationships. Create a join Entity so the relationship becomes 1-To-Many and Many-To-1.
+2. Never have 1-To-1 Composition/Owned ENTITY Relationships. For Composition relationships use Value types instead if required. In EF6 extend from BaseValueObject. In EF Core decorate value type with [OwnedAttribute]. Not sure if this attribute can be applied on base class. ValueTypes are included by default.
+3. Use collections only for Composition/Owned relationships(1-To-Many, child cannot exist independent of the parent). Don't use collections for Aggregation/Associated relationshiships(child can exist independently of the parent, reference relationship). Never use a Collection for Navigation purposes.
+4. All Aggregation/Associated Properties should have an associated Id property.
+5. Use Complex properties for Aggregation/Associated relationships only (Many-To-1, child can exist independently of the parent, reference relationship). These become Navigation properties.

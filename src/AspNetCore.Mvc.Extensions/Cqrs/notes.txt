@@ -1,0 +1,9 @@
+﻿CQS is about Command and Queries. It Doesn't care about the model. You have somehow separated services that only read data and services that modify data.
+CQRS is about separate models for writes and read. Of course, usage of write model often reads something to fulfill business logic, but you can only do reads on read model. Separate Databases are state of the art. But imagine single DB with separate models for read and writes modeled in OR/M. It is very often good enough.
+I have found that people often say they practice CQRS when they have CQS.
+
+The biggest difference is CQRS uses separate data stores for commands and queries. A query store can use a different technology like a document database or just be a denormalized schema in the same database that makes querying the data easier.
+The data between databases is usually copied asynchronously using something like a service bus. Therefore, data in the query store is eventually consistent (is going to be there at some point of time). Applications need to account for that. While it is possible to use the same transaction (same database or a 2-phase commit) to write in both stores, it is usually not recommended for scalability reasons.
+CQS architecture reads and writes from the same data store/tables.
+
+No, you don't necessarily need a separate write database. The core of CQRS segregation is at the model (code) level. Going all the way to the DB might be beneficial or detrimental to your project, depending on the context

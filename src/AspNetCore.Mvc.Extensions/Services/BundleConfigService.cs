@@ -9,9 +9,9 @@ namespace AspNetCore.Mvc.Extensions.Services
 {
     public class BundleConfigService
     {
-        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IWebHostEnvironment _hostingEnvironment;
 
-        public BundleConfigService(IHostingEnvironment hostingEnvironment)
+        public BundleConfigService(IWebHostEnvironment hostingEnvironment)
         {
             _hostingEnvironment = hostingEnvironment;
             Config = JsonConvert.DeserializeObject<List<Bundle>>(File.ReadAllText(Path.Combine(_hostingEnvironment.ContentRootPath, "bundleconfig.json")));

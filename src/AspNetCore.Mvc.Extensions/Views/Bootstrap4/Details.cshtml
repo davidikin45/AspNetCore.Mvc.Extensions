@@ -1,12 +1,12 @@
 ﻿@using AspNetCore.Mvc.Extensions
 @model dynamic
 
-<partial name="_Details" />
+@HtmlHelperPartialExtensions.Partial(Html, "~/Views/Bootstrap4/_Details.cshtml", Model, Html.ViewData)
 
 <p>
     @if (ViewBag.DisableEdit == null ? true : !ViewBag.DisableEdit)
     {
-        @Html.ActionLink("Edit", "Edit", new { id = Model.Id })<text>|</text>
+        @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) <text>|</text>
     }
 
     @if (ViewBag.Collection == null)

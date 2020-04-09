@@ -5,6 +5,6 @@ namespace AspNetCore.Mvc.Extensions.Routing.Constraints
     public class CultureConstraint : RegexRouteConstraint
     {
         public CultureConstraint()
-            : base(@"^[a-zA-Z]{2,3}(\-[a-zA-Z]{4})?(\-[a-zA-Z0-9]{2,3})?$") { }
+            : base(@"^(?!css|js|lib)[a-zA-Z]{2,3}(\-[a-zA-Z]{4})?(\-[a-zA-Z0-9]{2,3})?$") { }
     }
 }

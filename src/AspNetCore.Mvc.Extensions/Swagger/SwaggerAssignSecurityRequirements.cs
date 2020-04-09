@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Collections.Generic;
@@ -14,17 +13,18 @@ namespace AspNetCore.Mvc.Extensions.Swagger
     {
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
-            IEnumerable<AuthorizeAttribute> authorizeAttributes = new List<AuthorizeAttribute>();
+            //AllowAnonymous at Controller or Action level always takes priority!
+            var allowAnonymous = context.MethodInfo.ReflectedType.GetCustomAttributes(true)
+           .Union(context.MethodInfo.GetCustomAttributes(true))
+           .OfType<AllowAnonymousAttribute>().Any();
 
-            // Determine if the operation has the Authorize attribute
-            if (context.ApiDescription.ActionDescriptor is ControllerActionDescriptor)
-            {
-                authorizeAttributes = ((ControllerActionDescriptor)context.ApiDescription.ActionDescriptor).MethodInfo.ReflectedType.GetCustomAttributes(typeof(AuthorizeAttribute), true).Select(a => (AuthorizeAttribute)a);
-            }
+            //https://github.com/domaindrivendev/Swashbuckle.AspNetCore
+            //AuthorizeAttributes are AND not OR.
+            var authAttributes = context.MethodInfo.ReflectedType.GetCustomAttributes(true)
+            .Union(context.MethodInfo.GetCustomAttributes(true))
+            .OfType<AuthorizeAttribute>();
 
-            authorizeAttributes = authorizeAttributes.Concat(context.MethodInfo.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Select(a => (AuthorizeAttribute)a));
-
-            if (!authorizeAttributes.Any())
+            if (allowAnonymous || !authAttributes.Any())
                 return;
 
             // Initialize the operation.security property
@@ -34,7 +34,8 @@ namespace AspNetCore.Mvc.Extensions.Swagger
             // Add the appropriate security definition to the operation
             var securityRequirements = new OpenApiSecurityRequirement();
 
-            foreach (var item in authorizeAttributes)
+            //If no scheme is specified any scheme can be used.
+            foreach (var item in authAttributes)
             {
                 if (item.AuthenticationSchemes == null || item.AuthenticationSchemes.Contains(JwtBearerDefaults.AuthenticationScheme))
                 {
@@ -57,11 +58,6 @@ namespace AspNetCore.Mvc.Extensions.Swagger
                         securityRequirements.Add(SwaggerSecuritySchemes.BasicReference, new List<string>());
                     }
                 }
-            }
-
-            if (securityRequirements.Count() == 0)
-            {
-                securityRequirements.Add(SwaggerSecuritySchemes.CookiesReference, new List<string>());
             }
 
             operation.Security.Add(securityRequirements);

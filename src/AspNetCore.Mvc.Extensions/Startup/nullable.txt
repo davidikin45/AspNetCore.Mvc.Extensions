@@ -1,0 +1,24 @@
+﻿#nullable enable
+#nullable disable
+
+//Treat warnings as errors CS8600
+//<PropertyGroup>
+//<TargetFramework>netcoreapp3.0</TargetFramework>
+//<Nullable>enable</Nullable>
+//</PropertyGroup>
+
+//string? message = null;
+
+//public string? From {get; set;};
+// public string ToUpperFrom() - Warning goes away
+//{
+//    if(from is null)
+//       return "";
+//
+//    return from.ToUpper();
+//}
+//OR
+//public string? ToUpperFrom() => From?.ToUpper();
+//OR (never will be null)
+//public string ToUpperFrom() => From!.ToUpper();
+//string message = null!;

@@ -1,0 +1,13 @@
+﻿Mapping OrderBy
+
+- Can either use EF.Functions in mapping code to ensure all evaluation mapping is done on the sql server. this only works with Microsoft.EntityFrameworkCore.SqlServer
+- Create an IOrderByMapper : IMapper but source and destination types must be the same.
+
+Passing Expression<Func<IQueryable<TDestination>, IOrderedQueryable<TDestination>>> allows passing of strongly typed ordered by AND string ordered by.
+when using strongly typed ordering AutoMapper.Extensions.ExpressionMapping converts the properties. doesn't work for Age > CurrentDateTime.Year - x.DateOfBirth.Year
+
+https://app.pluralsight.com/library/courses/asp-dot-net-core-3-advanced-restful-concerns/table-of-contents
+
+
+UI Driven (Int,Strings) = OrderBy, PageSize, Page
+Code Driven (Strongly Typed) = Where Clause, Includes (fields)

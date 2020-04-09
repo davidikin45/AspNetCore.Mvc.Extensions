@@ -20,14 +20,14 @@
     Func<int, string> link = null;
     if (ViewBag.Collection == null)
     {
-        link = pageIndex => Url.Action("Index", new { page = pageIndex, pageSize = Model.PageSize, orderColumn = Model.OrderColumn, orderType = Model.OrderType, search = Model.Search });
+        link = pageIndex => Url.Action("Index", new { p = pageIndex, pageSize = Model.PageSize, orderBy = Model.OrderBy, search = Model.Search });
     }
     else
     {
-        link = pageIndex => Url.Action("Collection", new { id = ViewBag.Id, collection = ViewBag.Collection, page = pageIndex, pageSize = Model.PageSize, orderColumn = Model.OrderColumn, orderType = Model.OrderType, search = Model.Search });
+        link = pageIndex => Url.Action("Collection", new { id = ViewBag.Id, collection = ViewBag.Collection, p = pageIndex, pageSize = Model.PageSize, orderBy = Model.OrderBy, search = Model.Search });
     }
 }
-@HtmlHelperPartialExtensions.Partial(Html, "_List", Model.Data, Html.ViewData)
+@HtmlHelperPartialExtensions.Partial(Html, "~/Views/Bootstrap4/_List.cshtml", Model.Data, Html.ViewData)
 @if (ViewBag.Collection != null)
 {
     @Html.ActionLink("Back to List", "Index")

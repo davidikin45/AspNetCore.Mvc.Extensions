@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Mvc.ViewFeatures.Internal;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -48,8 +49,17 @@ namespace AspNetCore.Mvc.Extensions
         }
         public static IHtmlContent EnumDropDownListForStringValue<TModel, TEnum>(this IHtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TEnum>> expression, object htmlAttributes = null)
         {
-            var modelExplorer = ExpressionMetadataProvider.FromLambdaExpression(expression, htmlHelper.ViewData, htmlHelper.MetadataProvider);
+            var modelExpressionProvider = htmlHelper.ViewContext.HttpContext.RequestServices.GetRequiredService<ModelExpressionProvider>();
+
+            var expressionText = modelExpressionProvider.GetExpressionText(expression);
+            var modelExpression = modelExpressionProvider.CreateModelExpression(htmlHelper.ViewData, expressionText);
+
+            var modelExplorer = modelExpression.ModelExplorer;
             Microsoft.AspNetCore.Mvc.ModelBinding.ModelMetadata metadata = modelExplorer.Metadata;
+
+            //.NET Core 2.2 
+            //var modelExplorer = Microsoft.AspNetCore.Mvc.ViewFeatures.Internal.ExpressionMetadataProvider.FromLambdaExpression(expression, htmlHelper.ViewData, htmlHelper.MetadataProvider);
+            //Microsoft.AspNetCore.Mvc.ModelBinding.ModelMetadata metadata = modelExplorer.Metadata;
 
             Type enumType = GetNonNullableModelType(metadata);
             Type baseEnumType = Enum.GetUnderlyingType(enumType);

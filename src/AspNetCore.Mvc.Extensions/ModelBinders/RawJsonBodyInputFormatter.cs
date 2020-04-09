@@ -7,9 +7,10 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Base.ModelBinders
-{           
+namespace AspNetCore.Mvc.Extensions.ModelBinders
+{
     //[FromBody] or [ApiController]
+    //https://weblog.west-wind.com/posts/2017/sep/14/accepting-raw-request-body-content-in-aspnet-core-api-controllers
     //https://stackoverflow.com/questions/31952002/asp-net-core-mvc-how-to-get-raw-json-bound-to-a-string-without-a-type
     //options.InputFormatters.Insert(0, new RawStringRequestBodyInputFormatter());
     //options.InputFormatters.Insert(0, new RawBytesRequestBodyInputFormatter());

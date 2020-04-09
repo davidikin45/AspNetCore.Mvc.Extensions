@@ -1,36 +1,52 @@
-﻿using AspNetCore.Base.ModelBinders;
-using AspNetCore.Mvc.Extensions.AmbientRouteData;
-using AspNetCore.Mvc.Extensions.Authentication;
+﻿using AspNetCore.Mvc.Extensions.Authentication;
 using AspNetCore.Mvc.Extensions.Conventions.Display;
+using AspNetCore.Mvc.Extensions.Data.Configuration;
+using AspNetCore.Mvc.Extensions.Data.UnitOfWork;
+using AspNetCore.Mvc.Extensions.DependencyInjection;
 using AspNetCore.Mvc.Extensions.FeatureFolders;
 using AspNetCore.Mvc.Extensions.FluentMetadata;
+using AspNetCore.Mvc.Extensions.HealthChecks;
+using AspNetCore.Mvc.Extensions.HealthChecks.File;
+using AspNetCore.Mvc.Extensions.HealthChecks.Memory;
+using AspNetCore.Mvc.Extensions.HealthChecks.Ping;
 using AspNetCore.Mvc.Extensions.HostedServices;
-using AspNetCore.Mvc.Extensions.Internal;
-using AspNetCore.Mvc.Extensions.Localization;
+using AspNetCore.Mvc.Extensions.HostedServices.FileProcessing;
+using AspNetCore.Mvc.Extensions.Mapping;
+using AspNetCore.Mvc.Extensions.ModelBinders;
 using AspNetCore.Mvc.Extensions.NdjsonStream;
+using AspNetCore.Mvc.Extensions.OrderByMapping;
+using AspNetCore.Mvc.Extensions.Plugins;
 using AspNetCore.Mvc.Extensions.Providers;
 using AspNetCore.Mvc.Extensions.Razor;
 using AspNetCore.Mvc.Extensions.Reflection;
-using AspNetCore.Mvc.Extensions.Routing.Constraints;
+using AspNetCore.Mvc.Extensions.Security;
 using AspNetCore.Mvc.Extensions.Services;
 using AspNetCore.Mvc.Extensions.Settings;
+using AspNetCore.Mvc.Extensions.SignalR;
+using AspNetCore.Mvc.Extensions.StartupTasks;
 using AspNetCore.Mvc.Extensions.Swagger;
+using AspNetCore.Mvc.Extensions.UI;
+using AspNetCore.Mvc.Extensions.Users;
 using AspNetCore.Mvc.Extensions.Validation;
+using AspNetCore.Mvc.Extensions.Validation.Settings;
 using AspNetCore.Mvc.Extensions.VariableResourceRepresentation;
+using AspNetCore.Mvc.UrlLocalization;
+using AutoMapper;
+using AutoMapper.EquivalencyExpression;
+using AutoMapper.Extensions.ExpressionMapping;
+using AutoMapper.QueryableExtensions;
 using Database.Initialization;
-using Hangfire;
-using Hangfire.Client;
-using Hangfire.Common;
-using Hangfire.Initialization;
-using Hangfire.MemoryStorage;
-using Hangfire.Server;
-using Hangfire.SQLite;
-using Hangfire.SqlServer;
-using Hangfire.States;
+using GraphQL.Server;
+using GraphQL.Server.Ui.Playground;
+using GraphQL.Server.Ui.Voyager;
+using GraphQL.Types;
+using JpProject.AspNetCore.PasswordHasher.Core;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
@@ -41,39 +57,179 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.Services.AppAuthentication;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.DependencyModel;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using MiniProfiler.Initialization;
+using Nest;
+using NetTopologySuite.Geometries;
+using Scrutor;
+using Serilog;
+using Serilog.Sinks.Elasticsearch;
+using StackExchange.Profiling.Storage;
+using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace AspNetCore.Mvc.Extensions
 {
     public static class ConfigurationExtensions
     {
+        #region Application Settings
+        /// <summary>
+        /// Validate settings on App Startup
+        /// </summary>
+        public static IServiceCollection UseStartupSettingsValidation(this IServiceCollection services)
+        {
+            //While IStartupFilters can be used to add middleware to the pipeline, they don't have to. Instead, they can simply be used to run some code when the app starts up, after service configuration has happened, but before the app starts handling requests.
+            services.AddTransient<IStartupFilter, SettingsValidationStartupFilter>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Configures the settings.
+        /// </summary>
+        public static IServiceCollection ConfigureSettings<TOptions>(this IServiceCollection services, IConfiguration config) where TOptions : class, new()
+        {
+            // Bind the configuration using IOptions
+            services.Configure<TOptions>(config);
+
+            //services.Configure<TOptions>(o => { });
+            //services.AddOptions<TOptions>().Configure(o => { });
+
+            // Explicitly register the settings object so IOptions not required (optional)
+            //Singleton
+            //services.AddTransient(sp => sp.GetService<IOptions<TOptions>>().Value);
+
+            //Scoped - Settings are rebound per request
+            services.AddTransient(sp => sp.GetService<IOptionsSnapshot<TOptions>>().Value);
+
+            if (typeof(IValidateSettings).IsAssignableFrom(typeof(TOptions)))
+            {
+                // Register as an IValidateSettings
+                services.AddTransient<IValidateSettings>(sp => (IValidateSettings)sp.GetService<IOptions<TOptions>>().Value);
+            }
+
+            return services;
+        }
+
+
+        /// <summary>
+        /// Configures the settings.
+        /// </summary>
+        public static IServiceCollection ConfigureSettings<TOptions>(this IServiceCollection services, Action<TOptions> configureOptions) where TOptions : class, new()
+        {
+            // Bind the configuration using IOptions
+            services.Configure<TOptions>(configureOptions);
+
+            // Explicitly register the settings object so IOptions not required (optional)
+            services.AddTransient(sp => sp.GetService<IOptions<TOptions>>().Value);
+
+            if (typeof(IValidateSettings).IsAssignableFrom(typeof(TOptions)))
+            {
+                // Register as an IValidateSettings
+                services.AddTransient<IValidateSettings>(sp => (IValidateSettings)sp.GetService<IOptions<TOptions>>().Value);
+            }
+
+            return services;
+        }
+        #endregion
+
+        #region Logging
+        //https://www.humankode.com/asp-net-core/logging-with-elasticsearch-kibana-asp-net-core-and-docker
+        public static LoggerConfiguration AddElasticSearchLogging(this LoggerConfiguration loggerConfiguration, string elasticUri)
+        {
+            if (!string.IsNullOrWhiteSpace(elasticUri))
+            {
+                loggerConfiguration.WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticUri))
+                {
+                    AutoRegisterTemplate = true,
+                });
+            }
+
+            return loggerConfiguration;
+        }
+
+        public static LoggerConfiguration AddElasticSearchLogging(this LoggerConfiguration loggerConfiguration, IConfiguration configuration)
+        {
+            var elasticSettingsSection = configuration.GetChildren().FirstOrDefault(item => item.Key == "ElasticSettings");
+            if (elasticSettingsSection != null)
+            {
+                var log = elasticSettingsSection.GetValue<bool>("Log", false);
+                var uri = elasticSettingsSection.GetValue<string>("Uri", "");
+
+                if (log && string.IsNullOrWhiteSpace(uri))
+                {
+                    loggerConfiguration.AddElasticSearchLogging(uri);
+                }
+            }
+
+            return loggerConfiguration;
+        }
+
+        public static LoggerConfiguration AddSeqLogging(this LoggerConfiguration loggerConfiguration, IConfiguration configuration)
+        {
+            var seqSettingsSection = configuration.GetChildren().FirstOrDefault(item => item.Key == "SeqSettings");
+            if (seqSettingsSection != null)
+            {
+                var log = seqSettingsSection.GetValue<bool>("Log", false);
+                var uri = seqSettingsSection.GetValue<string>("Uri", "");
+
+                if (log && string.IsNullOrWhiteSpace(uri))
+                {
+                    loggerConfiguration.AddSeqLogging(uri);
+                }
+            }
+
+            return loggerConfiguration;
+        }
+
+        public static LoggerConfiguration AddSeqLogging(this LoggerConfiguration loggerConfiguration, string seekUri)
+        {
+            if (!string.IsNullOrWhiteSpace(seekUri))
+            {
+                loggerConfiguration.WriteTo.Seq(seekUri);
+            }
+
+            return loggerConfiguration;
+        }
+        #endregion
+
         #region Display Conventions
         public static IMvcBuilder AddAppendAsterixToRequiredFieldLabels(this IMvcBuilder builder)
         {
             var services = builder.Services;
             //Appends '*' to required fields
             services.AddTransient(sp => sp.GetService<IOptions<ConventionsHtmlGeneratorOptions>>().Value);
-            services.AddSingleton<IHtmlGenerator, ConventionsHtmlGenerator>();
+
+            services.Decorate<IHtmlGenerator, ConventionsHtmlGenerator>();
 
             return builder;
         }
@@ -183,6 +339,34 @@ namespace AspNetCore.Mvc.Extensions
 
         #endregion
 
+        #region Suppress Point Child Validation
+        /// <summary>
+        /// Suppresses Point child validation.
+        /// </summary>
+        public static IMvcBuilder SuppressMvcPointChildValidation(this IMvcBuilder builder)
+        {
+            var services = builder.Services;
+
+            services.AddSingleton<IConfigureOptions<MvcOptions>, SuppressPointChildValidationSetup>();
+
+            return builder;
+        }
+        public class SuppressPointChildValidationSetup : IConfigureOptions<MvcOptions>
+        {
+            private readonly IServiceProvider _serviceProvider;
+
+            public SuppressPointChildValidationSetup(IServiceProvider serviceProvider)
+            {
+                _serviceProvider = serviceProvider;
+            }
+
+            public void Configure(MvcOptions options)
+            {
+                options.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(Point)));
+            }
+        }
+        #endregion
+
         #region Type Finder
         /// <summary>
         /// Adds the type finder service to the application.
@@ -190,7 +374,7 @@ namespace AspNetCore.Mvc.Extensions
         public static IServiceCollection AddTypeFinder(this IServiceCollection services)
         {
             services.AddTransient(sp => sp.GetService<IOptions<AssemblyProviderOptions>>().Value);
-
+       
             services.AddSingleton<IAssemblyProvider, AssemblyProvider>();
             services.AddSingleton<ITypeFinder, TypeFinder>();
 
@@ -231,12 +415,28 @@ namespace AspNetCore.Mvc.Extensions
         /// <summary>
         /// Adds MVC IViewRenderService service to the application.
         /// </summary>
-        public static IMvcBuilder AddMvcViewRenderer(this IMvcBuilder builder)
+        public static IMvcBuilder AddMvcViewRendererAndPdfGenerator(this IMvcBuilder builder)
         {
             var services = builder.Services;
 
             services.AddHttpContextAccessor();
-            services.AddSingleton<IViewRenderService, ViewRenderService>();
+            services.TryAddSingleton<IViewRenderService, ViewRenderService>();
+            services.TryAddSingleton<IGeneratePdfService, GeneratePdfService>();
+
+            services.AddSingleton<UpdateableFileProvider>();
+
+            services.AddSingleton<IConfigureOptions<MvcRazorRuntimeCompilationOptions>, UpdateableFileProviderMvcRazorRuntimeCompilationOptionsSetup>();
+            //.NET Core 2.2 services.AddSingleton<IConfigureOptions<RazorViewEngineOptions>, UpdateableFileProviderRazorViewEngineOptionssSetup>();
+
+            return builder;
+        }
+
+        public static IMvcBuilder AddMvcViewRendererAndPdfGenerator(this IMvcBuilder builder, Action<GeneratePdfOptions> setupAction)
+        {
+            var services = builder.Services;
+
+            services.Configure(setupAction);
+            builder.AddMvcViewRendererAndPdfGenerator();
 
             return builder;
         }
@@ -305,23 +505,6 @@ namespace AspNetCore.Mvc.Extensions
         }
         #endregion region
 
-        #region Ambient Route Data
-        /// <summary>
-        /// Adds ambient route data URL helper factory service to the application.
-        /// </summary>
-        public static IMvcBuilder AddAmbientRouteDataUrlHelperFactory(this IMvcBuilder builder, Action<AmbientRouteDataUrlHelperFactoryOptions> setupAction = null)
-        {
-            var services = builder.Services;
-
-            if (setupAction != null)
-                services.Configure(setupAction);
-
-            services.Decorate<IUrlHelperFactory, AmbientRouteDataUrlHelperFactory>();
-
-            return builder;
-        }
-        #endregion
-
         #region Model Binder and Input Formatters
         /// <summary>
         /// Adds the point model binder to the application.
@@ -349,6 +532,15 @@ namespace AspNetCore.Mvc.Extensions
             builder.Services.AddSingleton<IConfigureOptions<MvcOptions>, RawBytesRequestBodyInputFormatterMvcOptionsSetup>();
             return builder;
         }
+
+        /// <summary>
+        /// Adds the User Specification model binders for UserIncludeSpecification<>, UserFilterSpecification<>, UserOrderBySpecification<>, UserFieldsSpecification<> to the application.
+        /// </summary>
+        public static IMvcBuilder AddMvcUserSpecificationModelBinders(this IMvcBuilder builder)
+        {
+            builder.Services.AddSingleton<IConfigureOptions<MvcOptions>, UserSpecificationsMvcOptionsSetup>();
+            return builder;
+        }
         #endregion
 
         #region Feature Folders
@@ -359,70 +551,140 @@ namespace AspNetCore.Mvc.Extensions
         {
             var services = builder.Services;
 
-            var options = new FeatureFolderOptions();
+            services.AddOptions();
             if (setupAction != null)
-                setupAction(options);
+               services.Configure(setupAction);
 
-            //https://stackoverflow.com/questions/36747293/how-to-specify-the-view-location-in-asp-net-core-mvc-when-using-custom-locations
-            services.Configure<RazorViewEngineOptions>(o =>
+            services.AddSingleton<IConfigureOptions<RazorViewEngineOptions>, FeatureFoldersSetup>();
+
+            return builder;
+        }
+
+        //https://stackoverflow.com/questions/36747293/how-to-specify-the-view-location-in-asp-net-core-mvc-when-using-custom-locations
+        public class FeatureFoldersSetup : IConfigureOptions<RazorViewEngineOptions>
+        {
+            private readonly ILogger<FeatureFoldersSetup> _logger;
+            private readonly FeatureFolderOptions _options;
+
+            public FeatureFoldersSetup(ILogger<FeatureFoldersSetup> logger, IOptions<FeatureFolderOptions> options)
+            {
+                _logger = logger;
+                _options = options.Value;
+            }
+
+            public void Configure(RazorViewEngineOptions o)
             {
                 // {2} is area, {1} is controller,{0} is the action    
                 //o.ViewLocationFormats.Clear();
-                o.ViewLocationFormats.Add(options.RootFeatureFolder + "/{1}/{0}" + RazorViewEngine.ViewExtension);
-                o.ViewLocationFormats.Add(options.RootFeatureFolder + "/{1}/Views/{0}" + RazorViewEngine.ViewExtension);
-                o.ViewLocationFormats.Add(options.RootFeatureFolder + "/Shared/Views/{0}" + RazorViewEngine.ViewExtension);
+                o.ViewLocationFormats.Add(_options.RootFeatureFolder + "/{1}/{0}" + RazorViewEngine.ViewExtension);
+                o.ViewLocationFormats.Add(_options.RootFeatureFolder + "/{1}/Views/{0}" + RazorViewEngine.ViewExtension);
+                o.ViewLocationFormats.Add(_options.RootFeatureFolder + "/Shared/Views/{0}" + RazorViewEngine.ViewExtension);
+                o.PageViewLocationFormats.Add(_options.RootFeatureFolder + "/Shared/Views/{0}" + RazorViewEngine.ViewExtension);
 
-                foreach (var sharedViewFolder in options.SharedViewFolders)
+                foreach (var sharedViewFolder in _options.SharedViewFolders)
                 {
-                    o.ViewLocationFormats.Add(options.RootFeatureFolder + "/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
+                    o.ViewLocationFormats.Add(_options.RootFeatureFolder + "/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
+                    o.PageViewLocationFormats.Add(_options.RootFeatureFolder + "/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
                 }
-            });
 
-            return builder;
+                _logger.LogInformation("View Locations:" + Environment.NewLine + string.Join(Environment.NewLine, o.ViewLocationFormats));
+                _logger.LogInformation("Page View Locations:" + Environment.NewLine + string.Join(Environment.NewLine, o.PageViewLocationFormats));
+            }
         }
 
         /// <summary>
         /// Adds area feature folders to the application with format /Areas/{Area}/{RootFeatureFolder}/{Controller}/{View}.cshtml, /Areas/{Area}/{RootFeatureFolder}/{Controller}/Views/{View}.cshtml, /Areas/{Area}/{RootFeatureFolder}/Shared/Views/{View}.cshtml and /Areas/{Area}/Shared/Views/{View}.cshtml
         /// </summary>
-        public static IMvcBuilder AddAreaFeatureFolders(this IMvcBuilder builder, Action<FeatureFolderOptions> setupAction = null)
+        public static IMvcBuilder AddAreaFeatureFolders(this IMvcBuilder builder, Action<AreaFeatureFolderOptions> setupAction = null)
         {
             var services = builder.Services;
 
-            var options = new FeatureFolderOptions();
+            services.AddOptions();
             if (setupAction != null)
-                setupAction(options);
+                services.Configure(setupAction);
 
-            services.Configure<RazorViewEngineOptions>(o =>
-            {
-                // {2} is area, {1} is controller,{0} is the action    
-                //o.AreaViewLocationFormats.Clear();
-                o.AreaViewLocationFormats.Add("/Areas/{2}" + options.RootFeatureFolder + "/{1}/{0}" + RazorViewEngine.ViewExtension);
-                o.AreaViewLocationFormats.Add("/Areas/{2}" + options.RootFeatureFolder + "/{1}/Views/{0}" + RazorViewEngine.ViewExtension);
-                o.AreaViewLocationFormats.Add("/Areas/{2}" + options.RootFeatureFolder + "/Shared/Views/{0}" + RazorViewEngine.ViewExtension);
-
-                foreach (var sharedViewFolder in options.SharedViewFolders)
-                {
-                    o.AreaViewLocationFormats.Add("/Areas/{2}" + options.RootFeatureFolder + "/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
-                }
-
-                o.AreaViewLocationFormats.Add("/Areas/Shared/Views/{0}" + RazorViewEngine.ViewExtension);
-
-                foreach (var sharedViewFolder in options.SharedViewFolders)
-                {
-                    o.AreaViewLocationFormats.Add("/Areas/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
-                }
-
-                o.AreaViewLocationFormats.Add(options.RootFeatureFolder + "/Shared/Views/{0}" + RazorViewEngine.ViewExtension);
-
-                foreach (var sharedViewFolder in options.SharedViewFolders)
-                {
-                    o.AreaViewLocationFormats.Add(options.RootFeatureFolder + "/Shared/Views/" + sharedViewFolder + "{0}" + RazorViewEngine.ViewExtension);
-                }
-            });
+            services.AddSingleton<IConfigureOptions<RazorViewEngineOptions>, AreaFeatureFoldersSetup>();
 
             return builder;
         }
 
+        public class AreaFeatureFoldersSetup : IConfigureOptions<RazorViewEngineOptions>
+        {
+            private readonly ILogger<AreaFeatureFoldersSetup> _logger;
+            private readonly AreaFeatureFolderOptions _options;
+
+            public AreaFeatureFoldersSetup(ILogger<AreaFeatureFoldersSetup> logger, IOptions<AreaFeatureFolderOptions> options)
+            {
+                _logger = logger;
+                _options = options.Value;
+            }
+
+            public void Configure(RazorViewEngineOptions o)
+            {
+                // {2} is area, {1} is controller,{0} is the action    
+                //o.AreaViewLocationFormats.Clear();
+                o.AreaViewLocationFormats.Add("/Areas/{2}" + _options.RootFeatureFolder + "/{1}/{0}" + RazorViewEngine.ViewExtension);
+                o.AreaViewLocationFormats.Add("/Areas/{2}" + _options.RootFeatureFolder + "/{1}/Views/{0}" + RazorViewEngine.ViewExtension);
+                o.AreaViewLocationFormats.Add("/Areas/{2}" + _options.RootFeatureFolder + "/Shared/Views/{0}" + RazorViewEngine.ViewExtension);
+
+                foreach (var sharedViewFolder in _options.SharedViewFolders)
+                {
+                    o.AreaViewLocationFormats.Add("/Areas/{2}" + _options.RootFeatureFolder + "/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
+                }
+
+                o.AreaViewLocationFormats.Add("/Areas/Shared/Views/{0}" + RazorViewEngine.ViewExtension);
+                o.AreaPageViewLocationFormats.Add("/Areas/Shared/Views/{0}" + RazorViewEngine.ViewExtension);
+
+                foreach (var sharedViewFolder in _options.SharedViewFolders)
+                {
+                    o.AreaViewLocationFormats.Add("/Areas/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
+                    o.AreaPageViewLocationFormats.Add("/Areas/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
+                }
+
+                o.AreaViewLocationFormats.Add(_options.RootFeatureFolder + "/Shared/Views/{0}" + RazorViewEngine.ViewExtension);
+                o.AreaPageViewLocationFormats.Add(_options.RootFeatureFolder + "/Shared/Views/{0}" + RazorViewEngine.ViewExtension);
+
+                foreach (var sharedViewFolder in _options.SharedViewFolders)
+                {
+                    o.AreaViewLocationFormats.Add(_options.RootFeatureFolder + "/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
+                    o.AreaPageViewLocationFormats.Add(_options.RootFeatureFolder + "/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
+                }
+
+                _logger.LogInformation("Area View Locations:" + Environment.NewLine + string.Join(Environment.NewLine, o.AreaViewLocationFormats));
+                _logger.LogInformation("Area Page View Locations:" + Environment.NewLine + string.Join(Environment.NewLine, o.AreaPageViewLocationFormats));
+            }
+        }
+        #endregion
+
+        #region View Location Expander
+        public static IMvcBuilder AddViewLocationExpander(this IMvcBuilder builder, string mvcImplementationFolder = "Controllers/")
+        {
+            builder.Services.Configure<RazorViewEngineOptions>(options =>
+           {
+               options.ViewLocationExpanders.Insert(0, new ViewLocationExpander(mvcImplementationFolder));
+           });
+
+            return builder;
+        }
+        #endregion
+
+        #region One Transaction per Http Call
+        public static void UseOneTransactionPerHttpCall(this IServiceCollection serviceCollection, System.Transactions.IsolationLevel level = System.Transactions.IsolationLevel.ReadCommitted)
+        {
+            serviceCollection.AddScoped<TransactionScope>((serviceProvider) =>
+            {
+                var transactionScope = new TransactionScope(TransactionScopeOption.RequiresNew, new TransactionOptions { IsolationLevel = level });
+                return transactionScope;
+            });
+
+            serviceCollection.AddScoped(typeof(UnitOfWorkFilter), typeof(UnitOfWorkFilter));
+
+            serviceCollection
+                .AddMvc(setup =>
+                {
+                    setup.Filters.AddService<UnitOfWorkFilter>(1);
+                });
+        }
         #endregion
 
         #region Validation
@@ -441,6 +703,11 @@ namespace AspNetCore.Mvc.Extensions
 
             return builder;
         }
+
+        public static IServiceCollection AddValidationService(this IServiceCollection services)
+        {
+            return services.AddTransient<IValidationService, ValidationService>();
+        }
         #endregion
 
         #region Authentication
@@ -448,7 +715,7 @@ namespace AspNetCore.Mvc.Extensions
         /// Uses the basic authentication.
         /// </summary>
         public static IApplicationBuilder UseBasicAuth(
-           this IApplicationBuilder builder, string username, string password)
+       this IApplicationBuilder builder, string username, string password)
         {
             return builder.UseMiddleware<BasicAuthMiddleware>("", username, password);
         }
@@ -475,21 +742,26 @@ namespace AspNetCore.Mvc.Extensions
         }
 
         /// <summary>
-        /// Users the must be authorized.
+        /// Users the must be authorized. The authorization filter will be executed on any request that enters the MVC middleware and maps to a valid action.
         /// </summary>
-        public static IMvcBuilder UserMustBeAuthorized(this IMvcBuilder builder)
+        public static IMvcBuilder UserMustBeAuthorized(this IMvcBuilder builder, bool enabled = true)
         {
-            var services = builder.Services;
-
-            services.Configure<MvcOptions>(options =>
+            if (enabled)
             {
-                //https://ondrejbalas.com/authorization-options-in-asp-net-core/
-                //The authorization filter will be executed on any request that enters the MVC middleware and maps to a valid action.
-                var globalPolicy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-                options.Filters.Add(new AuthorizeFilter(globalPolicy));
-            });
+                var services = builder.Services;
+
+                services.Configure<MvcOptions>(options =>
+                {
+                    //https://ondrejbalas.com/authorization-options-in-asp-net-core/
+                    //The authorization filter will be executed on any request that enters the MVC middleware and maps to a valid action.
+                    var globalPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    //other requirements such as location
+                    .Build();
+
+                    options.Filters.Add(new AuthorizeFilter(globalPolicy));
+                });
+            }
 
             return builder;
         }
@@ -647,8 +919,10 @@ namespace AspNetCore.Mvc.Extensions
 
                 //Variable resource representations
                 //Use RequestHeaderMatchesMediaTypeAttribute to route for Accept header. Versioning should be done with media types not URI!
+
                 var jsonInputFormatter = options.InputFormatters
-                .OfType<JsonInputFormatter>().FirstOrDefault();
+                .OfType<SystemTextJsonInputFormatter>().FirstOrDefault();
+
                 if (jsonInputFormatter != null)
                 {
                     foreach (var mediaType in variableResourceRepresentationOptions.JsonInputMediaTypes)
@@ -657,8 +931,19 @@ namespace AspNetCore.Mvc.Extensions
                     }
                 }
 
+                var jsonInputFormatterNewtonsoft = options.InputFormatters
+               .OfType<NewtonsoftJsonInputFormatter>().FirstOrDefault();
+
+                if (jsonInputFormatterNewtonsoft != null)
+                {
+                    foreach (var mediaType in variableResourceRepresentationOptions.JsonInputMediaTypes)
+                    {
+                        jsonInputFormatterNewtonsoft.SupportedMediaTypes.Add(mediaType);
+                    }
+                }
+
                 var jsonOutputFormatter = options.OutputFormatters
-                   .OfType<JsonOutputFormatter>().FirstOrDefault();
+                   .OfType<SystemTextJsonOutputFormatter>().FirstOrDefault();
 
                 if (jsonOutputFormatter != null)
                 {
@@ -678,6 +963,58 @@ namespace AspNetCore.Mvc.Extensions
                     }
                 }
 
+                var jsonOutputFormatterNewtonsoft = options.OutputFormatters
+                   .OfType<NewtonsoftJsonOutputFormatter>().FirstOrDefault();
+
+                if (jsonOutputFormatterNewtonsoft != null)
+                {
+                    foreach (var mediaType in variableResourceRepresentationOptions.JsonOutputMediaTypes)
+                    {
+                        jsonOutputFormatterNewtonsoft.SupportedMediaTypes.Add(mediaType);
+                    }
+
+                    if (variableResourceRepresentationOptions.RemoveTextJsonTextOutputFormatter)
+                    {
+                        // remove text/json as it isn't the approved media type
+                        // for working with JSON at API level
+                        if (jsonOutputFormatterNewtonsoft.SupportedMediaTypes.Contains("text/json"))
+                        {
+                            jsonOutputFormatterNewtonsoft.SupportedMediaTypes.Remove("text/json");
+                        }
+                    }
+                }
+
+                //.NET Core 2.2 
+                //var jsonInputFormatterNewtonsoft = options.InputFormatters.OfType<JsonInputFormatter>().FirstOrDefault();
+
+                //if (jsonInputFormatterNewtonsoft != null)
+                //{
+                //    foreach (var mediaType in variableResourceRepresentationOptions.JsonInputMediaTypes)
+                //    {
+                //        jsonInputFormatterNewtonsoft.SupportedMediaTypes.Add(mediaType);
+                //    }
+                //}
+
+                //var jsonOutputFormatterNewtonsoft = options.OutputFormatters.OfType<JsonOutputFormatter>().FirstOrDefault();
+
+                //if (jsonOutputFormatterNewtonsoft != null)
+                //{
+                //    foreach (var mediaType in variableResourceRepresentationOptions.JsonOutputMediaTypes)
+                //    {
+                //        jsonOutputFormatterNewtonsoft.SupportedMediaTypes.Add(mediaType);
+                //    }
+
+                //    if (variableResourceRepresentationOptions.RemoveTextJsonTextOutputFormatter)
+                //    {
+                //        // remove text/json as it isn't the approved media type
+                //        // for working with JSON at API level
+                //        if (jsonOutputFormatterNewtonsoft.SupportedMediaTypes.Contains("text/json"))
+                //        {
+                //            jsonOutputFormatterNewtonsoft.SupportedMediaTypes.Remove("text/json");
+                //        }
+                //    }
+                //}
+
                 foreach (var formatterMapping in variableResourceRepresentationOptions.FormatterMappings)
                 {
                     options.FormatterMappings.SetMediaTypeMappingForFormat(formatterMapping.Key, formatterMapping.Value);
@@ -689,18 +1026,28 @@ namespace AspNetCore.Mvc.Extensions
         #endregion
 
         #region Hosted Services
+        public static IServiceCollection AddHostedServiceScoped<TWorkItem>(this IServiceCollection services, params object[] arguments)
+            where TWorkItem : class, IScopedProcessingService
+        {
+            return services.AddTransient<IHostedService>(sp =>
+            {
+                return new ScopedHostedService<TWorkItem>(sp)
+                {
+                    Arguments = arguments
+                };
+            });
+        }
+
         /// <summary>
         /// Adds the hosted service with cron job schedules or use [CronJob] to the application.
         /// </summary>
-        public static IServiceCollection AddHostedServiceCronJob<TCronJob>(this IServiceCollection services, params string[] cronSchedules)
-            where TCronJob : class, IHostedServiceCronJob
+        public static IServiceCollection AddHostedServiceCronJob<TWorkItem>(this IServiceCollection services, params string[] cronSchedules)
+            where TWorkItem : class, IScopedProcessingService
         {
-            services.AddScoped<TCronJob>();
-
             return services.AddTransient<IHostedService>(sp =>
             {
-                var logger = sp.GetService<ILogger<HostedServiceCron<TCronJob>>>();
-                return new HostedServiceCron<TCronJob>(sp, logger, cronSchedules);
+                var logger = sp.GetService<ILogger<CronHostedService<TWorkItem>>>();
+                return new CronHostedService<TWorkItem>(sp, logger, cronSchedules);
             });
         }
 
@@ -712,197 +1059,25 @@ namespace AspNetCore.Mvc.Extensions
             services.AddHostedService<QueuedHostedService>();
             return services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
         }
-        #endregion
 
-        #region Hangfire
-        /// <summary>
-        /// Adds the hangfire services to the application.
-        /// </summary>
-        public static IServiceCollection AddHangfire(this IServiceCollection services, string serverName, string connectionString = "", Action<JobStorageOptions> configJobStorage = null, Action <BackgroundJobServerOptions> configAction = null, IEnumerable<IBackgroundProcess> additionalProcesses = null)
+        public static IServiceCollection AddHostedServiceBackgroundTaskQueue(this IServiceCollection services, Action<QueuedHostedServiceOptions> configure)
         {
-            services.AddHangfire(config =>
-            {
-                config
-                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-                 .UseSimpleAssemblyNameTypeSerializer()
-                 .UseRecommendedSerializerSettings();
+            services.Configure(configure);
+            return services.AddHostedServiceBackgroundTaskQueue();
+        }
 
-                config.UseFilter(new HangfireLoggerAttribute());
-                config.UseFilter(new HangfirePreserveOriginalQueueAttribute());
-
-                if(connectionString != null)
-                {
-                    //Initializes Hangfire Schema if PrepareSchemaIfNecessary = true
-                    var storage = HangfireJobStorage.GetJobStorage(connectionString, configJobStorage).JobStorage;
-
-                    config.UseStorage(storage);
-                    //config.UseMemoryStorage();
-                    //config.UseSqlServerStorage(connectionString);
-                    //config.UseSQLiteStorage(connectionString);
-                }
-            });
-
-            if(connectionString != null)
-            {
-                //Launches Server as IHostedService
-                services.AddHangfireServer(serverName, configAction, additionalProcesses);
-            }
+        public static IServiceCollection AddFileProcessing<T, TResultProcessor>(this IServiceCollection services) where TResultProcessor : class, IResultProcessor<T>
+        {
+            services.TryAddSingleton<ICsvResultParser<T>, CsvResultParser<T>>();
+            services.TryAddScoped<IResultProcessor<T>, TResultProcessor>();
+            services.AddSingleton<FileProcessingChannel<T>>();
+            services.AddHostedService<FileProcessingService<T>>();
 
             return services;
         }
+#endregion
 
-        //IBackgroundJobClient and IRecurringJobManager will only work when storage setup via services.AddHangfire
-        public static IServiceCollection AddHangfireServer(this IServiceCollection services, string serverName, Action<BackgroundJobServerOptions> configAction = null, IEnumerable<IBackgroundProcess> additionalProcesses = null, JobStorage storage = null)
-        {
-            return services.AddTransient<IHostedService, BackgroundJobServerHostedService>(provider =>
-            {
-                ThrowIfNotConfigured(provider);
-
-                var options = new BackgroundJobServerOptions
-                {
-                    ServerName = serverName,
-                    Queues = new[] { serverName, "default" }
-                };
-
-                if (configAction != null)
-                    configAction(options);
-
-                storage = storage ?? provider.GetService<JobStorage>() ?? JobStorage.Current;
-                additionalProcesses = additionalProcesses ?? provider.GetServices<IBackgroundProcess>();
-
-                options.Activator = options.Activator ?? provider.GetService<JobActivator>();
-                options.FilterProvider = options.FilterProvider ?? provider.GetService<IJobFilterProvider>();
-                options.TimeZoneResolver = options.TimeZoneResolver ?? provider.GetService<ITimeZoneResolver>();
-
-                GetInternalServices(provider, out var factory, out var stateChanger, out var performer);
-
-#pragma warning disable 618
-                return new BackgroundJobServerHostedService(
-#pragma warning restore 618
-                    storage, options, additionalProcesses, factory, performer, stateChanger);
-            });
-        }
-
-        public static IServiceCollection AddHangfireServerServices(this IServiceCollection services, Action<BackgroundJobServerOptions> configAction = null, JobStorage storage = null)
-        {
-            var options = new BackgroundJobServerOptions();
-            if (configAction != null)
-                configAction(options);
-
-            services.AddSingleton<IBackgroundJobClient>(x =>
-            {
-                ThrowIfNotConfigured(x);
-
-                if (GetInternalServices(x, out var factory, out var stateChanger, out _))
-                {
-                    return new BackgroundJobClient(storage ?? x.GetRequiredService<JobStorage>(), factory, stateChanger);
-                }
-
-                return new BackgroundJobClient(
-                    storage ?? x.GetRequiredService<JobStorage>(),
-                    options.FilterProvider ?? x.GetRequiredService<IJobFilterProvider>());
-            });
-
-            services.AddSingleton<IRecurringJobManager>(x =>
-            {
-                ThrowIfNotConfigured(x);
-
-                if (GetInternalServices(x, out var factory, out _, out _))
-                {
-                    return new RecurringJobManager(
-                        storage ?? x.GetRequiredService<JobStorage>(),
-                        factory,
-                         options.TimeZoneResolver ?? x.GetService<ITimeZoneResolver>());
-                }
-
-                return new RecurringJobManager(
-                   storage ?? x.GetRequiredService<JobStorage>(),
-                    options.FilterProvider ?? x.GetRequiredService<IJobFilterProvider>(),
-                    options.TimeZoneResolver ?? x.GetService<ITimeZoneResolver>());
-            });
-
-            return services;
-        }
-
-        internal static void ThrowIfNotConfigured(IServiceProvider serviceProvider)
-        {
-            var configuration = serviceProvider.GetService<IGlobalConfiguration>();
-            if (configuration == null)
-            {
-                throw new InvalidOperationException(
-                    "Unable to find the required services. Please add all the required services by calling 'IServiceCollection.AddHangfire' inside the call to 'ConfigureServices(...)' in the application startup code.");
-            }
-        }
-
-        internal static bool GetInternalServices(
-           IServiceProvider provider,
-           out IBackgroundJobFactory factory,
-           out IBackgroundJobStateChanger stateChanger,
-           out IBackgroundJobPerformer performer)
-        {
-            factory = provider.GetService<IBackgroundJobFactory>();
-            performer = provider.GetService<IBackgroundJobPerformer>();
-            stateChanger = provider.GetService<IBackgroundJobStateChanger>();
-
-            if (factory != null && performer != null && stateChanger != null)
-            {
-                return true;
-            }
-
-            factory = null;
-            performer = null;
-            stateChanger = null;
-
-            return false;
-        }
-
-        /// <summary>
-        /// Exposes hangfire dashboard.
-        /// </summary>
-        public static IApplicationBuilder UseHangfireDashboard(this IApplicationBuilder builder, string route = "/hangfire", Action<DashboardOptions> configAction = null, JobStorage storage = null)
-        {
-            var options = new DashboardOptions
-            {
-                //must be set otherwise only local access allowed
-                //Authorization = new[] { new HangfireRoleAuthorizationfilter() },
-                AppPath = route.Replace("/hangfire", "")
-            };
-
-            if (configAction != null)
-                configAction(options);
-
-            builder.UseHangfireDashboard(route, options, storage);
-
-            return builder;
-        }
-
-        /// <summary>
-        /// Starts the hangfire server. Better to use AddHangfireServer.
-        /// </summary>
-        public static IApplicationBuilder UseHangfireServer(this IApplicationBuilder builder, string serverName, IEnumerable<IBackgroundProcess> additionalProcesses = null, JobStorage storage = null)
-        {
-            //each microserver has its own queue. Queue by using the Queue attribute.
-            //https://discuss.hangfire.io/t/one-queue-for-the-whole-farm-and-one-queue-by-server/490
-            var options = new BackgroundJobServerOptions
-            {
-                ServerName = serverName,
-                Queues = new[] { serverName, "default" }
-            };
-
-            //https://discuss.hangfire.io/t/one-queue-for-the-whole-farm-and-one-queue-by-server/490/3
-
-            builder.UseHangfireServer(options, additionalProcesses, storage);
-            return builder;
-        }
-
-        public static IServiceCollection AddHangfireJob<HangfireJob>(this IServiceCollection services)
-            where HangfireJob : class
-        {
-            return services.AddTransient<HangfireJob>();
-        }
-        #endregion
-
-        #region Localization
+#region Localization
         //"LocalizationSettings": {
         //  "DefaultCulture": "en-AU",
         //  "SupportedUICultures": [ "en" ],
@@ -931,7 +1106,7 @@ namespace AspNetCore.Mvc.Extensions
             //Support all formats for numbers, dates, etc.
             var formatCulturesList = new List<string>() { };
 
-            if (supportAllLanguagesFormatting || supportAllLanguagesFormatting)
+            if (supportAllLanguagesFormatting || supportAllCountryFormatting)
             {
                 var languages = CultureInfo.GetCultures(CultureTypes.NeutralCultures).Where(language => language.Name != "").ToList();
 
@@ -1011,6 +1186,11 @@ namespace AspNetCore.Mvc.Extensions
 
             //options.RequestCultureProviders.Insert(0, routeDataRequestProvider);
 
+            //Url Localization
+            //https://www.strathweb.com/2015/11/localized-routes-with-asp-net-5-and-mvc-6/
+            //https://github.com/saaratrix/asp.net-core-mvc-localized-routing
+            //https://www.strathweb.com/2019/08/dynamic-controller-routing-in-asp-net-core-3-0/
+
             services.Configure<RequestLocalizationOptions>(options =>
             {
                 options.DefaultRequestCulture = new RequestCulture(culture: defaultCulture, uiCulture: defaultUICulture);
@@ -1021,6 +1201,7 @@ namespace AspNetCore.Mvc.Extensions
                 options.RequestCultureProviders = new List<IRequestCultureProvider>()
                 {
                      new RouteDataRequestCultureProvider() { Options = options, RouteDataStringKey = "culture", UIRouteDataStringKey = "ui-culture" },
+                     new UrlRequestCultureProvider(),
                      new QueryStringRequestCultureProvider() { QueryStringKey = "culture", UIQueryStringKey = "ui-culture" },
                      new CookieRequestCultureProvider(),
                      new AcceptLanguageHeaderRequestCultureProvider(),
@@ -1031,64 +1212,9 @@ namespace AspNetCore.Mvc.Extensions
 
             return services;
         }
+#endregion
 
-        public static IServiceCollection ConfigureRedirectUnsupportedCultureOptions(this IServiceCollection services, Action<RedirectUnsupportedCultureOptions> configureOptions)
-        {
-            return services.Configure(configureOptions);
-        }
-
-        public static MvcOptions AddOptionalCultureRouteConvention(this MvcOptions options, string cultureConstraintKey = "cultureCheck")
-        {
-            options.Conventions.Insert(0, new LocalizationConvention(true, cultureConstraintKey));
-
-            return options;
-        }
-
-        public static MvcOptions AddCultureRouteConvention(this MvcOptions options, string cultureConstraintKey = "cultureCheck")
-        {
-            options.Conventions.Insert(0, new LocalizationConvention(false, cultureConstraintKey));
-
-            return options;
-        }
-
-        public static IServiceCollection AddCultureRouteConstraint(this IServiceCollection services, string cultureConstraintKey = "cultureCheck")
-        {
-            return services.Configure<RouteOptions>(options =>
-            {
-                options.ConstraintMap.Add(cultureConstraintKey, typeof(CultureConstraint));
-            });
-        }
-
-        //404 cultureless. Used with AddCultureRouteConvention.
-        public static IRouteBuilder RedirectCulturelessToDefaultCulture(this IRouteBuilder routes, RequestLocalizationOptions localizationOptions, string cultureConstraintKey = "cultureCheck")
-        {
-            //any route 1.has a culture; and 2.does not match the previous global route url will return a 404.
-            routes.MapMiddlewareGet("{culture" + (!string.IsNullOrEmpty(cultureConstraintKey) ? $":{cultureConstraintKey}" : "") + "}/{*path}", appBuilder =>
-            {
-
-            });
-
-            //redirect culture-less routes
-            routes.MapGet("{*path}", (RequestDelegate)(ctx =>
-            {
-                var defaultCulture = localizationOptions.DefaultRequestCulture.Culture.Name;
-
-                var cultureFeature = ctx.Features.Get<IRequestCultureFeature>();
-                var actualCulture = cultureFeature?.RequestCulture.Culture.Name;
-                var actualCultureLanguage = cultureFeature?.RequestCulture.Culture.TwoLetterISOLanguageName;
-
-                var path = ctx.GetRouteValue("path") ?? string.Empty;
-                var culturedPath = $"{ctx.Request.PathBase}/{actualCulture}/{path}{ctx.Request.QueryString.ToString()}";
-                ctx.Response.Redirect(culturedPath);
-                return Task.CompletedTask;
-            }));
-
-            return routes;
-        }
-
-        #endregion
-
-        #region Azure Key Vault
+#region Azure Key Vault Config
         //https://joonasw.net/view/azure-ad-managed-service-identity
         //https://joonasw.net/view/aspnet-core-azure-keyvault-msi
         /// <summary>
@@ -1097,6 +1223,34 @@ namespace AspNetCore.Mvc.Extensions
         public static IWebHostBuilder UseAzureKeyVault(this IWebHostBuilder webHostBuilder, string vaultName = null, bool useOnlyInProduction = true)
         {
             return webHostBuilder.ConfigureAppConfiguration((ctx, builder) =>
+            {
+                var config = builder.Build();
+
+                if (vaultName == null)
+                {
+                    var keyVaultSettings = GetKeyVaultSettings(config);
+                    if (keyVaultSettings != null)
+                    {
+                        vaultName = keyVaultSettings.Name;
+                    }
+                }
+
+                //If used outside Azure, it will authenticate as the developer's user. It will try using Azure CLI 2.0 (install from here). The second option is AD Integrated Authentication.
+                //After installing the CLI, remember to run az login, and login to your Azure account before running the app.Another important thing is that you need to also select the subscription where the Key Vault is.So if you have access to more than one subscription, also run az account set - s "My Azure Subscription name or id"
+                //Then you need to make sure your user has access to a Key Vault(does not have to be the production vault...).
+                if (!string.IsNullOrWhiteSpace(vaultName) && (!useOnlyInProduction || ctx.HostingEnvironment.IsProduction()))
+                {
+                    //Section--Name
+                    var tokenProvider = new AzureServiceTokenProvider();
+                    var kvClient = new KeyVaultClient((authority, resource, scope) => tokenProvider.KeyVaultTokenCallback(authority, resource, scope));
+                    builder.AddAzureKeyVault($"https://{vaultName}.vault.azure.net", kvClient, new DefaultKeyVaultSecretManager());
+                }
+            });
+        }
+
+        public static IHostBuilder UseAzureKeyVault(this IHostBuilder hostBuilder, string vaultName = null, bool useOnlyInProduction = true)
+        {
+            return hostBuilder.ConfigureAppConfiguration((ctx, builder) =>
             {
                 var config = builder.Build();
 
@@ -1133,6 +1287,1114 @@ namespace AspNetCore.Mvc.Extensions
             var settingsSection = config.GetSection(sectionKey);
             return settingsSection.Get<KeyVaultSettings>();
         }
+#endregion
+
+#region EF Config
+        public static IWebHostBuilder UseEFConfiguration<TDbContext>(this IWebHostBuilder webHostBuilder, string connectionStringOrName, bool initializeSchema = false, bool useOnlyInProduction = true)
+        where TDbContext : DbContext, IConfigurationDbContext
+        {
+            return webHostBuilder.ConfigureAppConfiguration((ctx, builder) =>
+            {
+                if ((!useOnlyInProduction || ctx.HostingEnvironment.IsProduction()))
+                {
+                    var config = builder.Build();
+
+                    if (config.GetSection("ConnectionStrings").GetChildren().Any(c => c.Key == connectionStringOrName))
+                    {
+                        builder.AddEFConfiguration<TDbContext>(config.GetConnectionString(connectionStringOrName), initializeSchema);
+                    }
+                    else
+                    {
+                        builder.AddEFConfiguration<TDbContext>(connectionStringOrName, initializeSchema);
+                    }
+                }
+            });
+        }
+
+        public static IHostBuilder UseEFConfiguration<TDbContext>(this IHostBuilder webHostBuilder, string connectionStringOrName, bool initializeSchema = false, bool useOnlyInProduction = true)
+       where TDbContext : DbContext, IConfigurationDbContext
+        {
+            return webHostBuilder.ConfigureAppConfiguration((ctx, builder) =>
+            {
+                if ((!useOnlyInProduction || ctx.HostingEnvironment.IsProduction()))
+                {
+                    var config = builder.Build();
+
+                    if (config.GetSection("ConnectionStrings").GetChildren().Any(c => c.Key == connectionStringOrName))
+                    {
+                        builder.AddEFConfiguration<TDbContext>(config.GetConnectionString(connectionStringOrName), initializeSchema);
+                    }
+                    else
+                    {
+                        builder.AddEFConfiguration<TDbContext>(connectionStringOrName, initializeSchema);
+                    }
+                }
+            });
+        }
+#endregion
+
+#region Json string Config
+        public static IConfigurationBuilder AddJsonString(this IConfigurationBuilder builder, string json)
+        {
+
+            return builder.AddJsonStream(StringToStream(json));
+        }
+
+        private static Stream StringToStream(string str)
+        {
+            var memStream = new MemoryStream();
+            var textWriter = new StreamWriter(memStream);
+            textWriter.Write(str);
+            textWriter.Flush();
+            memStream.Seek(0, SeekOrigin.Begin);
+
+            return memStream;
+        }
+#endregion
+
+#region Startup Tasks
+
+        public static IWebHostBuilder UseStartupTasks(this IWebHostBuilder builder, bool scanApplicationDependencies = true)
+        {
+            return builder.ConfigureServices((services) =>
+            {
+                services.AddTaskExecutingServer();
+                if (scanApplicationDependencies)
+                {
+                    services.AddDbStartupTasks();
+                    services.AddStartupTasks();
+                }
+            });
+        }
+
+        public static IServiceCollection AddStartupTask<TStartupTask>(this IServiceCollection services)
+        where TStartupTask : class, IStartupTask
+        {
+            _sharedContext.RegisterTask();
+
+            return services
+           .AddTransient<IStartupTask, TStartupTask>()
+           .AddTaskExecutingServer();
+        }
+
+        public static IServiceCollection AddDbStartupTask<TDbStartupTask>(this IServiceCollection services)
+      where TDbStartupTask : class, IDbStartupTask
+        {
+            _sharedContext.RegisterTask();
+
+            return services
+          .AddTransient<IDbStartupTask, TDbStartupTask>()
+          .AddTaskExecutingServer();
+        }
+
+        public static IServiceCollection AddDbStartupTasks(this IServiceCollection services, Action<StartupTaskOptions> setup = null)
+        {
+            var options = new StartupTaskOptions();
+            if (setup != null)
+                setup(options);
+
+            if (options.LoadApplicationDependencies)
+            {
+                services.LoadApplicationDependencies();
+            }
+
+            if (!string.IsNullOrEmpty(options.LoadPathDependencies))
+            {
+                services.LoadAssembliesFromPath(options.LoadPathDependencies);
+            }
+
+            services.Scan(scan =>
+            {
+                scan.FromCurrentDomainAssemblies(options.Predicate)
+                .AddClasses(c => c.AssignableTo<IDbStartupTask>().Where(_ => _sharedContext.RegisterTask()))
+                .As<IDbStartupTask>()
+                .WithTransientLifetime();
+            });
+
+            services.AddTaskExecutingServer();
+
+            return services;
+        }
+
+        public static IServiceCollection AddStartupTasks(this IServiceCollection services, Action<StartupTaskOptions> setup = null)
+        {
+            var options = new StartupTaskOptions();
+            if (setup != null)
+                setup(options);
+
+            if (options.LoadApplicationDependencies)
+            {
+                services.LoadApplicationDependencies();
+            }
+
+            if (!string.IsNullOrEmpty(options.LoadPathDependencies))
+            {
+                services.LoadAssembliesFromPath(options.LoadPathDependencies);
+            }
+
+            services.Scan(scan =>
+            {
+                scan.FromCurrentDomainAssemblies(options.Predicate)
+                .AddClasses(c => c.AssignableTo<IStartupTask>().Where(_ => _sharedContext.RegisterTask()))
+                .As<IStartupTask>()
+                .WithTransientLifetime();
+            });
+
+
+            services.AddTaskExecutingServer();
+            return services;
+        }
+
+
+        private static readonly StartupTaskContext _sharedContext = new StartupTaskContext();
+        //Only needed for .NET Core 2.2 as in .NET Core 3.0 IHostedServices run before Server Starts. Hosted Services are run in the order they are added so Db StartupTask HostedServices must be added before StartupTask HostedServices and standard HostedServices.
+        public static IServiceCollection AddTaskExecutingServer(this IServiceCollection services)
+        {
+            if (services.Any(service => service.ImplementationType == typeof(StartupTasksHostedService)))
+            {
+                return services;
+            }
+
+            services.AddSingleton(_sharedContext);
+
+            services.AddTransient<StartupTasksHostedService>();
+
+            return services.AddHostedService<StartupTasksHostedService>();
+
+            //.NET Core 2.2 
+            //var decoratorType = typeof(TaskExecutingServer);
+            //if (services.Any(service => service.ImplementationType == decoratorType))
+            //{
+            //    // We've already decorated the IServer
+            //    return services;
+            //}
+
+            //services.AddTransient<StartupTasksHostedService>();
+
+            //services.AddSingleton(_sharedContext);
+
+            ////Replace IISServerSetupFilter
+            //var iisServerSetupFilter = services.FirstOrDefault(s => s.ImplementationInstance != null && s.ImplementationInstance.GetType().Name == "IISServerSetupFilter");
+            //if (iisServerSetupFilter != null)
+            //{
+            //    var virtualPath = (string)iisServerSetupFilter.ImplementationInstance.GetType().GetField("_virtualPath", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(iisServerSetupFilter.ImplementationInstance);
+            //    var index = services.IndexOf(iisServerSetupFilter);
+            //    services[index] = ServiceDescriptor.Singleton(typeof(IStartupFilter), new TaskExecutingServerIISServerSetupFilter(virtualPath));
+            //}
+
+            //// Decorate the IServer with our TaskExecutingServer
+            //return services.Decorate<IServer, TaskExecutingServer>();
+        }
         #endregion
+
+        #region WebHostBuilder Extensions
+        public static IWebHostBuilder ConfigureWebHost(this IWebHostBuilder webHostBuilder, Action<IWebHostBuilder> configure)
+        {
+            configure(webHostBuilder);
+
+            return webHostBuilder;
+        }
+#endregion
+
+#region Elastic Search Extensions
+        public static void AddElasticSearch(this IServiceCollection services, string url, string defaultIndex = "default")
+        {
+            var settings = new ConnectionSettings(new Uri(url))
+                .PrettyJson()
+                .BasicAuthentication("elastic", "elastic")
+                .DefaultIndex(defaultIndex);
+
+            var client = new ElasticClient(settings);
+
+            services.AddSingleton<IElasticClient>(client);
+        }
+#endregion
+
+#region DbContext Extensions
+        //        public static IServiceCollection AddDbContextNoSql<TContext>(this IServiceCollection services, string connectionString, ServiceLifetime contextLifetime = ServiceLifetime.Scoped) where TContext : DbContextNoSql
+        //        {
+        //            if (ConnectionStringHelper.IsLiteDbInMemory(connectionString))
+        //            {
+        //                contextLifetime = ServiceLifetime.Singleton;
+        //            }
+
+        //            if (ConnectionStringHelper.IsLiteDbInMemory(connectionString))
+        //            {
+        //                services.AddDbContextNoSqlInMemory<TContext>(contextLifetime);
+        //            }
+        //            else
+        //            {
+        //                services.Add(new ServiceDescriptor(typeof(TContext), sp => ActivatorUtilities.CreateInstance(sp, typeof(TContext), new object[] { connectionString }), contextLifetime));
+        //            }
+        //            return services;
+        //        }
+
+        //        public static IServiceCollection AddDbContextNoSqlInMemory<TContext>(this IServiceCollection services, ServiceLifetime contextLifetime = ServiceLifetime.Scoped) where TContext : DbContextNoSql
+        //        {
+        //            services.Add(new ServiceDescriptor(typeof(TContext), sp => ActivatorUtilities.CreateInstance(sp, typeof(TContext), new object[] { new MemoryStream() }), contextLifetime));
+        //            return services;
+        //        }
+
+        //        public static IServiceCollection AddDbContext<TContext>(this IServiceCollection services, string connectionString, ServiceLifetime contextLifetime = ServiceLifetime.Scoped) where TContext : DbContext
+        //        {
+        //            if (ConnectionStringHelper.IsSQLiteInMemory(connectionString))
+        //            {
+        //                contextLifetime = ServiceLifetime.Singleton;
+        //            }
+
+        //            return services.AddDbContext<TContext>(options =>
+        //            {
+        //                options.SetConnectionString<TContext>(connectionString);
+        //                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+        //            }, contextLifetime);
+        //        }
+
+        //        public static DbContextOptionsBuilder SetConnectionString<TContext>(this DbContextOptionsBuilder options, string connectionString, string migrationsAssembly = "")
+        //            where TContext : DbContext
+        //        {
+        //            if (connectionString == null)
+        //            {
+        //                return options;
+        //            }
+        //            else if (connectionString == string.Empty)
+        //            {
+        //                return options.UseInMemoryDatabase(typeof(TContext).FullName);
+        //            }
+        //            else if (ConnectionStringHelper.IsSQLite(connectionString))
+        //            {
+        //                if (!string.IsNullOrWhiteSpace(migrationsAssembly))
+        //                {
+        //                    return options.UseSqlite(connectionString, sqlOptions =>
+        //                    {
+        //                        sqlOptions.MigrationsAssembly(migrationsAssembly);
+        //                        sqlOptions.UseNetTopologySuite();
+        //                    });
+        //                }
+        //                return options.UseSqlite(connectionString, sqlOptions =>
+        //                {
+        //                    sqlOptions.UseNetTopologySuite();
+        //                });
+        //            }
+        //#if NETCOREAPP3_1
+        //            else if (ConnectionStringHelper.IsCosmos(connectionString))
+        //            {
+        //                var dbConnectionString = new CosmosDBConnectionString(connectionString);
+        //                return options.UseCosmos(dbConnectionString.ServiceEndpoint.ToString(), dbConnectionString.AuthKey, null);
+        //            }
+        //#endif
+        //            else
+        //            {
+        //                if (!string.IsNullOrWhiteSpace(migrationsAssembly))
+        //                {
+        //                    return options.UseSqlServer(connectionString, sqlOptions =>
+        //                    {
+        //                        sqlOptions.MigrationsAssembly(migrationsAssembly);
+        //                        sqlOptions.UseNetTopologySuite();
+        //                    });
+        //                }
+        //                return options.UseSqlServer(connectionString, sqlOptions =>
+        //                {
+        //                    sqlOptions.UseNetTopologySuite();
+        //                });
+        //            }
+        //        }
+
+        //        //https://medium.com/volosoft/asp-net-core-dependency-injection-best-practices-tips-tricks-c6e9c67f9d96
+        //        public static IServiceCollection AddDbContextInMemory<TContext>(this IServiceCollection services, ServiceLifetime contextLifetime = ServiceLifetime.Scoped) where TContext : DbContext
+        //        {
+        //            return services.AddDbContext<TContext>(options =>
+        //                    options.UseInMemoryDatabase(Guid.NewGuid().ToString()), contextLifetime);
+        //        }
+
+        //        public static IServiceCollection AddDbContextSqlServer<TContext>(this IServiceCollection services, string connectionString, ServiceLifetime contextLifetime = ServiceLifetime.Scoped) where TContext : DbContext
+        //        {
+        //            return services.AddDbContext<TContext>(options =>
+        //                    options.UseSqlServer(connectionString, sqlOptions =>
+        //                    {
+        //                        sqlOptions.UseNetTopologySuite();
+        //                    }), contextLifetime);
+        //        }
+
+        //        public static IServiceCollection AddDbContextSqlite<TContext>(this IServiceCollection services, string connectionString, ServiceLifetime contextLifetime = ServiceLifetime.Scoped) where TContext : DbContext
+        //        {
+        //            return services.AddDbContext<TContext>(options =>
+        //                    options.UseSqlite(connectionString, sqlOptions =>
+        //                    {
+        //                        sqlOptions.UseNetTopologySuite();
+        //                    }), contextLifetime);
+        //        }
+
+        //        public static IServiceCollection AddDbContextSqliteInMemory<TContext>(this IServiceCollection services, ServiceLifetime contextLifetime = ServiceLifetime.Singleton) where TContext : DbContext
+        //        {
+        //            return services.AddDbContext<TContext>(options =>
+        //                    options.UseSqlite(":memory:", sqlOptions =>
+        //                    {
+        //                        sqlOptions.UseNetTopologySuite();
+        //                    }), contextLifetime);
+        //        }
+
+        //        public static IServiceCollection AddDbContextPoolSqlServer<TContext>(this IServiceCollection services, string connectionString, ServiceLifetime contextLifetime = ServiceLifetime.Scoped) where TContext : DbContext
+        //        {
+        //            return services.AddDbContextPool<TContext>(options =>
+        //                    options.UseSqlServer(connectionString, sqlOptions =>
+        //                    {
+        //                        sqlOptions.UseNetTopologySuite();
+        //                    }));
+        //        }
+
+        //        public static IServiceCollection AddDbContextSqlServerWithRetries<TContext>(this IServiceCollection services, string connectionString, int retries = 10, ServiceLifetime contextLifetime = ServiceLifetime.Scoped) where TContext : DbContext
+        //        {
+        //            return services.AddDbContext<TContext>(options =>
+        //                     options.UseSqlServer(connectionString,
+        //                     sqlServerOptionsAction: sqlOptions =>
+        //                     {
+        //                         sqlOptions.EnableRetryOnFailure(
+        //                         maxRetryCount: retries,
+        //                         maxRetryDelay: TimeSpan.FromSeconds(30),
+        //                         errorNumbersToAdd: null);
+        //                         sqlOptions.UseNetTopologySuite();
+        //                     }), contextLifetime);
+        //        }
+
+        //Repository needs interface so it can be injected into Domain Services
+        public static void AddRepository<TRepository, TRepositoryImplementation>(this IServiceCollection services)
+        where TRepository : class
+        where TRepositoryImplementation : class, TRepository
+        {
+            services.AddScoped<TRepositoryImplementation>();
+            services.AddScoped<TRepository>(sp => sp.GetService<TRepositoryImplementation>());
+        }
+
+        public static void AddUnitOfWork<TUnitOfWorkImplementation>(this IServiceCollection services)
+        where TUnitOfWorkImplementation : UnitOfWorkBase
+        {
+            services.AddScoped<TUnitOfWorkImplementation>();
+            services.AddScoped<IUnitOfWork>(sp => sp.GetService<TUnitOfWorkImplementation>());
+        }
+
+        public static void AddUnitOfWork<TUnitOfWork, TUnitOfWorkImplementation>(this IServiceCollection services)
+            where TUnitOfWork : class
+            where TUnitOfWorkImplementation : UnitOfWorkBase, TUnitOfWork
+        {
+            services.AddScoped<TUnitOfWorkImplementation>();
+            services.AddScoped<IUnitOfWork>(sp => sp.GetService<TUnitOfWorkImplementation>());
+            services.AddScoped<TUnitOfWork>(sp => sp.GetService<TUnitOfWorkImplementation>());
+        }
+
+#endregion
+
+#region MiniProfiler
+        public static IServiceCollection AddMiniProfiler(this IServiceCollection services, string connectionString, bool initializeDatabase)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                return services.AddMiniProfilerInMemory();
+            }
+            else if (ConnectionStringHelper.IsSQLite(connectionString))
+            {
+                return services.AddMiniProfilerSqlLite(connectionString, initializeDatabase);
+            }
+            else
+            {
+                return services.AddMiniProfilerSqlServer(connectionString, initializeDatabase);
+            }
+        }
+
+        public static IServiceCollection AddMiniProfilerInMemory(this IServiceCollection services)
+        {
+            services.AddMiniProfiler(options =>
+            {
+                // (Optional) Path to use for profiler URLs, default is /mini-profiler-resources
+                options.RouteBasePath = "/profiler";
+
+                // (Optional) You can disable "Connection Open()", "Connection Close()" (and async variant) tracking.
+                // (defaults to true, and connection opening/closing is tracked)
+                options.TrackConnectionOpenClose = true;
+
+                options.PopupRenderPosition = StackExchange.Profiling.RenderPosition.BottomLeft;
+                options.PopupStartHidden = true; //ALT + P to display
+                options.PopupShowTrivial = true;
+                options.PopupShowTimeWithChildren = true;
+                options.ResultsAuthorize = (request) => true;
+                options.UserIdProvider = (request) => request.HttpContext.User.Identity.Name;
+            }).AddEntityFramework();
+
+            return services;
+        }
+
+        public static IServiceCollection AddMiniProfilerSqlServer(this IServiceCollection services, string connectionString, bool initializeDatabase)
+        {
+            services.AddMiniProfiler(options =>
+            {
+                // (Optional) Path to use for profiler URLs, default is /mini-profiler-resources
+                options.RouteBasePath = "/profiler";
+
+                // (Optional) You can disable "Connection Open()", "Connection Close()" (and async variant) tracking.
+                // (defaults to true, and connection opening/closing is tracked)
+                options.TrackConnectionOpenClose = true;
+
+                options.PopupRenderPosition = StackExchange.Profiling.RenderPosition.BottomLeft;
+                options.PopupStartHidden = true; //ALT + P to display
+                options.PopupShowTrivial = true;
+                options.PopupShowTimeWithChildren = true;
+                options.ResultsAuthorize = (request) => true;
+                options.UserIdProvider = (request) => request.HttpContext.User.Identity.Name;
+
+                options.Storage = new SqlServerStorage(connectionString);
+            }).AddEntityFramework();
+
+            if (initializeDatabase)
+            {
+                MiniProfilerInitializer.EnsureDbAndTablesCreatedAsync(connectionString).Wait();
+            }
+
+            return services;
+        }
+
+        public static IServiceCollection AddMiniProfilerSqlLite(this IServiceCollection services, string connectionString, bool initializeDatabase)
+        {
+            services.AddMiniProfiler(options =>
+            {
+                // (Optional) Path to use for profiler URLs, default is /mini-profiler-resources
+                options.RouteBasePath = "/profiler";
+
+                // (Optional) You can disable "Connection Open()", "Connection Close()" (and async variant) tracking.
+                // (defaults to true, and connection opening/closing is tracked)
+                options.TrackConnectionOpenClose = true;
+
+                options.PopupRenderPosition = StackExchange.Profiling.RenderPosition.BottomLeft;
+                options.PopupStartHidden = true; //ALT + P to display
+                options.PopupShowTrivial = true;
+                options.PopupShowTimeWithChildren = true;
+                options.ResultsAuthorize = (request) => true;
+                options.UserIdProvider = (request) => request.HttpContext.User.Identity.Name;
+
+                options.Storage = new SqliteStorage(connectionString);
+            }).AddEntityFramework();
+
+            if (initializeDatabase)
+            {
+                MiniProfilerInitializer.EnsureDbAndTablesCreatedAsync(connectionString).Wait();
+            }
+
+            return services;
+        }
+#endregion
+
+#region Authentication
+
+        public static AuthenticationBuilder AddJwtAuthentication(this AuthenticationBuilder authenticationBuilder,
+           string bearerTokenKey,
+           string bearerTokenPublicSigningKeyPath,
+           string bearerTokenPublicSigningCertificatePath,
+           string bearerTokenExternalIssuers,
+           string bearerTokenLocalIssuer,
+           string bearerTokenAudiences)
+        {
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); // keep original claim types
+
+            var signingKeys = new List<SecurityKey>();
+            if (!String.IsNullOrWhiteSpace(bearerTokenKey))
+            {
+                //Symmetric
+                signingKeys.Add(SigningKey.LoadSymmetricSecurityKey(bearerTokenKey));
+            }
+
+            if (!String.IsNullOrWhiteSpace(bearerTokenPublicSigningKeyPath))
+            {
+                //Assymetric
+                signingKeys.Add(SigningKey.LoadPublicRsaSigningKey(bearerTokenPublicSigningKeyPath));
+            }
+
+            if (!String.IsNullOrWhiteSpace(bearerTokenPublicSigningCertificatePath))
+            {
+                //Assymetric
+                signingKeys.Add(SigningKey.LoadPublicSigningCertificate(bearerTokenPublicSigningCertificatePath));
+            }
+
+            var validIssuers = new List<string>();
+            if (!string.IsNullOrEmpty(bearerTokenExternalIssuers))
+            {
+                foreach (var externalIssuer in bearerTokenExternalIssuers.Split(','))
+                {
+                    if (!string.IsNullOrWhiteSpace(externalIssuer))
+                    {
+                        validIssuers.Add(externalIssuer);
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(bearerTokenLocalIssuer))
+            {
+                validIssuers.Add(bearerTokenLocalIssuer);
+            }
+
+            var validAudiences = new List<string>();
+            foreach (var audience in bearerTokenAudiences.Split(','))
+            {
+                if (!string.IsNullOrWhiteSpace(audience))
+                {
+                    validAudiences.Add(audience);
+                }
+            }
+
+            //https://developer.okta.com/blog/2018/03/23/token-authentication-aspnetcore-complete-guide
+            //https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/blob/46eb0ca2942831f858597b7fa73bb3230b6c16db/src/System.IdentityModel.Tokens.Jwt/JwtSecurityTokenHandler.cs
+            //https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/blob/e3389b0e2e5a428e6a9bfd72a377a1f415588a8b/src/Microsoft.IdentityModel.Tokens/Validators.cs
+            //https://developer.okta.com/blog/2018/03/23/token-authentication-aspnetcore-complete-guide
+            //https://github.com/IdentityServer/IdentityServer4.AccessTokenValidation does reference + JWT auth
+
+            return authenticationBuilder.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+            {
+                //cfg.Authority = "{yourAuthorizationServerAddress}";
+                //cfg.Audience = "{yourAudience}";
+
+                options.SaveToken = true; //var accessToken = await HttpContext.GetTokenAsync("access_token"); //forward the JWT in an outgoing request.
+                options.TokenValidationParameters = new TokenValidationParameters()
+                {
+                    // Specify what in the JWT needs to be checked 
+                    ValidateLifetime = true,
+                    ValidateAudience = true,
+                    ValidateIssuer = true,
+                    ValidateTokenReplay = true,
+                    ValidateActor = true,
+                    ValidateIssuerSigningKey = true,
+
+                    RequireSignedTokens = true,
+
+                    ValidIssuers = validIssuers, //in the JWT this is the uri of the Identity Provider which issues the token.
+                    ValidAudiences = validAudiences, //in the JWT this is aud. This is the resource the user is expected to have.
+
+                    IssuerSigningKeys = signingKeys //Tries to match on 1. kid, 2. x5t (cert thumbprint), 3. attempt all
+                };
+
+                //https://docs.microsoft.com/en-us/dotnet/api/
+                //microsoft.aspnetcore.authentication.jwtbearer.jwtbearerevents
+                options.Events = new JwtBearerEvents
+                {
+                    OnForbidden = e =>
+                    {
+                        Log.Warning("API access was forbidden!");
+                        return Task.FromResult(e);
+                    },
+                    OnAuthenticationFailed = e =>
+                    {
+                        Log.Warning(e.Exception, "Authentication Failed!");
+                        return Task.FromResult(e);
+                    }
+                };
+            });
+        }
+
+        public static void AddCookiePolicy(this IServiceCollection services, string cookieConsentName)
+        {
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+                options.ConsentCookie.Name = cookieConsentName;
+                options.CheckConsentNeeded = context => true;
+                options.MinimumSameSitePolicy = SameSiteMode.None;
+            });
+        }
+
+        public static void AddIdentity<TContext, TUser, TRole>(this IServiceCollection services,
+        int maxFailedAccessAttemptsBeforeLockout,
+        int lockoutMinutes,
+        bool requireDigit,
+        int requiredLength,
+        int requiredUniqueChars,
+        bool requireLowercase,
+        bool requireNonAlphanumeric,
+        bool requireUppercase,
+
+        //user
+        bool requireConfirmedEmail,
+        bool requireUniqueEmail,
+        int registrationEmailConfirmationExprireDays,
+        int forgotPasswordEmailConfirmationExpireHours,
+        int userDetailsChangeLogoutMinutes)
+            where TContext : DbContext
+            where TUser : class
+            where TRole : class
+        {
+            services.AddIdentity<TUser, TRole>(options =>
+            {
+                options.Password.RequireDigit = requireDigit;
+                options.Password.RequiredLength = requiredLength;
+                options.Password.RequiredUniqueChars = requiredUniqueChars;
+                options.Password.RequireLowercase = requireLowercase;
+                options.Password.RequireNonAlphanumeric = requireNonAlphanumeric;
+                options.Password.RequireUppercase = requireUppercase;
+                options.User.RequireUniqueEmail = requireUniqueEmail;
+                options.SignIn.RequireConfirmedEmail = requireConfirmedEmail;
+                options.Tokens.EmailConfirmationTokenProvider = "emailconf";
+
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = maxFailedAccessAttemptsBeforeLockout;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(lockoutMinutes);
+            })
+                .AddEntityFrameworkStores<TContext>()
+                .AddDefaultTokenProviders()
+                .AddTokenProvider<EmailConfirmationTokenProvider<TUser>>("emailconf")
+                .AddPasswordValidator<DoesNotContainPasswordValidator<TUser>>();
+
+            //https://github.com/brunohbrito/JPProject.AspNetCore.PasswordHasher
+            services.UpgradePasswordSecurity()
+            .WithStrenghten(PasswordHasherStrenght.Sensitive)
+            .UseArgon2<TUser>();
+
+            //registration email confirmation days
+            services.Configure<EmailConfirmationTokenProviderOptions>(options =>
+           options.TokenLifespan = TimeSpan.FromDays(registrationEmailConfirmationExprireDays));
+
+            //forgot password hours
+            services.Configure<DataProtectionTokenProviderOptions>(options =>
+            options.TokenLifespan = TimeSpan.FromHours(forgotPasswordEmailConfirmationExpireHours));
+
+            //Security stamp validator validates every x minutes and will log out user if account is changed. e.g password change
+            services.Configure<SecurityStampValidatorOptions>(options =>
+            {
+                options.ValidationInterval = TimeSpan.FromMinutes(userDetailsChangeLogoutMinutes);
+            });
+        }
+
+        public static void AddIdentityCore<TContext, TUser, TRole>(this IServiceCollection services,
+        int maxFailedAccessAttemptsBeforeLockout,
+        int lockoutMinutes,
+        bool requireDigit,
+        int requiredLength,
+        int requiredUniqueChars,
+        bool requireLowercase,
+        bool requireNonAlphanumeric,
+        bool requireUppercase,
+
+        //user
+        bool requireConfirmedEmail,
+        bool requireUniqueEmail,
+        int registrationEmailConfirmationExprireDays,
+        int forgotPasswordEmailConfirmationExpireHours,
+        int userDetailsChangeLogoutMinutes)
+            where TContext : DbContext
+            where TUser : class
+            where TRole : class
+        {
+            services.AddIdentityCore<TUser>(options =>
+            {
+                options.Password.RequireDigit = requireDigit;
+                options.Password.RequiredLength = requiredLength;
+                options.Password.RequiredUniqueChars = requiredUniqueChars;
+                options.Password.RequireLowercase = requireLowercase;
+                options.Password.RequireNonAlphanumeric = requireNonAlphanumeric;
+                options.Password.RequireUppercase = requireUppercase;
+                options.User.RequireUniqueEmail = requireUniqueEmail;
+                options.SignIn.RequireConfirmedEmail = requireConfirmedEmail;
+                options.Tokens.EmailConfirmationTokenProvider = "emailconf";
+
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = maxFailedAccessAttemptsBeforeLockout;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(lockoutMinutes);
+            })
+             .AddRoles<TRole>()
+                 .AddEntityFrameworkStores<TContext>()
+                 .AddDefaultTokenProviders()
+                 .AddTokenProvider<EmailConfirmationTokenProvider<TUser>>("emailconf")
+                 .AddPasswordValidator<DoesNotContainPasswordValidator<TUser>>()
+                 .AddRoleValidator<RoleValidator<IdentityRole>>()
+                 .AddRoleManager<RoleManager<IdentityRole>>()
+                 .AddSignInManager<SignInManager<TUser>>();
+
+            //https://github.com/brunohbrito/JPProject.AspNetCore.PasswordHasher
+            services.UpgradePasswordSecurity()
+            .WithStrenghten(PasswordHasherStrenght.Sensitive)
+            .UseArgon2<TUser>();
+
+            //registration email confirmation days
+            services.Configure<EmailConfirmationTokenProviderOptions>(options =>
+           options.TokenLifespan = TimeSpan.FromDays(registrationEmailConfirmationExprireDays));
+
+            //forgot password hours
+            services.Configure<DataProtectionTokenProviderOptions>(options =>
+            options.TokenLifespan = TimeSpan.FromHours(forgotPasswordEmailConfirmationExpireHours));
+
+            //Security stamp validator validates every x minutes and will log out user if account is changed. e.g password change
+            services.Configure<SecurityStampValidatorOptions>(options =>
+            {
+                options.ValidationInterval = TimeSpan.FromMinutes(userDetailsChangeLogoutMinutes);
+            });
+        }
+
+#endregion
+
+#region CORS
+        public static void ConfigureCorsAllowAnyOrigin(this IServiceCollection services, string name)
+        {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name,
+                    builder => builder
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader());
+            });
+        }
+
+        public static void ConfigureCorsAllowSpecificOrigin(this IServiceCollection services, string name, params string[] domains)
+        {
+            services.AddCors(options =>
+            {
+                //https://docs.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-2.1
+                options.AddPolicy(name,
+              builder => builder
+              .SetIsOriginAllowedToAllowWildcardSubdomains()
+              .WithOrigins(domains)
+              .AllowAnyMethod()
+              .AllowAnyHeader());
+            });
+        }
+#endregion
+
+#region SignalR Hub Mapper
+        public static IServiceCollection AddSignalRHubMapper(this IServiceCollection services, Action<SignalRHubMapperOptions> setup = null)
+        {
+            services.TryAddSingleton<ISignalRHubMapper, SignalRHubMapper>();
+
+            var options = new SignalRHubMapperOptions();
+            if (setup != null)
+            {
+                setup(options);
+                services.Configure(setup);
+            }
+
+            if (!string.IsNullOrEmpty(options.LoadPathDependencies))
+            {
+                services.LoadAssembliesFromPath(options.LoadPathDependencies);
+            }
+
+            if (options.LoadApplicationDependencies)
+            {
+                services.LoadApplicationDependencies();
+            }
+
+            services.Scan(scan =>
+            {
+                scan.FromCurrentDomainAssemblies(options.Predicate)
+                .AddClasses(c => c.AssignableTo<ISignalRHubMap>())
+                .As<ISignalRHubMap>()
+                .WithSingletonLifetime();
+            });
+
+            return services;
+        }
+#endregion
+
+#region Dependency Injection by Convention
+        //https://andrewlock.net/using-scrutor-to-automatically-register-your-services-with-the-asp-net-core-di-container/
+        public static IServiceCollection AddServicesByConvention(this IServiceCollection services, Action<ServicesByConventionOptions> setup = null)
+        {
+            var options = new ServicesByConventionOptions();
+            if (setup != null)
+                setup(options);
+
+            if (options.LoadApplicationDependencies)
+            {
+                services.LoadApplicationDependencies();
+            }
+
+            if (!string.IsNullOrEmpty(options.LoadPathDependencies))
+            {
+                services.LoadAssembliesFromPath(options.LoadPathDependencies);
+            }
+
+            services.Scan(scan =>
+            {
+                scan.FromCurrentDomainAssemblies(options.Predicate)
+               .AddClasses(c => c.Where(t => t.Name.Contains("Singleton")))
+               .UsingRegistrationStrategy(RegistrationStrategy.Skip)
+               .AsMatchingInterface()
+               .WithSingletonLifetime()
+               .AddClasses(c => c.Where(t => t.Name.Contains("Scoped")))
+               .UsingRegistrationStrategy(RegistrationStrategy.Skip)
+               .AsMatchingInterface()
+               .WithScopedLifetime()
+               .AddClasses()
+               .UsingRegistrationStrategy(RegistrationStrategy.Skip)
+               .AsMatchingInterface()
+               .WithTransientLifetime();
+            });
+
+            return services;
+        }
+#endregion
+
+#region AutoMapper Interfaces
+        /// <summary>
+        /// Adds the automapper interfaces to the application.
+        /// </summary>
+        public static IServiceCollection AddAutoMapperInterfaces(this IServiceCollection services, Action<MappingOptions> setup = null)
+        {
+            var options = new MappingOptions();
+            if (setup != null)
+                setup(options);
+
+            if (options.LoadApplicationDependencies)
+            {
+                services.LoadApplicationDependencies();
+            }
+
+            if (!string.IsNullOrEmpty(options.LoadPathDependencies))
+            {
+                services.LoadAssembliesFromPath(options.LoadPathDependencies);
+            }
+
+            services.AddSingleton(sp => new MapperConfiguration(cfg =>
+            {
+                //https://github.com/AutoMapper/AutoMapper.Extensions.ExpressionMapping
+                //AutoMapper.Extensions.ExpressionMapping
+                cfg.AddExpressionMapping();
+                //AutoMapper.Collection & Automapper.Collection.EntityFrameworkCore
+                //Allows a DTO model for owned Collection Types.
+                cfg.AddCollectionMappers();
+                //cfg.SetGeneratePropertyMaps<GenerateEntityFrameworkPrimaryKeyPropertyMaps<DB>>();
+                new AutoMapperConfiguration(cfg, options.Predicate);
+            }));
+            services.AddSingleton<AutoMapper.IConfigurationProvider>(sp => sp.GetRequiredService<MapperConfiguration>());
+            services.AddSingleton<IExpressionBuilder>(sp => new ExpressionBuilder(sp.GetRequiredService<MapperConfiguration>()));
+            services.AddSingleton<IMapper>(sp => sp.GetRequiredService<MapperConfiguration>().CreateMapper());
+
+            return services;
+        }
+#endregion
+
+#region Order By Mapper
+        public static IServiceCollection ConfigureOrderByMapper(this IServiceCollection services, Action<OrderByMapperOptions> configure)
+        {
+            return services.Configure(configure);
+        }
+
+        public static IServiceCollection AddOrderByMapper(this IServiceCollection services)
+        {
+            return services.AddSingleton<IOrderByMapper, OrderByMapper>();
+        }
+
+        public static IServiceCollection AddOrderByMapper(this IServiceCollection services, Action<OrderByMapperOptions> configure)
+        {
+            services.ConfigureOrderByMapper(configure);
+            return services.AddOrderByMapper();
+        }
+#endregion
+
+#region Health Checks
+
+        public static IServiceCollection AddHealthCheckPublisher(this IServiceCollection services, Action<HealthCheckGenericPublisherOptions> configure)
+        {
+            services.Configure(configure);
+            return services.AddSingleton<IHealthCheckPublisher, HealthCheckGenericPublisher>();
+        }
+
+        public static IHealthChecksBuilder AddSystemMemoryCheck(this IHealthChecksBuilder builder, string name = "Memory")
+        {
+            return builder.AddCheck<SystemMemoryHealthCheck>(name);
+        }
+
+        public static IHealthChecksBuilder AddPingCheck(this IHealthChecksBuilder builder, string name, string host, int timeout, int pingInterval = 0)
+        {
+            return builder.AddCheck(name, new PingHealthCheck(host, timeout, pingInterval)); ;
+        }
+
+        public static IHealthChecksBuilder AddFilePathWriteHealthCheck(this IHealthChecksBuilder builder, string filePath,
+            HealthStatus failureStatus, IEnumerable<string> tags = default)
+        {
+            if (filePath == null)
+            {
+                throw new ArgumentNullException(nameof(filePath));
+            }
+
+            return builder.Add(new HealthCheckRegistration(
+                "File Path Health Check",
+                new FilePathWriteHealthCheck(filePath),
+                failureStatus,
+                tags));
+        }
+#endregion
+
+#region Scrutor Scan
+        public static IImplementationTypeSelector FromCurrentDomainAssemblies(this ITypeSourceSelector scan)
+        {
+            return scan.FromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
+        }
+
+        public static IImplementationTypeSelector FromCurrentDomainAssemblies(this ITypeSourceSelector scan, Func<Assembly, bool> predicate)
+        {
+            return scan.FromAssemblies(AppDomain.CurrentDomain.GetAssemblies().Where(predicate));
+        }
+#endregion
+
+#region Scrutor Load into Current AppDomain
+        public static IServiceCollection LoadApplicationDependencies(this IServiceCollection services, bool includeFramework = false)
+        {
+            return services.Scan(scan => scan.LoadApplicationDependencies(includeFramework));
+        }
+
+        public static ITypeSourceSelector LoadApplicationDependencies(this ITypeSourceSelector scan, bool includeFramework = false)
+        {
+            return scan.LoadApplicationDependencies(DependencyContext.Default, includeFramework);
+        }
+
+        public static IServiceCollection LoadApplicationDependencies(this IServiceCollection services, DependencyContext context, bool includeFramework = false)
+        {
+            return services.Scan(scan => scan.LoadApplicationDependencies(context, includeFramework));
+        }
+
+        public static ITypeSourceSelector LoadApplicationDependencies(this ITypeSourceSelector scan, DependencyContext context, bool includeFramework = false)
+        {
+            // Storage to ensure not loading the same assembly twice.
+            Dictionary<string, bool> loaded = new Dictionary<string, bool>();
+
+            // Filter to avoid loading all the .net framework
+            bool ShouldLoad(string assemblyName)
+            {
+                return (includeFramework || NotNetFramework(assemblyName))
+                    && !loaded.ContainsKey(assemblyName);
+            }
+
+            bool NotNetFramework(string assemblyName)
+            {
+                return !assemblyName.StartsWith("Microsoft.")
+                    && !assemblyName.StartsWith("System")
+                    && !assemblyName.StartsWith("Newtonsoft.")
+                    && !assemblyName.StartsWith("netstandard")
+                    && !assemblyName.StartsWith("Remotion.Linq")
+                    && !assemblyName.StartsWith("SOS.NETCore")
+                    && !assemblyName.StartsWith("WindowsBase")
+                    && !assemblyName.StartsWith("mscorlib");
+            }
+
+            // Populate already loaded assemblies
+            System.Diagnostics.Debug.WriteLine($">> Already loaded assemblies:");
+            foreach (var a in AppDomain.CurrentDomain.GetAssemblies().Where(a => ShouldLoad(a.GetName().Name)))
+            {
+                loaded.Add(a.GetName().Name, true);
+                System.Diagnostics.Debug.WriteLine($">>>> {a.FullName}");
+            }
+            int alreadyLoaded = loaded.Keys.Count();
+
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+
+            sw.Start();
+
+            var assemblies = context.RuntimeLibraries
+              .SelectMany(library => library.GetDefaultAssemblyNames(context))
+              .Where(an => ShouldLoad(an.FullName))
+              .Select(an =>
+              {
+                  loaded.Add(an.FullName, true);
+                  System.Diagnostics.Debug.WriteLine($"\n>> Referenced assembly => {an.FullName}");
+                  return Assembly.Load(an);
+              })
+              .ToList();
+
+            // Debug
+            System.Diagnostics.Debug.WriteLine($"\n>> Assemblies loaded after scan ({(loaded.Keys.Count - alreadyLoaded)} assemblies in {sw.ElapsedMilliseconds} ms):");
+            foreach (var a in loaded.Keys.OrderBy(k => k))
+                System.Diagnostics.Debug.WriteLine($">>>> {a}");
+
+            return scan;
+        }
+
+        public static IServiceCollection LoadAssembliesFromPath(this IServiceCollection services, string path)
+        {
+            return services.Scan(scan => scan.LoadAssembliesFromPath(path));
+        }
+
+        public static ITypeSourceSelector LoadAssembliesFromPath(this ITypeSourceSelector scan, string path)
+        {
+            List<Assembly> assemblies = new List<Assembly>();
+            foreach (var assemblyPath in Directory.EnumerateFiles(path, "*.*", SearchOption.TopDirectoryOnly)
+            .Where(file => new[] { ".dll" }.Any(file.ToLower().EndsWith)))
+            {
+                System.Diagnostics.Debug.WriteLine($"Loading Assembly: {assemblyPath}");
+                var assembly = Assembly.LoadFrom(assemblyPath);
+                assemblies.Add(assembly);
+            }
+            return scan;
+        }
+
+        //https://github.com/dotnet/samples/blob/master/core/extensions/AppWithPlugin/AppWithPlugin/Program.cs
+        //Without using AssemblyDependencyResolver, it is extremely difficult to correctly load plugins that have their own dependencies.   
+        //By using AssemblyDependencyResolver along with a custom AssemblyLoadContext, an application can load plugins so that each plugin's dependencies are loaded from the correct location, and one plugin's dependencies will not conflict with another.This sample includes plugins that have conflicting dependencies and plugins that rely on satellite assemblies or native libraries.
+        public static IServiceCollection LoadPluginAssembliesFromPath(this IServiceCollection services, string path)
+        {
+            return services.Scan(scan => scan.LoadPluginAssembliesFromPath(path));
+        }
+
+        public static ITypeSourceSelector LoadPluginAssembliesFromPath(this ITypeSourceSelector scan, string path)
+        {
+            foreach (var assemblyDirectory in Directory.EnumerateDirectories(path, "*", SearchOption.TopDirectoryOnly))
+            {
+                var directoryName = Path.GetDirectoryName(assemblyDirectory);
+                var pluginDLLLocation = Directory.EnumerateFiles(assemblyDirectory, $"{directoryName}.dll", SearchOption.AllDirectories).FirstOrDefault();
+
+                if (pluginDLLLocation != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Loading Assembly: {pluginDLLLocation}");
+                    PluginLoadContext loadContext = new PluginLoadContext(pluginDLLLocation);
+                    var pluginAssembly = loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(pluginDLLLocation)));
+                }
+            }
+
+            return scan;
+        }
+#endregion
+
+#region SPA XSRF
+        /// <summary>
+        /// Uses SPA XSRF Token Middleware.
+        /// </summary>
+        public static IApplicationBuilder UseSpaGenerateAntiforgeryTokenMiddleware(this IApplicationBuilder builder, Action<SpaGenerateAntiforgeryTokenOptions> configureOptions = null)
+        {
+            var options = new SpaGenerateAntiforgeryTokenOptions();
+            if (configureOptions != null)
+                configureOptions(options);
+
+            return builder.UseMiddleware<SpaGenerateAntiforgeryTokenOptions>(options);
+        }
+#endregion
+
+#region GraphQL
+
+        public static IEndpointConventionBuilder MapGraphQLSchema<TSchema>(this IEndpointRouteBuilder endpoints, string path = "/graphql") where TSchema : ISchema
+        {
+            var requestHandler = endpoints.CreateApplicationBuilder().UseWebSockets().UseGraphQL<TSchema>(path).Build();
+            return endpoints.Map(path, requestHandler);
+        }
+
+        public static IEndpointConventionBuilder MapGraphQLPlayground(this IEndpointRouteBuilder endpoints, Action<GraphQLPlaygroundOptions> configAction = null)
+        {
+            var options = new GraphQLPlaygroundOptions();
+            if (configAction != null)
+                configAction(options);
+
+            var requestHandler = endpoints.CreateApplicationBuilder().UseWebSockets().UseGraphQLPlayground(options).Build();
+            return endpoints.Map((options.Path != null ? options.Path.Value : "/ui/playground") + "/{**path}", requestHandler);
+        }
+
+        public static IEndpointConventionBuilder MapGraphQLVoyager(this IEndpointRouteBuilder endpoints, Action<GraphQLVoyagerOptions> configAction = null)
+        {
+            var options = new GraphQLVoyagerOptions();
+            if (configAction != null)
+                configAction(options);
+
+            var requestHandler = endpoints.CreateApplicationBuilder().UseWebSockets().UseGraphQLVoyager(options).Build();
+            return endpoints.Map((options.Path != null ? options.Path.Value : "/ui/voyager") + "/{**path}", requestHandler);
+        }
+#endregion
+
+#region User Service
+        public static IServiceCollection AddUserService(this IServiceCollection services)
+        {
+            return services.AddScoped<IUserService, UserService>();
+        }
+
+#endregion
     }
 }

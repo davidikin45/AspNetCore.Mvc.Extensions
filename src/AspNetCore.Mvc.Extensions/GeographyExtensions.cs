@@ -1,5 +1,4 @@
-﻿using GeoAPI.Geometries;
-using NetTopologySuite;
+﻿using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
@@ -52,7 +51,7 @@ namespace AspNetCore.Mvc.Extensions
         {
             var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: srid);
 
-            var point = geometryFactory.CreatePoint(new Coordinate(lon, lat));
+            var point = geometryFactory.CreatePoint(new NetTopologySuite.Geometries.Coordinate(lon, lat));
 
             return (Point)point;
         }

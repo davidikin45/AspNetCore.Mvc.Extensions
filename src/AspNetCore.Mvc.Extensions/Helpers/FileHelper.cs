@@ -1,4 +1,5 @@
 ﻿using AspNetCore.Mvc.Extensions;
+using AspNetCore.Mvc.Extensions.Settings;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Win32;
@@ -13,7 +14,23 @@ namespace AspNetCore.Mvc.Extensions.Helpers
 {
     public static class FileHelperExtensions
     {
-        public async static Task<Boolean> SaveToDirectoryAsync(this IFormFile fileUpload, IHostingEnvironment environment, string contentFolder)
+        //public async static Task<Boolean> SaveToDirectoryAsync(this IFormFile fileUpload, IHostingEnvironment environment, string contentFolder)
+        //{
+        //    var physicalFolder = Path.Combine(environment.ContentRootPath, contentFolder);
+
+        //    if (fileUpload != null && fileUpload.Length > 0)
+        //    {
+        //        var fileName = Path.GetFileName(fileUpload.FileName);
+        //        using (var stream = new FileStream(Path.Combine(physicalFolder, fileName), FileMode.Create))
+        //        {
+        //            await fileUpload.CopyToAsync(stream);
+        //        }
+        //        return true;
+        //    }
+        //    return false;
+        //}
+
+        public async static Task<Boolean> SaveToDirectoryAsync(this IFormFile fileUpload, IWebHostEnvironment environment, string contentFolder)
         {
             var physicalFolder = Path.Combine(environment.ContentRootPath, contentFolder);
 
@@ -65,12 +82,90 @@ namespace AspNetCore.Mvc.Extensions.Helpers
         {
             return System.IO.Path.GetFileNameWithoutExtension(fileInfo.FullName).Replace("main", "");
         }
+        public static string GetAbsoluteUrlSlug(AppSettings appSettings, IWebHostEnvironment hostingEnvironment, string folderId, string path, int width = 0, int height = 0, int size = 0, int maxWidth = 0, int maxHeight = 0, bool watermark = false)
+        {
+            return AbsoluteUrlSlug(FileHelper.GetFileInfo(appSettings, hostingEnvironment, folderId, path), appSettings, hostingEnvironment, width, height, size, maxWidth, maxHeight, watermark);
+        }
 
-        public static string VirtualPathSlug(this FileInfo fileinfo, IHostingEnvironment hostingEnvironment, int width = 0, int height = 0, int size = 0, int maxWidth = 0, int maxHeight = 0, bool watermark = false)
+        public static string AbsoluteShareUrlSlug(this FileInfo fileinfo, AppSettings appSettings, IWebHostEnvironment hostingEnvironment)
+        {
+            return AbsoluteUrlSlug(fileinfo, appSettings, hostingEnvironment, 1200, 630, 0, 0, 0, false);
+        }
+
+        public static string AbsoluteUrlSlug(this FileInfo fileinfo, AppSettings appSettings, IWebHostEnvironment hostingEnvironment, int width = 0, int height = 0, int size = 0, int maxWidth = 0, int maxHeight = 0, bool watermark = false)
+        {
+            return appSettings.SiteUrl + VirtualPathSlug(fileinfo, hostingEnvironment, width, height, size, maxWidth, maxHeight, watermark);
+        }
+
+
+        //public static string GetAbsoluteUrlSlug(AppSettings appSettings, IHostingEnvironment hostingEnvironment, string folderId, string path, int width = 0, int height = 0, int size = 0, int maxWidth = 0, int maxHeight = 0, bool watermark = false)
+        //{
+        //    return AbsoluteUrlSlug(FileHelper.GetFileInfo(appSettings, hostingEnvironment, folderId, path), appSettings, hostingEnvironment, width, height, size, maxWidth, maxHeight, watermark);
+        //}
+
+        //public static string AbsoluteShareUrlSlug(this FileInfo fileinfo, AppSettings appSettings, IHostingEnvironment hostingEnvironment)
+        //{
+        //    return AbsoluteUrlSlug(fileinfo, appSettings, hostingEnvironment, 1200, 630, 0, 0, 0, false);
+        //}
+
+        //public static string AbsoluteUrlSlug(this FileInfo fileinfo, AppSettings appSettings, IHostingEnvironment hostingEnvironment, int width = 0, int height = 0, int size = 0, int maxWidth = 0, int maxHeight = 0, bool watermark = false)
+        //{
+        //    return appSettings.SiteUrl + VirtualPathSlug(fileinfo, hostingEnvironment, width, height, size, maxWidth, maxHeight, watermark);
+        //}
+
+        public static string VirtualPathSlugOrUrl(this FileInfo fileinfo, IWebHostEnvironment hostingEnvironment, int width = 0, int height = 0, int size = 0, int maxWidth = 0, int maxHeight = 0, bool watermark = false)
+        {
+
+            if (fileinfo.IsText())
+            {
+                var id = fileinfo.ReadFileLine(0);
+                if (id.IsYouTube())
+                {
+                    return id.YouTubeMaxResThumbailUrl();
+                }
+                else
+                {
+                    return fileinfo.ReadFileLine(1);
+                }
+            }
+            else
+            {
+                return VirtualPathSlug(fileinfo, hostingEnvironment, width, height, size, maxWidth, maxHeight, watermark);
+            }
+        }
+
+        public static string VirtualPathSlug(this FileInfo fileinfo, IWebHostEnvironment hostingEnvironment, int width = 0, int height = 0, int size = 0, int maxWidth = 0, int maxHeight = 0, bool watermark = false)
         {
             var absoluteVirtual = GetAbsoluteVirtualPath(fileinfo.FullName, hostingEnvironment);
             return VirtualPathSlug(absoluteVirtual, width, height, size, maxWidth, maxHeight, watermark);
         }
+
+        //public static string VirtualPathSlugOrUrl(this FileInfo fileinfo, IHostingEnvironment hostingEnvironment, int width = 0, int height = 0, int size = 0, int maxWidth = 0, int maxHeight = 0, bool watermark = false)
+        //{
+
+        //    if (fileinfo.IsText())
+        //    {
+        //        var id = fileinfo.ReadFileLine(0);
+        //        if (id.IsYouTube())
+        //        {
+        //            return id.YouTubeMaxResThumbailUrl();
+        //        }
+        //        else
+        //        {
+        //            return fileinfo.ReadFileLine(1);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return VirtualPathSlug(fileinfo, hostingEnvironment, width, height, size, maxWidth, maxHeight, watermark);
+        //    }
+        //}
+
+        //public static string VirtualPathSlug(this FileInfo fileinfo, IHostingEnvironment hostingEnvironment, int width = 0, int height = 0, int size = 0, int maxWidth = 0, int maxHeight = 0, bool watermark = false)
+        //{
+        //    var absoluteVirtual = GetAbsoluteVirtualPath(fileinfo.FullName, hostingEnvironment);
+        //    return VirtualPathSlug(absoluteVirtual, width, height, size, maxWidth, maxHeight, watermark);
+        //}
 
         public static string ReadFileLine(this FileInfo fileinfo, int line)
         {
@@ -126,19 +221,31 @@ namespace AspNetCore.Mvc.Extensions.Helpers
 
         //app-relative virtual path ~/image.jpg
         //absolute virtual path /image.jpg
-        public static string VirtualPath(this FileInfo fileinfo, IHostingEnvironment hostingEnvironment)
+        //public static string VirtualPath(this FileInfo fileinfo, IHostingEnvironment hostingEnvironment)
+        //{
+        //    return GetAbsoluteVirtualPath(fileinfo.FullName, hostingEnvironment);
+        //}
+
+        //public static string GetAbsoluteVirtualPath(this string physicalPath, IHostingEnvironment hostingEnvironment)
+        //{
+        //    string appRelativeVirtualPath = "~/" + physicalPath.Replace(hostingEnvironment.WebRootPath + @"\", String.Empty).Replace("\\", "/");
+        //    var absolute = FileHelper.MakeVirtualPathAppAbsolute(appRelativeVirtualPath, "/");
+
+        //    return absolute;
+        //}
+
+        public static string VirtualPath(this FileInfo fileinfo, IWebHostEnvironment hostingEnvironment)
         {
             return GetAbsoluteVirtualPath(fileinfo.FullName, hostingEnvironment);
         }
 
-        public static string GetAbsoluteVirtualPath(this string physicalPath, IHostingEnvironment hostingEnvironment)
+        public static string GetAbsoluteVirtualPath(this string physicalPath, IWebHostEnvironment hostingEnvironment)
         {
             string appRelativeVirtualPath = "~/" + physicalPath.Replace(hostingEnvironment.WebRootPath + @"\", String.Empty).Replace("\\", "/");
             var absolute = FileHelper.MakeVirtualPathAppAbsolute(appRelativeVirtualPath, "/");
 
             return absolute;
         }
-
     }
 
     public static class FileHelper
@@ -170,6 +277,16 @@ namespace AspNetCore.Mvc.Extensions.Helpers
             // Return it unchanged
             return virtualPath;
         }
+
+        public static FileInfo GetFileInfo(AppSettings appSettings, IWebHostEnvironment hostingEnvironment, string folderId, string path)
+        {
+            return GetFileInfo(hostingEnvironment.MapWwwPath(appSettings.Folders[folderId]) + path);
+        }
+
+        //public static FileInfo GetFileInfo(AppSettings appSettings, IHostingEnvironment hostingEnvironment, string folderId, string path)
+        //{
+        //    return GetFileInfo(hostingEnvironment.MapWwwPath(appSettings.Folders[folderId]) + path);
+        //}
 
         public static FileInfo GetFileInfo(string path)
         {
@@ -548,7 +665,9 @@ namespace AspNetCore.Mvc.Extensions.Helpers
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
+#pragma warning disable CS0618 // Type or member is obsolete
         public static extern IntPtr ExtractIconEx([MarshalAs(UnmanagedType.VBByRefStr)] ref string lpszFile, IntPtr nIconIndex, ref IntPtr phiconLarge, ref IntPtr phiconSmall, int nIcons);
+#pragma warning restore CS0618 // Type or member is obsolete
 
         private static System.Drawing.Icon getIconFromEx(string file, int index, bool large)
         {

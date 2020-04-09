@@ -1,0 +1,1 @@
+﻿AutoMapper with DDD only works Entity > DTO but not DTO > Entity.

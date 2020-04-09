@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 
-namespace AspNetCore.Base.ModelBinders
+namespace AspNetCore.Mvc.Extensions.ModelBinders
 {
     [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
     public class FromFormRouteQueryAttribute : Attribute, IBindingSourceMetadata, IModelNameProvider

@@ -713,6 +713,12 @@ services.AddHostedServiceCronJob<Job2>("* * * * *"); //Every minute
 services.AddHostedServiceBackgroundTaskQueue();
 ```
 
+## Hosted Service Shutdown - Default 5 seconds
+```
+WebHost.CreateDefaultBuilder(args)
+    .UseShutdownTimeout(TimeSpan.FromSeconds(10))
+```
+
 ## Hangfire
 ```
 services.AddHangfire("web-background", "");
@@ -751,6 +757,75 @@ WebHost.CreateDefaultBuilder(args)
  var timeZone = System.Net.WebUtility.UrlDecode(Request.Cookies["timezone"]);
 ```
 
+## Config + Logging
+```
+public class Program
+{
+    public static IConfiguration Configuration;
+
+    public async static Task<int> Main(string[] args)
+    {
+        Configuration = Config.Build(args, Directory.GetCurrentDirectory(), typeof(TStartup).Assembly.GetName().Name);
+
+        LoggingInit.Init(Configuration);
+
+        try
+        {
+            Log.Information("Getting the motors running...");
+
+            var host = CreateWebHostBuilder(args).Build();
+
+            //https://andrewlock.net/running-async-tasks-on-app-startup-in-asp-net-core-part-2/
+            //Even though the tasks run after the IConfiguration and DI container configuration has completed, they run before the IStartupFilters have run and the middleware pipeline has been configured.
+            //await host.InitAsync();
+
+            //AppStartup.Configure will be called here
+            await host.RunAsync();
+
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Host terminated unexpectedly");
+            return 1;
+        }
+        finally
+        {
+            Log.CloseAndFlush();
+        }
+    }
+}
+```
+
+## Startup Initialization Tasks
+* https://andrewlock.net/running-async-tasks-on-app-startup-in-asp-net-core-part-2/
+
+```
+WebHost.CreateDefaultBuilder(args)
+    .UseStartupTasks();
+```
+```
+public class DbInitializer : IDbStartupTask
+{
+    public int Order => 0;
+
+    public Task ExecuteAsync()
+    {
+        return Task.CompletedTask;
+    }
+}
+```
+```
+public class Initializer : IStartupTask
+{
+    public int Order => 0;
+
+    public Task ExecuteAsync()
+    {
+        return Task.CompletedTask;
+    }
+}
+```
 
 ## Authors
 

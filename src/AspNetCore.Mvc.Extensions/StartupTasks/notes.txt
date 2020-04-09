@@ -1,0 +1,2 @@
+﻿Use IHostedService for blocking Startup Tasks
+Use BackgroundService for non-blocking Startup Tasks

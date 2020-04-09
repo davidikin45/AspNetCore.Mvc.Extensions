@@ -1,11 +1,16 @@
 ﻿using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.AspNetCore.Mvc.ViewFeatures.Internal;
+using Microsoft.AspNetCore.Mvc.ViewFeatures.Buffers;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Text.Encodings.Web;
 
 namespace AspNetCore.Mvc.Extensions
@@ -60,7 +65,7 @@ namespace AspNetCore.Mvc.Extensions
 
         public static IHtmlHelper<TModel> For<TModel>(ViewContext viewContext, ViewDataDictionary viewData, TModel model)
         {
-            var newViewData = new ViewDataDictionary<TModel>(viewData) { Model = model };
+            var newViewData = new ViewDataDictionary<TModel>(viewData, model);
 
             ViewContext newViewContext = new ViewContext(
                 viewContext,
@@ -75,13 +80,50 @@ namespace AspNetCore.Mvc.Extensions
                 viewContext.HttpContext.RequestServices.GetRequiredService<IViewBufferScope>(),
                 viewContext.HttpContext.RequestServices.GetRequiredService<HtmlEncoder>(),
                 viewContext.HttpContext.RequestServices.GetRequiredService<UrlEncoder>(),
-                viewContext.HttpContext.RequestServices.GetRequiredService<ExpressionTextCache>());
+                viewContext.HttpContext.RequestServices.GetRequiredService<ModelExpressionProvider>());
+
+          //.NET Core 2.2 
+         //   var helper = new HtmlHelper<TModel>(
+         //(IHtmlGenerator)viewContext.HttpContext.RequestServices.GetService(typeof(IHtmlGenerator)),
+         //(ICompositeViewEngine)viewContext.HttpContext.RequestServices.GetService(typeof(ICompositeViewEngine)),
+         //(IModelMetadataProvider)viewContext.HttpContext.RequestServices.GetService(typeof(IModelMetadataProvider)),
+         //(IViewBufferScope)viewContext.HttpContext.RequestServices.GetService(typeof(IViewBufferScope)),
+         //(HtmlEncoder)viewContext.HttpContext.RequestServices.GetService(typeof(HtmlEncoder)),
+         //(UrlEncoder)viewContext.HttpContext.RequestServices.GetService(typeof(UrlEncoder)),
+         //(ExpressionTextCache)viewContext.HttpContext.RequestServices.GetService(typeof(ExpressionTextCache)));
+
 
             helper.Contextualize(newViewContext);
 
             return helper;
         }
 
-    
+
+        public static IHtmlContent ActionLink<TController>(this IHtmlHelper html, Expression<Action<TController>> expression, string linkText, object htmlAttributes = null, Boolean passRouteValues = true) where TController : ControllerBase
+        {
+            var result = Helpers.ExpressionHelper.GetRouteValuesFromExpression<TController>(expression);
+            result.RouteValues.Remove("Action");
+            result.RouteValues.Remove("Controller");
+
+            IDictionary<string, object> htmlAttributesDict = null;
+
+            if (htmlAttributes != null)
+            {
+                htmlAttributesDict = (IDictionary<string, object>)new RouteValueDictionary(htmlAttributes);
+            }
+            else
+            {
+                htmlAttributesDict = new Dictionary<string, object>();
+            }
+
+            if (passRouteValues)
+            {
+                return html.ActionLink(linkText, result.Action, result.Controller, result.RouteValues, htmlAttributesDict);
+            }
+            else
+            {
+                return html.ActionLink(linkText, result.Action, result.Controller, new RouteValueDictionary(), htmlAttributesDict);
+            }
+        }
     }
 }

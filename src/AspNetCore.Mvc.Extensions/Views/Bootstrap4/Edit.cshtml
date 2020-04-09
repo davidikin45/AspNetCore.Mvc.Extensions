@@ -3,8 +3,7 @@
     ViewContext.ClientValidationEnabled = true;
 }
 
-<partial name="_Edit" />
-
+@HtmlHelperPartialExtensions.Partial(Html, "~/Views/Bootstrap4/_Edit.cshtml", Model, Html.ViewData)
 <p>
     @Html.ActionLink("Back to List", "Index")
 </p>

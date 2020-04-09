@@ -1,0 +1,19 @@
+﻿FluentValidation
+FluentValidation.AspNetCore
+
+public class Validator : AbstractValidator<ViewModel>
+{
+	public Validator(DbContext ctx)
+	{
+		RuleFor(c => c.Property).NotEmpty().MinimumLength(5)
+		.MustAsync(async (value, _) => {
+			return !(await ctx.Clients.AnyAsync(c => c.Name == value));
+		}).WithMessage("Name must be unique");;
+
+		When(c=> !string.IsNullOrEmpty(c.Phone), () => {
+			RuleFor(c => c.Phone).NotEmpty().WithMessage("Phone Cannot be empty");
+		});
+	}
+}
+
+.AddFluentValidation(cfg => cfg.RegisterValidatorsFromAssemblyContaining<ViewModel>());

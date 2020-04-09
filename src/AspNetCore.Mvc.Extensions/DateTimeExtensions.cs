@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using TimeZoneConverter;
 using TimeZoneNames;
 
 namespace AspNetCore.Mvc.Extensions
@@ -33,8 +34,68 @@ namespace AspNetCore.Mvc.Extensions
     //DateTimeOffset allows roundtrip for a user and there values. To a users values to other users still need timezone.
     //RoundtripKind allows all values a user sees to be as expteced.
     //[DataType("datetime-local")]
+
+
+    //TZConvert.GetTimeZoneInfo works cross platform but TimeZoneInfo.FindSystemTimeZoneById does not.
     public static class DateTimeExtensions
     {
+
+        public static string ToISO8601(this DateTime dt)
+        {
+            return dt.ToUniversalTime().ToString("s") + "Z";
+        }
+
+        public static string ToDaysTil(this DateTime value, DateTime endDateTime)
+        {
+            var ts = new TimeSpan(endDateTime.Ticks - value.Ticks);
+            var delta = ts.TotalSeconds;
+            if (delta < 60)
+            {
+                return ts.Seconds == 1 ? "one second" : ts.Seconds + " seconds";
+            }
+            if (delta < 120)
+            {
+                return "a minute";
+            }
+            if (delta < 2700) // 45 * 60
+            {
+                return ts.Minutes + " minutes";
+            }
+            if (delta < 5400) // 90 * 60
+            {
+                return "an hour";
+            }
+            if (delta < 86400) // 24 * 60 * 60
+            {
+                return ts.Hours + " hours";
+            }
+            if (delta < 172800) // 48 * 60 * 60
+            {
+                return "yesterday";
+            }
+            if (delta < 2592000) // 30 * 24 * 60 * 60
+            {
+                return ts.Days + " days";
+            }
+            if (delta < 31104000) // 12 * 30 * 24 * 60 * 60
+            {
+                int months = Convert.ToInt32(Math.Floor((double)ts.Days / 30));
+                return months <= 1 ? "one month" : months + " months";
+            }
+            var years = Convert.ToInt32(Math.Floor((double)ts.Days / 365));
+            return years <= 1 ? "one year" : years + " years";
+        }
+
+        public static DateTime ToStartOfMonth(this DateTime date)
+        {
+            return new DateTime(date.Year, date.Month, 1);
+        }
+
+        public static DateTime ToEndOfMonth(this DateTime date)
+        {
+            return new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1);
+        }
+
         #region Input
         /// <summary>
         /// Local to UTC.
@@ -49,7 +110,7 @@ namespace AspNetCore.Mvc.Extensions
         /// </summary>
         public static DateTime UnspecifiedToUtc(this DateTime unspecifiedDateTime, string timeZoneId)
         {
-            var istTZ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            var istTZ = TZConvert.GetTimeZoneInfo(timeZoneId);
             return TimeZoneInfo.ConvertTimeToUtc(unspecifiedDateTime, istTZ);
         }
         #endregion
@@ -65,7 +126,7 @@ namespace AspNetCore.Mvc.Extensions
         /// </summary>
         public static string UtcToTimeZone(this DateTime unspecifiedasUtcOrutcDateTime, string timeZoneId)
         {
-            var istTZ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            var istTZ = TZConvert.GetTimeZoneInfo(timeZoneId);
             string lang = CultureInfo.CurrentCulture.Name;   // example: "en-US"
             var abbreviations = TZNames.GetAbbreviationsForTimeZone(timeZoneId, lang);
             var convertedTime = TimeZoneInfo.ConvertTimeFromUtc(unspecifiedasUtcOrutcDateTime, istTZ);
@@ -77,7 +138,7 @@ namespace AspNetCore.Mvc.Extensions
         /// </summary>
         public static string UtcToTimeZoneNoAbbreviation(this DateTime unspecifiedOrutcDateTime, string timeZoneId)
         {
-            var istTZ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            var istTZ = TZConvert.GetTimeZoneInfo(timeZoneId);
             var convertedTime = TimeZoneInfo.ConvertTimeFromUtc(unspecifiedOrutcDateTime, istTZ);
             return String.Format("{0}", convertedTime.ToShortDateString());
         }
@@ -87,7 +148,7 @@ namespace AspNetCore.Mvc.Extensions
         /// </summary>
         public static string LocalOrUtcToTimeZone(this DateTime unspecifiedAsLocalOrLocalOrutcDateTime, string timeZoneId)
         {
-            var istTZ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            var istTZ = TZConvert.GetTimeZoneInfo(timeZoneId);
             string lang = CultureInfo.CurrentCulture.Name;   // example: "en-US"
             var abbreviations = TZNames.GetAbbreviationsForTimeZone(timeZoneId, lang);
             var convertedTime = TimeZoneInfo.ConvertTime(unspecifiedAsLocalOrLocalOrutcDateTime, istTZ);
@@ -99,7 +160,7 @@ namespace AspNetCore.Mvc.Extensions
         /// </summary>
         public static string LocalOrUtcToTimeZoneNoAbbreviation(this DateTime unspecifiedAsLocalOrLocalOrutcDateTime, string timeZoneId)
         {
-            var istTZ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            var istTZ = TZConvert.GetTimeZoneInfo(timeZoneId);
             var convertedTime = TimeZoneInfo.ConvertTime(unspecifiedAsLocalOrLocalOrutcDateTime, istTZ);
             return String.Format("{0}", convertedTime.ToShortDateString());
         }
@@ -109,7 +170,7 @@ namespace AspNetCore.Mvc.Extensions
         #region Input DateTimeOffset
         public static DateTimeOffset ToTimeZone(DateTimeOffset original, string timeZoneId)
         {
-            TimeZoneInfo istTZ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            TimeZoneInfo istTZ = TZConvert.GetTimeZoneInfo(timeZoneId);
             DateTimeOffset temp = TimeZoneInfo.ConvertTime(original, istTZ);
             var convertedTime = original
                 .Subtract(temp.Offset)
@@ -122,7 +183,7 @@ namespace AspNetCore.Mvc.Extensions
         #region Output DateTimeOffset
         public static string ToTimeZoneFormatted(DateTimeOffset original, string timeZoneId)
         {
-            TimeZoneInfo istTZ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            TimeZoneInfo istTZ = TZConvert.GetTimeZoneInfo(timeZoneId);
             DateTimeOffset temp = TimeZoneInfo.ConvertTime(original, istTZ);
             var convertedTime = original
                 .Subtract(temp.Offset)
@@ -136,7 +197,7 @@ namespace AspNetCore.Mvc.Extensions
 
         public static string ToTimeZoneFormattedNoAbbreviation(DateTimeOffset original, string timeZoneId)
         {
-            TimeZoneInfo istTZ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            TimeZoneInfo istTZ = TZConvert.GetTimeZoneInfo(timeZoneId);
             DateTimeOffset temp = TimeZoneInfo.ConvertTime(original, istTZ);
             var convertedTime = original
                 .Subtract(temp.Offset)

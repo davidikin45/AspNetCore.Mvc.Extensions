@@ -40,7 +40,9 @@ namespace AspNetCore.Mvc.Extensions.FluentMetadata
 
         private IModelMetadataBuilder<TValue> GetOrCreateDisplayMetadataConfigurator<TValue>(PropertyInfo propertyInfo)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             var identity = ModelMetadataIdentity.ForProperty(propertyInfo.PropertyType, propertyInfo.Name, ModelType);
+#pragma warning restore CS0618 // Type or member is obsolete
             IMetadataConfigurator configurator;
             if (!_configurators.TryGetValue(identity, out configurator))
             {

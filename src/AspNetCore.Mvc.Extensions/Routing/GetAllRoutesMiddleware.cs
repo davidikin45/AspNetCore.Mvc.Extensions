@@ -20,10 +20,10 @@ namespace AspNetCore.Mvc.Extensions.Routing
             return app;
         }
 
-        //public static IEndpointConventionBuilder MapAllRoutes(this IEndpointRouteBuilder routeBuilder, string pathString)
-        //{
-        //    return routeBuilder.MapHandlerMiddleware<GetAllRoutesMiddleware>(pathString);
-        //}
+        public static IEndpointConventionBuilder MapAllRoutes(this IEndpointRouteBuilder routeBuilder, string pathString)
+        {
+            return routeBuilder.MapHandlerMiddlewareRoute<GetAllRoutesMiddleware>(pathString);
+        }
     }
 
     public class GetAllRoutesMiddleware

@@ -1,0 +1,18 @@
+﻿{
+  "FeatureManagement": {
+    "About": true,
+    "BucketList": true,
+    "Blog": true,
+    "Contact": true,
+    "Countries": true,
+    "Gallery": true,
+    "HelpFAQ": true,
+    "Locations": true,
+    "MyWebsite": true,
+    "PrivacyPolicy": true,
+    "Resume": true,
+    "TravelMap": true,
+    "Videos": true,
+    "WorkWithMe": true
+  }
+}

@@ -1,0 +1,5 @@
+﻿https://restfulapi.net/richardson-maturity-model/
+Level 0 = Does not make use of any of URI, HTTP Methods, and HATEOAS capabilities. Typically ignores the HTTP verbs. e.g SOAP using a single URI
+Level 1 = Makes use of URIs out of URI, HTTP Methods, and HATEOAS. e.g ASMX Web Services
+Level 2 = Makes use of URIs and HTTP out of URI, HTTP Methods, and HATEOAS. e.g REST
+Level 3 = Makes use of all three i.e. URIs and HTTP and HATEOAS. This is the most mature level of Richardson’s model which encourages easy discoverability and makes it easy for the responses to be self-explanatory by using HATEOAS.

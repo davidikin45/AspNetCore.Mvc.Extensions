@@ -1,15 +1,17 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Net.Http.Headers;
 using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
+using System;
+using System.IO;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
 namespace AspNetCore.Mvc.Extensions.NdjsonStream
 {
+
     internal class NdjsonWriterFactory : INdjsonWriterFactory
     {
         private class NdjsonWriter : INdjsonWriter
@@ -17,6 +19,7 @@ namespace AspNetCore.Mvc.Extensions.NdjsonStream
             private static byte[] _newlineDelimiter = Encoding.UTF8.GetBytes("\n");
 
             private readonly Stream _writeStream;
+
             private readonly JsonSerializerOptions _jsonSerializerOptions;
 
             public NdjsonWriter(Stream writeStream, JsonSerializerOptions jsonSerializerOptions)
@@ -29,7 +32,7 @@ namespace AspNetCore.Mvc.Extensions.NdjsonStream
             {
                 Type valueType = value?.GetType() ?? typeof(object);
 
-                await JsonSerializer.WriteAsync(value, valueType, _writeStream, _jsonSerializerOptions);
+                await JsonSerializer.SerializeAsync(_writeStream, value, valueType, _jsonSerializerOptions);
                 await _writeStream.WriteAsync(_newlineDelimiter, 0, _newlineDelimiter.Length);
                 await _writeStream.FlushAsync();
             }
@@ -78,11 +81,18 @@ namespace AspNetCore.Mvc.Extensions.NdjsonStream
 
         private static void DisableResponseBuffering(HttpContext context)
         {
-            IHttpBufferingFeature bufferingFeature = context.Features.Get<IHttpBufferingFeature>();
+            IHttpResponseBodyFeature bufferingFeature = context.Features.Get<IHttpResponseBodyFeature>();
             if (bufferingFeature != null)
             {
-                bufferingFeature.DisableResponseBuffering();
+                bufferingFeature.DisableBuffering();
             }
+
+            //.NET Core 2.2 
+            //IHttpBufferingFeature bufferingFeature = context.Features.Get<IHttpBufferingFeature>();
+            //if (bufferingFeature != null)
+            //{
+            //    bufferingFeature.DisableResponseBuffering();
+            //}
         }
     }
 }

@@ -1,0 +1,116 @@
+﻿-- Lazy Loading
+1.Microsoft.EntityFrameworkCore.Proxies
+ChangeTracker.LazyLoadingEnabled = true OR .UseLazyLoadingProxies()
+Every navigation property in the model must be marked virtual
+
+2. Microsoft.EntityFrameworkCore.Abstractions
+private ILazyLoader LazyLoader {get; set;}
+private Entity(ILazyLoader lazyLoader)
+{
+	LazyLoader = lazyLoader;
+}
+
+public List<Employee> Employees
+{
+	get => LazyLoader.Load(this, ref _ employees);
+	set => employees = value;
+}
+
+3. No dependencies
+public class Location
+    {
+        private List<Employee> _employees;
+
+        private Location(Action<object, string> lazyLoader)
+        {
+            LazyLoader = lazyLoader;
+        }
+        private Action<object, string> LazyLoader { get; set; }
+       
+        public Location()
+        {
+            _employees = new List<Employee>();
+        }
+
+        public List<Employee> Employees
+        { get => LazyLoader.Load(this, ref _employees); }
+    }
+
+
+using System;
+using System.Runtime.CompilerServices;
+
+namespace AspNetCore.Mvc.Extensions.Data.Helpers
+{
+    public static class LazyLoadingExtensions
+    {
+        public static TRelated Load<TRelated>(
+            this Action<object, string> loader,
+            object entity,
+            ref TRelated navigationField,
+            [CallerMemberName] string navigationName = null)
+            where TRelated : class
+        {
+            loader?.Invoke(entity, navigationName);
+
+            return navigationField;
+        }
+    }
+}
+
+-- Value Conversions
+-- Time of Day
+public TimeSpan OpenTime { get; set;}
+
+-- Time Period
+public TimeSpan BrewTime { get; set;}
+
+modelBuilder.Entity<Recipe>().Property(s => s.BrewTime).HasC onversion(new TimeSpanToTicksConverter());
+
+-- Enum to String
+public enum LocationType
+{
+	abc,
+	def
+}
+
+modelBuilder.Entity<Location>().Property(s => s.LocationType).HasConversion(new EnumToStringConverter<LocationType>());
+
+
+-- Colors
+modelBuilder.Entity<Store>().Property(s => s.Color).HasConversion(new ColorToStringValueConverter);
+
+-- Views (Manual)
+public DbQuery<UnitQueryType> UnitsInService { get; set;}
+AND/OR
+modelBuilder.Query<UnitQueryType>().ToView("ViewName");
+
+-- Defining Query instead of creating views
+modelBuilder.Query<UnitQueryType>().ToQuery(
+	() => Units.Where( u=> u.OutOfService == null)
+		.Select(u => new UnitQueryType(
+			u.Location.StreetAddress, u.BrewerType.Description, u.Acquired, u.cost
+		))
+);
+
+-- Defining Query Raw Sql
+modelBuilder.Query<UnitQueryType>().ToQuery(
+	() => Query<UnitQueryType>().FromSql(
+	@"
+	
+	")
+	);
+);
+
+dbContext.Query<UnitQueryType>().ToList();
+dbContext.UnitsInService.ToList();
+
+-- private parameterless constructors
+private Class();
+
+//https://docs.microsoft.com/en-us/ef/core/querying/raw-sql
+context.Properties
+    .FromSql($"SELECT * FROM dbo.Properties where JSON_VALUE(name,'$.en') LIKE '%{user}%'")
+	.Where(b => b.Rating > 3)
+    .OrderByDescending(b => b.Rating)
+    .ToList();

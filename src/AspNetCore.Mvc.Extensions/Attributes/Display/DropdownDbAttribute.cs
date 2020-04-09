@@ -10,7 +10,7 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
         public DropdownDbContextAttribute(Type dbContextType, Type modelType)
             :base(dbContextType, modelType)
         {
-
+            
         }
 
         public DropdownDbContextAttribute(Type dbContextType, Type modelType, string dataTextFieldExpression)
@@ -21,6 +21,24 @@ namespace AspNetCore.Mvc.Extensions.Attributes.Display
 
         public DropdownDbContextAttribute(Type dbContextType, Type modelType, string dataTextFieldExpression, string dataValueField)
               : base(dbContextType, modelType, dataTextFieldExpression)
+        {
+            DataValueField = dataValueField;
+        }
+
+        public DropdownDbContextAttribute(string dbContextType, Type modelType)
+            : base(Type.GetType(dbContextType), modelType)
+        {
+
+        }
+
+        public DropdownDbContextAttribute(string dbContextType, Type modelType, string dataTextFieldExpression)
+              : base(Type.GetType(dbContextType), modelType, dataTextFieldExpression)
+        {
+
+        }
+
+        public DropdownDbContextAttribute(string dbContextType, Type modelType, string dataTextFieldExpression, string dataValueField)
+              : base(Type.GetType(dbContextType), modelType, dataTextFieldExpression)
         {
             DataValueField = dataValueField;
         }
