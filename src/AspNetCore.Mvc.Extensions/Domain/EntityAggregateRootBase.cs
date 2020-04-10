@@ -9,8 +9,9 @@ namespace AspNetCore.Mvc.Extensions.Domain
         //Optimistic Concurrency. Potentially ETags serve the same purpose
         public byte[] RowVersion { get; set; }
 
-
+       
         private readonly List<DomainEvent> _domainEvents = new List<DomainEvent>();
+    
         public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
         public void AddDomainEvent(DomainEvent eventItem)

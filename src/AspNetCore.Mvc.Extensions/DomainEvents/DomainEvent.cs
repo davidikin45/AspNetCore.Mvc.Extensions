@@ -1,10 +1,12 @@
 ﻿using AspNetCore.Mvc.Extensions.Validation;
 using Newtonsoft.Json;
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.DomainEvents
 {
+    [NotMapped]
     public class DomainEvent
     {
         public DomainEvent()
