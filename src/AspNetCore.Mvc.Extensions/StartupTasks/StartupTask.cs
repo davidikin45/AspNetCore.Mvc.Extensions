@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.StartupTasks
 {
-    public abstract class ScopedStartupTaskBlocking : IStartupTask
+    public abstract class StartupTaskBlocking : IStartupTask
     {
         private readonly IServiceProvider _serviceProvider;
-        public ScopedStartupTaskBlocking(IServiceProvider serviceProvider)
+        public StartupTaskBlocking(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
         }
@@ -23,19 +23,6 @@ namespace AspNetCore.Mvc.Extensions.StartupTasks
             {
                 await ExecuteAsync(scope.ServiceProvider, cancellationToken);
             }
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-    }
-
-    public abstract class StartupTaskBlocking : IStartupTask
-    {
-        public abstract int Order { get; }
-
-        protected abstract Task ExecuteAsync(CancellationToken stoppingToken);
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            return ExecuteAsync(cancellationToken);
         }
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
