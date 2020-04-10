@@ -1,7 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
+using Microsoft.AspNetCore.Mvc.Razor.TagHelpers;
+using Microsoft.AspNetCore.Mvc.ViewComponents;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,16 +31,23 @@ namespace AspNetCore.Mvc.Extensions.Logging
             // Get the names of all the application parts. This is the short assembly name for AssemblyParts
             var applicationParts = _partManager.ApplicationParts.Select(x => x.Name);
 
-            // Create a controller feature, and populate it from the application parts
             var controllerFeature = new ControllerFeature();
             _partManager.PopulateFeature(controllerFeature);
-
-            // Get the names of all of the controllers
             var controllers = controllerFeature.Controllers.Select(x => x.Name);
 
-            // Log the application parts and controllers
-            _logger.LogInformation("Found the following application parts: '{ApplicationParts}' with the following controllers: '{Controllers}'",
-                string.Join(", ", applicationParts), string.Join(", ", controllers));
+            var tagHelperFeature = new TagHelperFeature();
+            _partManager.PopulateFeature(tagHelperFeature);
+            var tagHelpers = tagHelperFeature.TagHelpers.Select(x => x.Name);
+
+            var viewComponentFeature = new ViewComponentFeature();
+            _partManager.PopulateFeature(viewComponentFeature);
+            var viewComponents = viewComponentFeature.ViewComponents.Select(x => x.Name);
+
+            //Log the application parts
+            _logger.LogInformation("Found the following Application Parts: " + Environment.NewLine + string.Join(Environment.NewLine, applicationParts));
+            _logger.LogInformation("Found the following Controllers: " + Environment.NewLine + string.Join(Environment.NewLine, controllers));
+            _logger.LogInformation("Found the following Tag Helpers: " + Environment.NewLine + string.Join(Environment.NewLine, tagHelpers));
+            _logger.LogInformation("Found the following View Components: " + Environment.NewLine + string.Join(Environment.NewLine, viewComponents));
 
             return Task.CompletedTask;
         }

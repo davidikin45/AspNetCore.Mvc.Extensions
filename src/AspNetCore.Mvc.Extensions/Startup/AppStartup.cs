@@ -1426,27 +1426,37 @@ namespace AspNetCore.Mvc.Extensions
         {
             Logger.LogInformation("Configuring Application Parts");
 
+            //https://docs.microsoft.com/en-us/aspnet/core/mvc/advanced/app-parts?view=aspnetcore-3.1
+            //https://andrewlock.net/when-asp-net-core-cant-find-your-controller-debugging-application-parts
+            //An Application Part is an abstraction over the resources of an MVC app. Application Parts allow ASP.NET Core to discover controllers, view components, tag helpers, Razor Pages, razor compilation sources, and more
             //Note that in ASP.NET Core 3.x, when you compile an assembly that references ASP.NET Core, an assembly attribute is added to the output, [ApplicationPart]. ASP.NET Core 3.x apps look for this attribute on referenced assemblies and registers them as application parts automatically, so the code above isn't necessary.
 
+            //Log the found application parts
+            services.AddHostedService<ApplicationPartsLogger>();
+
+            //Not required when using Razor Class Libraries!
             //Add Controllers and views from other assemblies
             foreach (var assembly in ApplicationParts)
             {
                 mvcBuilder.AddApplicationPart(assembly).AddControllersAsServices();
             }
 
+            //Log the found application parts
             services.AddHostedService<ApplicationPartsLogger>();
 
+            //Not required when using Razor Class Libraries!
             //.NET Core 3.0
             //Add Embedded views from other assemblies
             services.Configure<MvcRazorRuntimeCompilationOptions>(options =>
             {
-                //Add Embedded Views from other assemblies
+                //Add Embedded Views from other assemblies.
                 //Edit and Continue wont work with these views.
                 foreach (var assembly in ApplicationParts)
                 {
                     options.FileProviders.Add(new EmbeddedFileProvider(assembly));
                 }
 
+                //https://docs.microsoft.com/en-us/aspnet/core/razor-pages/ui-class?view=aspnetcore-3.1&tabs=visual-studio
                 //Admin Views
                 options.FileProviders.Add(new EmbeddedFileProvider(typeof(DropdownDbContextAttribute).Assembly));
             });
