@@ -12,9 +12,9 @@
     <RepositoryUrl>https://github.com/davidikin45/AspNetCore.Mvc.Extensions</RepositoryUrl>
     <PackageTags>ASP.NET Core Extensions Mvc</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.31</Version>
-    <FileVersion>1.0.31.0</FileVersion>
-    <AssemblyVersion>1.0.31.0</AssemblyVersion>
+    <Version>1.0.32</Version>
+    <FileVersion>1.0.32.0</FileVersion>
+    <AssemblyVersion>1.0.32.0</AssemblyVersion>
     <LangVersion>latest</LangVersion>
     <UserSecretsId>a241189c-8727-4327-b8e3-49397ed423c8</UserSecretsId>
     <ApplicationIcon />
@@ -26,117 +26,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="StartupTasks\1StartupTasksHostedService.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="Views\Bootstrap4\Create.cshtml" />
-    <Content Remove="Views\Bootstrap4\Delete.cshtml" />
-    <Content Remove="Views\Bootstrap4\Details.cshtml" />
-    <Content Remove="Views\Shared\DisplayTemplates\Boolean.cshtml" />
-    <Content Remove="Views\Shared\DisplayTemplates\Enum.cshtml" />
-    <Content Remove="Views\Shared\DisplayTemplates\FileInfo.cshtml" />
-    <Content Remove="Views\Shared\DisplayTemplates\IFormFile.cshtml" />
-    <Content Remove="Views\Shared\DisplayTemplates\ModelDropdown.cshtml" />
-    <Content Remove="Views\Shared\DisplayTemplates\ModelOwnedCollection.cshtml" />
-    <Content Remove="Views\Shared\DisplayTemplates\ModelRadioOrCheckboxButtonList.cshtml" />
-    <Content Remove="Views\Shared\DisplayTemplates\ModelRadioOrCheckboxList.cshtml" />
-    <Content Remove="Views\Shared\DisplayTemplates\Object.cshtml" />
-    <Content Remove="Views\Shared\DisplayTemplates\Point.cshtml" />
-    <Content Remove="Views\Shared\DisplayTemplates\Slider.cshtml" />
-    <Content Remove="Views\Bootstrap4\Edit.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\Boolean.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\ByteArray.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\Currency.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\Date.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\DateTime.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\EmailAddress.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\Enum.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\FileInfo.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\Html.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\IEnumerable`IFormFile.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\IFormFile.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\Int32.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\ModelDropdown.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\ModelOwnedCollection.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\ModelOwnedCollectionItem.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\ModelRadioOrCheckboxButtonList.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\ModelRadioOrCheckboxList.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\MultilineText.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\Object.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\PhoneNumber.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\Point.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\ReadOnly.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\Slider.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\String.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\SubmitButton.cshtml" />
-    <Content Remove="Views\Shared\EditorTemplates\Url.cshtml" />
-    <Content Remove="Views\Bootstrap4\List.cshtml" />
-    <Content Remove="Views\Bootstrap4\_Create.cshtml" />
-    <Content Remove="Views\Bootstrap4\_CreateCollectionItem.cshtml" />
-    <Content Remove="Views\Bootstrap4\_Delete.cshtml" />
-    <Content Remove="Views\Bootstrap4\_Details.cshtml" />
-    <Content Remove="Views\Bootstrap4\_Edit.cshtml" />
-    <Content Remove="Views\Bootstrap4\_List.cshtml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Views\Shared\EditorTemplates\Help.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Views\Bootstrap4\Create.cshtml" />
-    <EmbeddedResource Include="Views\Bootstrap4\Delete.cshtml" />
-    <EmbeddedResource Include="Views\Bootstrap4\Details.cshtml" />
-    <EmbeddedResource Include="Views\Shared\DisplayTemplates\Boolean.cshtml" />
-    <EmbeddedResource Include="Views\Shared\DisplayTemplates\Enum.cshtml" />
-    <EmbeddedResource Include="Views\Shared\DisplayTemplates\FileInfo.cshtml" />
-    <EmbeddedResource Include="Views\Shared\DisplayTemplates\IFormFile.cshtml" />
-    <EmbeddedResource Include="Views\Shared\DisplayTemplates\ModelRadioOrCheckboxList.cshtml" />
-    <EmbeddedResource Include="Views\Shared\DisplayTemplates\ModelRadioOrCheckboxButtonList.cshtml" />
-    <EmbeddedResource Include="Views\Shared\DisplayTemplates\ModelDropdown.cshtml" />
-    <EmbeddedResource Include="Views\Shared\DisplayTemplates\ModelOwnedCollection.cshtml" />
-    <EmbeddedResource Include="Views\Shared\DisplayTemplates\Object.cshtml" />
-    <EmbeddedResource Include="Views\Shared\DisplayTemplates\Point.cshtml" />
-    <EmbeddedResource Include="Views\Shared\DisplayTemplates\Slider.cshtml" />
-    <EmbeddedResource Include="Views\Bootstrap4\Edit.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\Boolean.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\ByteArray.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\Currency.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\Date.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\DateTime.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\EmailAddress.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\Enum.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\FileInfo.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\Help.txt" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\Html.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\IEnumerable`IFormFile.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\IFormFile.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\Int32.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\ModelRadioOrCheckboxList.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\ModelRadioOrCheckboxButtonList.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\ModelDropdown.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\ModelOwnedCollection.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\ModelOwnedCollectionItem.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\MultilineText.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\Object.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\PhoneNumber.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\Point.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\ReadOnly.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\Slider.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\String.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\SubmitButton.cshtml" />
-    <EmbeddedResource Include="Views\Shared\EditorTemplates\Url.cshtml" />
-    <EmbeddedResource Include="Views\Bootstrap4\List.cshtml" />
-    <EmbeddedResource Include="Views\Bootstrap4\_Create.cshtml" />
-    <EmbeddedResource Include="Views\Bootstrap4\_CreateCollectionItem.cshtml" />
-    <EmbeddedResource Include="Views\Bootstrap4\_Delete.cshtml" />
-    <EmbeddedResource Include="Views\Bootstrap4\_Details.cshtml" />
-    <EmbeddedResource Include="Views\Bootstrap4\_Edit.cshtml" />
-    <EmbeddedResource Include="Views\Bootstrap4\_List.cshtml" />
-  </ItemGroup>
 
   <ItemGroup>
     <!--https://andrewlock.net/converting-a-netstandard-2-library-to-netcore-3/-->

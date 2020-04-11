@@ -11,6 +11,7 @@ using AspNetCore.Mvc.Extensions.HealthChecks.Memory;
 using AspNetCore.Mvc.Extensions.HealthChecks.Ping;
 using AspNetCore.Mvc.Extensions.HostedServices;
 using AspNetCore.Mvc.Extensions.HostedServices.FileProcessing;
+using AspNetCore.Mvc.Extensions.Logging;
 using AspNetCore.Mvc.Extensions.Mapping;
 using AspNetCore.Mvc.Extensions.ModelBinders;
 using AspNetCore.Mvc.Extensions.NdjsonStream;
@@ -101,6 +102,24 @@ namespace AspNetCore.Mvc.Extensions
 {
     public static class ConfigurationExtensions
     {
+        #region ApplicationParts - Controllers, Views, ViewComponents, TagHelpers
+
+        public static IWebHostBuilder LogApplicationParts(this IWebHostBuilder builder)
+        {
+            return builder.ConfigureServices((services) =>
+            {
+                services.LogApplicationParts();
+            });
+        }
+
+        //https://docs.microsoft.com/en-us/aspnet/core/mvc/advanced/app-parts?view=aspnetcore-3.1
+        //https://andrewlock.net/when-asp-net-core-cant-find-your-controller-debugging-application-parts
+        public static IServiceCollection LogApplicationParts(this IServiceCollection services)
+        {
+            return services.AddHostedService<ApplicationPartsLogger>();
+        }
+        #endregion
+
         #region Application Settings
         /// <summary>
         /// Validate settings on App Startup
@@ -374,7 +393,7 @@ namespace AspNetCore.Mvc.Extensions
         public static IServiceCollection AddTypeFinder(this IServiceCollection services)
         {
             services.AddTransient(sp => sp.GetService<IOptions<AssemblyProviderOptions>>().Value);
-       
+
             services.AddSingleton<IAssemblyProvider, AssemblyProvider>();
             services.AddSingleton<ITypeFinder, TypeFinder>();
 
@@ -544,6 +563,19 @@ namespace AspNetCore.Mvc.Extensions
         #endregion
 
         #region Feature Folders
+        public static IWebHostBuilder LogViewLocations(this IWebHostBuilder builder)
+        {
+            return builder.ConfigureServices((services) =>
+            {
+                services.LogViewLocations();
+            });
+        }
+
+        public static IServiceCollection LogViewLocations(this IServiceCollection services)
+        {
+            return services.AddHostedService<ViewLocationsLogger>();
+        }
+
         /// <summary>
         /// Adds feature folders to the application with format /{RootFeatureFolder}/{Controller}/{View}.cshtml, /{RootFeatureFolder}/{Controller}/Views/{View}.cshtml and /{RootFeatureFolder}/Shared/Views/{View}.cshtml
         /// </summary>
@@ -553,7 +585,7 @@ namespace AspNetCore.Mvc.Extensions
 
             services.AddOptions();
             if (setupAction != null)
-               services.Configure(setupAction);
+                services.Configure(setupAction);
 
             services.AddSingleton<IConfigureOptions<RazorViewEngineOptions>, FeatureFoldersSetup>();
 
@@ -586,9 +618,6 @@ namespace AspNetCore.Mvc.Extensions
                     o.ViewLocationFormats.Add(_options.RootFeatureFolder + "/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
                     o.PageViewLocationFormats.Add(_options.RootFeatureFolder + "/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
                 }
-
-                _logger.LogInformation("View Locations:" + Environment.NewLine + string.Join(Environment.NewLine, o.ViewLocationFormats));
-                _logger.LogInformation("Page View Locations:" + Environment.NewLine + string.Join(Environment.NewLine, o.PageViewLocationFormats));
             }
         }
 
@@ -649,9 +678,6 @@ namespace AspNetCore.Mvc.Extensions
                     o.AreaViewLocationFormats.Add(_options.RootFeatureFolder + "/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
                     o.AreaPageViewLocationFormats.Add(_options.RootFeatureFolder + "/Shared/Views/" + sharedViewFolder + "/{0}" + RazorViewEngine.ViewExtension);
                 }
-
-                _logger.LogInformation("Area View Locations:" + Environment.NewLine + string.Join(Environment.NewLine, o.AreaViewLocationFormats));
-                _logger.LogInformation("Area Page View Locations:" + Environment.NewLine + string.Join(Environment.NewLine, o.AreaPageViewLocationFormats));
             }
         }
         #endregion
@@ -1075,9 +1101,9 @@ namespace AspNetCore.Mvc.Extensions
 
             return services;
         }
-#endregion
+        #endregion
 
-#region Localization
+        #region Localization
         //"LocalizationSettings": {
         //  "DefaultCulture": "en-AU",
         //  "SupportedUICultures": [ "en" ],
@@ -1212,9 +1238,9 @@ namespace AspNetCore.Mvc.Extensions
 
             return services;
         }
-#endregion
+        #endregion
 
-#region Azure Key Vault Config
+        #region Azure Key Vault Config
         //https://joonasw.net/view/azure-ad-managed-service-identity
         //https://joonasw.net/view/aspnet-core-azure-keyvault-msi
         /// <summary>
@@ -1287,9 +1313,9 @@ namespace AspNetCore.Mvc.Extensions
             var settingsSection = config.GetSection(sectionKey);
             return settingsSection.Get<KeyVaultSettings>();
         }
-#endregion
+        #endregion
 
-#region EF Config
+        #region EF Config
         public static IWebHostBuilder UseEFConfiguration<TDbContext>(this IWebHostBuilder webHostBuilder, string connectionStringOrName, bool initializeSchema = false, bool useOnlyInProduction = true)
         where TDbContext : DbContext, IConfigurationDbContext
         {
@@ -1331,9 +1357,9 @@ namespace AspNetCore.Mvc.Extensions
                 }
             });
         }
-#endregion
+        #endregion
 
-#region Json string Config
+        #region Json string Config
         public static IConfigurationBuilder AddJsonString(this IConfigurationBuilder builder, string json)
         {
 
@@ -1350,9 +1376,9 @@ namespace AspNetCore.Mvc.Extensions
 
             return memStream;
         }
-#endregion
+        #endregion
 
-#region Startup Tasks
+        #region Startup Tasks
 
         public static IWebHostBuilder UseStartupTasks(this IWebHostBuilder builder, bool scanApplicationDependencies = true)
         {
@@ -1494,9 +1520,9 @@ namespace AspNetCore.Mvc.Extensions
 
             return webHostBuilder;
         }
-#endregion
+        #endregion
 
-#region Elastic Search Extensions
+        #region Elastic Search Extensions
         public static void AddElasticSearch(this IServiceCollection services, string url, string defaultIndex = "default")
         {
             var settings = new ConnectionSettings(new Uri(url))
@@ -1508,9 +1534,9 @@ namespace AspNetCore.Mvc.Extensions
 
             services.AddSingleton<IElasticClient>(client);
         }
-#endregion
+        #endregion
 
-#region DbContext Extensions
+        #region DbContext Extensions
         //        public static IServiceCollection AddDbContextNoSql<TContext>(this IServiceCollection services, string connectionString, ServiceLifetime contextLifetime = ServiceLifetime.Scoped) where TContext : DbContextNoSql
         //        {
         //            if (ConnectionStringHelper.IsLiteDbInMemory(connectionString))
@@ -1681,9 +1707,9 @@ namespace AspNetCore.Mvc.Extensions
             services.AddScoped<TUnitOfWork>(sp => sp.GetService<TUnitOfWorkImplementation>());
         }
 
-#endregion
+        #endregion
 
-#region MiniProfiler
+        #region MiniProfiler
         public static IServiceCollection AddMiniProfiler(this IServiceCollection services, string connectionString, bool initializeDatabase)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -1779,9 +1805,9 @@ namespace AspNetCore.Mvc.Extensions
 
             return services;
         }
-#endregion
+        #endregion
 
-#region Authentication
+        #region Authentication
 
         public static AuthenticationBuilder AddJwtAuthentication(this AuthenticationBuilder authenticationBuilder,
            string bearerTokenKey,
@@ -2023,9 +2049,9 @@ namespace AspNetCore.Mvc.Extensions
             });
         }
 
-#endregion
+        #endregion
 
-#region CORS
+        #region CORS
         public static void ConfigureCorsAllowAnyOrigin(this IServiceCollection services, string name)
         {
             services.AddCors(options =>
@@ -2051,9 +2077,9 @@ namespace AspNetCore.Mvc.Extensions
               .AllowAnyHeader());
             });
         }
-#endregion
+        #endregion
 
-#region SignalR Hub Mapper
+        #region SignalR Hub Mapper
         public static IServiceCollection AddSignalRHubMapper(this IServiceCollection services, Action<SignalRHubMapperOptions> setup = null)
         {
             services.TryAddSingleton<ISignalRHubMapper, SignalRHubMapper>();
@@ -2085,9 +2111,9 @@ namespace AspNetCore.Mvc.Extensions
 
             return services;
         }
-#endregion
+        #endregion
 
-#region Dependency Injection by Convention
+        #region Dependency Injection by Convention
         //https://andrewlock.net/using-scrutor-to-automatically-register-your-services-with-the-asp-net-core-di-container/
         public static IServiceCollection AddServicesByConvention(this IServiceCollection services, Action<ServicesByConventionOptions> setup = null)
         {
@@ -2124,9 +2150,9 @@ namespace AspNetCore.Mvc.Extensions
 
             return services;
         }
-#endregion
+        #endregion
 
-#region AutoMapper Interfaces
+        #region AutoMapper Interfaces
         /// <summary>
         /// Adds the automapper interfaces to the application.
         /// </summary>
@@ -2163,9 +2189,9 @@ namespace AspNetCore.Mvc.Extensions
 
             return services;
         }
-#endregion
+        #endregion
 
-#region Order By Mapper
+        #region Order By Mapper
         public static IServiceCollection ConfigureOrderByMapper(this IServiceCollection services, Action<OrderByMapperOptions> configure)
         {
             return services.Configure(configure);
@@ -2181,9 +2207,9 @@ namespace AspNetCore.Mvc.Extensions
             services.ConfigureOrderByMapper(configure);
             return services.AddOrderByMapper();
         }
-#endregion
+        #endregion
 
-#region Health Checks
+        #region Health Checks
 
         public static IServiceCollection AddHealthCheckPublisher(this IServiceCollection services, Action<HealthCheckGenericPublisherOptions> configure)
         {
@@ -2215,9 +2241,9 @@ namespace AspNetCore.Mvc.Extensions
                 failureStatus,
                 tags));
         }
-#endregion
+        #endregion
 
-#region Scrutor Scan
+        #region Scrutor Scan
         public static IImplementationTypeSelector FromCurrentDomainAssemblies(this ITypeSourceSelector scan)
         {
             return scan.FromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
@@ -2227,9 +2253,9 @@ namespace AspNetCore.Mvc.Extensions
         {
             return scan.FromAssemblies(AppDomain.CurrentDomain.GetAssemblies().Where(predicate));
         }
-#endregion
+        #endregion
 
-#region Scrutor Load into Current AppDomain
+        #region Scrutor Load into Current AppDomain
         public static IServiceCollection LoadApplicationDependencies(this IServiceCollection services, bool includeFramework = false)
         {
             return services.Scan(scan => scan.LoadApplicationDependencies(includeFramework));
@@ -2344,9 +2370,9 @@ namespace AspNetCore.Mvc.Extensions
 
             return scan;
         }
-#endregion
+        #endregion
 
-#region SPA XSRF
+        #region SPA XSRF
         /// <summary>
         /// Uses SPA XSRF Token Middleware.
         /// </summary>
@@ -2358,9 +2384,9 @@ namespace AspNetCore.Mvc.Extensions
 
             return builder.UseMiddleware<SpaGenerateAntiforgeryTokenOptions>(options);
         }
-#endregion
+        #endregion
 
-#region GraphQL
+        #region GraphQL
 
         public static IEndpointConventionBuilder MapGraphQLSchema<TSchema>(this IEndpointRouteBuilder endpoints, string path = "/graphql") where TSchema : ISchema
         {
@@ -2387,14 +2413,14 @@ namespace AspNetCore.Mvc.Extensions
             var requestHandler = endpoints.CreateApplicationBuilder().UseWebSockets().UseGraphQLVoyager(options).Build();
             return endpoints.Map((options.Path != null ? options.Path.Value : "/ui/voyager") + "/{**path}", requestHandler);
         }
-#endregion
+        #endregion
 
-#region User Service
+        #region User Service
         public static IServiceCollection AddUserService(this IServiceCollection services)
         {
             return services.AddScoped<IUserService, UserService>();
         }
 
-#endregion
+        #endregion
     }
 }

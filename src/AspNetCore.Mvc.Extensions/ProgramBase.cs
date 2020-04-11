@@ -165,6 +165,8 @@ namespace AspNetCore.Mvc.Extensions
             {
                 services.AddHttpContextAccessor();
             })
+            .LogApplicationParts()
+            .LogViewLocations()
             .UseStartupTasks(false)
             //https://docs.microsoft.com/en-us/aspnet/core/razor-pages/ui-class?view=aspnetcore-3.0&tabs=visual-studio
             //When the app is published, the companion assets from all referenced projects and packages are copied into the wwwroot folder of the published app under _content/{LIBRARY NAME}/.

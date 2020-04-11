@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Razor.Compilation;
 using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.AspNetCore.Mvc.Razor.TagHelpers;
 using Microsoft.AspNetCore.Mvc.ViewComponents;
@@ -43,9 +44,14 @@ namespace AspNetCore.Mvc.Extensions.Logging
             _partManager.PopulateFeature(viewComponentFeature);
             var viewComponents = viewComponentFeature.ViewComponents.Select(x => x.Name);
 
+            var viewsFeature = new ViewsFeature();
+            _partManager.PopulateFeature(viewsFeature);
+            var views = viewsFeature.ViewDescriptors.Select(x => x.RelativePath);
+
             //Log the application parts
             _logger.LogInformation("Found the following Application Parts: " + Environment.NewLine + string.Join(Environment.NewLine, applicationParts));
             _logger.LogInformation("Found the following Controllers: " + Environment.NewLine + string.Join(Environment.NewLine, controllers));
+            _logger.LogInformation("Found the following Views: " + Environment.NewLine + string.Join(Environment.NewLine, views));
             _logger.LogInformation("Found the following Tag Helpers: " + Environment.NewLine + string.Join(Environment.NewLine, tagHelpers));
             _logger.LogInformation("Found the following View Components: " + Environment.NewLine + string.Join(Environment.NewLine, viewComponents));
 
