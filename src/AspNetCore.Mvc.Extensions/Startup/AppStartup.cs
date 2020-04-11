@@ -2103,7 +2103,7 @@ namespace AspNetCore.Mvc.Extensions
             //4. AND Request header If-Modified-Since < Cached Last Modified (Time it was stored in cache)
 
             //Will only attempt to store in cache if:
-            //1. Request header DOES NOT contain Cache-Control: no-store
+            //1. Request header DOES NOT contain Cache-Control: no-store (Added by RequestVerification)
             //2. AND Response header DOES NOT contain Cache-Control: no-store
             //3. AND Response header does not contain Set-Cookie
             //4. AND Response Status is 200
