@@ -1549,7 +1549,9 @@ namespace AspNetCore.Mvc.Extensions
 
             var defaultSettings = JsonConvert.DefaultSettings();
 
-            var builder = services.AddSignalR();
+            //Microsoft.AspNetCore.SignalR.Protocols.MessagePack
+            //MessagePack is a binary serialization format that is fast and compact. It's useful when performance and bandwidth are a concern because it creates smaller messages compared to JSON
+            var builder = services.AddSignalR().AddMessagePackProtocol();
 
             builder.AddJsonProtocol(options =>
             {

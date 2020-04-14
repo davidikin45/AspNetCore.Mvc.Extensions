@@ -7,6 +7,7 @@ using AspNetCore.Mvc.Extensions.Email;
 using AspNetCore.Mvc.Extensions.Helpers;
 using AspNetCore.Mvc.Extensions.Settings;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ namespace AspNetCore.Mvc.Extensions.Controllers.Mvc
     //If there is an attribute applied(via[HttpGet], [HttpPost], [HttpPut], [AcceptVerbs], etc), the action will accept the specified HTTP method(s).
     //If the name of the controller action starts the words "Get", "Post", "Put", "Delete", "Patch", "Options", or "Head", use the corresponding HTTP method.
     //Otherwise, the action supports the POST method.
-    //[Authorize(Roles = "admin")]
+    [Authorize()]
     public abstract class MvcControllerEntityAuthorizeBase<TCreateDto, TReadDto, TUpdateDto, TDeleteDto, IEntityService> : MvcControllerEntityReadOnlyAuthorizeBase<TReadDto, IEntityService>
         where TCreateDto : class
         where TReadDto : class

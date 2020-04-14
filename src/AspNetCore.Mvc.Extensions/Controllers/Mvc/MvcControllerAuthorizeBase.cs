@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace AspNetCore.Mvc.Extensions.Controllers.Mvc
 {
-    [Authorize(Roles = "admin")]
+    [Authorize()]
     public abstract class MvcControllerAuthorizeBase : MvcControllerBase
     {
         public MvcControllerAuthorizeBase()

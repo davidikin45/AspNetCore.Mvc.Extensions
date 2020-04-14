@@ -11,41 +11,6 @@ namespace AspNetCore.Mvc.Extensions.SignalR
         Task ReceiveMessage(string message);
     }
 
-    public class ChatHub : NotificationHub
-    {
-        //Client JS RPC methods
-
-        public Task SendMessageToClients(string message, params string[] connectionIds)
-        {
-            //return Clients.Clients(connectionIds.ToList()).SendAsync("ReceiveMessage", message);
-            return Clients.Clients(connectionIds.ToList()).ReceiveMessage(message);
-        }
-
-        public Task SendMessageToUsers(string message, params string[] userIds)
-        {
-            //return Clients.Users(userIds.ToList()).SendAsync("ReceiveMessage", message);
-            return Clients.Users(userIds.ToList()).ReceiveMessage(message);
-        }
-
-        public Task SendMessageToAllUsers(string message)
-        {
-            //return Clients.All.SendAsync("ReceiveMessage", message);
-            return Clients.All.ReceiveMessage(message);
-        }
-
-        public Task SendMessageToGroups(string message, params string[] groups)
-        {
-            //return Clients.Groups(groups.ToList()).SendAsync("ReceiveMessage", message);
-            return Clients.Groups(groups.ToList()).ReceiveMessage(message);
-        }
-
-        public Task SendMessageBackToSender(string message)
-        {
-            //return Clients.Caller.SendAsync("ReceiveMessage", message);
-            return Clients.Caller.ReceiveMessage(message);
-        }
-    }
-
     public class NotificationHub : Hub<INotificationClient>
     {
        

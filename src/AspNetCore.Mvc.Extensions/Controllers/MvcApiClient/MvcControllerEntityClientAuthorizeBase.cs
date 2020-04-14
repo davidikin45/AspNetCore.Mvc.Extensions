@@ -5,6 +5,7 @@ using AspNetCore.Mvc.Extensions.Controllers.ApiClient;
 using AspNetCore.Mvc.Extensions.Data.Helpers;
 using AspNetCore.Mvc.Extensions.Helpers;
 using AspNetCore.Mvc.Extensions.UI;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace AspNetCore.Mvc.Extensions.Controllers.MvcApiClient
     //If there is an attribute applied(via[HttpGet], [HttpPost], [HttpPut], [AcceptVerbs], etc), the action will accept the specified HTTP method(s).
     //If the name of the controller action starts the words "Get", "Post", "Put", "Delete", "Patch", "Options", or "Head", use the corresponding HTTP method.
     //Otherwise, the action supports the POST method.
-    //[Authorize(Roles = "admin")]
+    [Authorize()]
     public abstract class MvcControllerEntityClientAuthorizeBase<TCreateDto, TReadDto, TUpdateDto, TDeleteDto, IEntityService> : MvcControllerEntityReadOnlyClientAuthorizeBase<TReadDto, IEntityService>
         where TCreateDto : class
         where TReadDto : class

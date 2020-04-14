@@ -1,6 +1,7 @@
 ﻿using AspNetCore.Mvc.Extensions.Settings;
 using EntityFrameworkCore.Initialization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -87,6 +88,7 @@ namespace AspNetCore.Mvc.Extensions
                 {
                     options.LoginPath = "/Account/Login";
                     options.Cookie.Name = appSettings.CookieAuthName;
+                    options.Cookie.SameSite = SameSiteMode.Lax; //Lax to allow for OAuth otherwise SameSiteMode.Strict to prevent CSRF;
                 });
 
                 services.ConfigureExternalCookie(options =>

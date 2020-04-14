@@ -93,6 +93,7 @@ namespace AspNetCore.Mvc.Extensions.Data.Repository
             if (take.HasValue)
                 query = query.Take(take.Value);
 
+            //.ToQueryString() or .ToString()
             DebugSQL(query);
 
             return query;

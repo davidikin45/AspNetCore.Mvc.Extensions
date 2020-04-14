@@ -28,7 +28,7 @@ namespace AspNetCore.Mvc.Extensions.Controllers.File
     //If there is an attribute applied(via[HttpGet], [HttpPost], [HttpPut], [AcceptVerbs], etc), the action will accept the specified HTTP method(s).
     //If the name of the controller action starts the words "Get", "Post", "Put", "Delete", "Patch", "Options", or "Head", use the corresponding HTTP method.
     //Otherwise, the action supports the POST method.
-    [Authorize(Roles = "admin")]
+    [Authorize()]
     public abstract class MvcControllerFileMetadataReadOnlyAuthorizeBase : MvcControllerBase
     {   
         public IFileSystemGenericRepositoryFactory FileSystemGenericRepositoryFactory { get; private set; }

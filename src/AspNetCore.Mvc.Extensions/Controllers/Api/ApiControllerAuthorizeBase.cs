@@ -15,7 +15,7 @@ namespace AspNetCore.Mvc.Extensions.Controllers.Api
     //Otherwise, the action supports the POST method.
 
     //AuthorizeAttributes are AND not OR.
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme+ "," + BasicAuthenticationDefaults.AuthenticationScheme, Roles = "admin")] // 40
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme+ "," + BasicAuthenticationDefaults.AuthenticationScheme)] // 40
     public abstract class ApiControllerAuthorizeBase : ApiControllerBase
     {
         public ApiControllerAuthorizeBase(ControllerServicesContext context)

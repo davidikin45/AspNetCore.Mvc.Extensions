@@ -80,5 +80,10 @@ namespace AspNetCore.Mvc.Extensions.Data.Helpers
         {
             return CountList<T>.CreateAsync(query, skip, take, cancellationToken);
         }
+
+        public static string ToSqlString(this IQueryable query)
+        {
+            return query.ToString();
+        }
     }
 }
