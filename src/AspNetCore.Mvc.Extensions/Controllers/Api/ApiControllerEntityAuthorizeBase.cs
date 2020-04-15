@@ -231,7 +231,7 @@ namespace AspNetCore.Mvc.Extensions.Controllers.Api
             //    return ApiNotFoundErrorMessage(Messages.NotFound);
             //}
 
-            var result = await Service.UpdateGraphAsync(id, dto, UserId, cts.Token);
+            var result = await Service.UpdateAsync(id, dto, UserId, cts.Token);
             if (result.IsFailure)
             {
                 return ValidationErrors(result);
@@ -256,7 +256,7 @@ namespace AspNetCore.Mvc.Extensions.Controllers.Api
         {
             var cts = TaskHelper.CreateChildCancellationTokenSource(ClientDisconnectedToken());
 
-            var results = await Service.BulkUpdateGraphAsync(dtos, UserId, cts.Token);
+            var results = await Service.BulkUpdateAsync(dtos, UserId, cts.Token);
 
             return BulkUpdateResponse(results);
         }

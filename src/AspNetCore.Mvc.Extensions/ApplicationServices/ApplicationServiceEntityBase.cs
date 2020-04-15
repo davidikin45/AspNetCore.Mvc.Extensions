@@ -551,7 +551,7 @@ namespace AspNetCore.Mvc.Extensions.Application
 
             dtoPatchTypes.ApplyTo(dto);
 
-            var result = await UpdateGraphAsync(id, dto, updatedBy, cancellationToken);
+            var result = await UpdateAsync(id, dto, updatedBy, cancellationToken);
 
             return Result.Ok();
         }

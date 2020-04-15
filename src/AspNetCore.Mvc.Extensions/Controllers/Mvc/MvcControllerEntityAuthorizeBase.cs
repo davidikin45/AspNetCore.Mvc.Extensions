@@ -127,7 +127,7 @@ namespace AspNetCore.Mvc.Extensions.Controllers.Mvc
             {
                 try
                 {
-                    var result = await Service.UpdateGraphAsync(id, dto, Username, cts.Token);
+                    var result = await Service.UpdateAsync(id, dto, Username, cts.Token);
                     if (result.IsFailure)
                     {
                         HandleUpdateException(result, dto, true);
