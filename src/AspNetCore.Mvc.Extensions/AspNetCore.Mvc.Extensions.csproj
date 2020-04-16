@@ -12,9 +12,9 @@
     <RepositoryUrl>https://github.com/davidikin45/AspNetCore.Mvc.Extensions</RepositoryUrl>
     <PackageTags>ASP.NET Core Extensions Mvc</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.37</Version>
-    <FileVersion>1.0.37.0</FileVersion>
-    <AssemblyVersion>1.0.37.0</AssemblyVersion>
+    <Version>1.0.38</Version>
+    <FileVersion>1.0.38.0</FileVersion>
+    <AssemblyVersion>1.0.38.0</AssemblyVersion>
     <LangVersion>latest</LangVersion>
     <UserSecretsId>a241189c-8727-4327-b8e3-49397ed423c8</UserSecretsId>
     <ApplicationIcon />
@@ -30,7 +30,7 @@
   <ItemGroup>
     <!--https://andrewlock.net/converting-a-netstandard-2-library-to-netcore-3/-->
     <PackageReference Include="AspNetCore.Mvc.SelectList" Version="1.1.14" />
-    <PackageReference Include="AspNetCore.Mvc.UrlLocalization" Version="1.0.10" />
+    <PackageReference Include="AspNetCore.Mvc.UrlLocalization" Version="1.0.11" />
     <PackageReference Include="ClosedXML" Version="0.94.2" />
     <PackageReference Include="CsvHelper" Version="15.0.4" />
     <PackageReference Include="FluentValidation" Version="8.6.2" />
