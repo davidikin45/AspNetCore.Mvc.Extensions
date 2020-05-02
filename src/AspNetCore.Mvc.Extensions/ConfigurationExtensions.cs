@@ -15,7 +15,6 @@ using AspNetCore.Mvc.Extensions.Logging;
 using AspNetCore.Mvc.Extensions.Mapping;
 using AspNetCore.Mvc.Extensions.ModelBinders;
 using AspNetCore.Mvc.Extensions.NdjsonStream;
-using AspNetCore.Mvc.Extensions.OrderByMapping;
 using AspNetCore.Mvc.Extensions.Plugins;
 using AspNetCore.Mvc.Extensions.Providers;
 using AspNetCore.Mvc.Extensions.Razor;
@@ -26,7 +25,6 @@ using AspNetCore.Mvc.Extensions.Settings;
 using AspNetCore.Mvc.Extensions.SignalR;
 using AspNetCore.Mvc.Extensions.StartupTasks;
 using AspNetCore.Mvc.Extensions.Swagger;
-using AspNetCore.Mvc.Extensions.UI;
 using AspNetCore.Mvc.Extensions.Users;
 using AspNetCore.Mvc.Extensions.Validation;
 using AspNetCore.Mvc.Extensions.Validation.Settings;
@@ -47,7 +45,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
@@ -86,7 +83,6 @@ using Scrutor;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 using StackExchange.Profiling.Storage;
-using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
 using System.Collections.Generic;
@@ -549,15 +545,6 @@ namespace AspNetCore.Mvc.Extensions
         public static IMvcBuilder AddMvcRawBytesRequestBodyInputFormatter(this IMvcBuilder builder)
         {
             builder.Services.AddSingleton<IConfigureOptions<MvcOptions>, RawBytesRequestBodyInputFormatterMvcOptionsSetup>();
-            return builder;
-        }
-
-        /// <summary>
-        /// Adds the User Specification model binders for UserIncludeSpecification<>, UserFilterSpecification<>, UserOrderBySpecification<>, UserFieldsSpecification<> to the application.
-        /// </summary>
-        public static IMvcBuilder AddMvcUserSpecificationModelBinders(this IMvcBuilder builder)
-        {
-            builder.Services.AddSingleton<IConfigureOptions<MvcOptions>, UserSpecificationsMvcOptionsSetup>();
             return builder;
         }
         #endregion
@@ -2188,24 +2175,6 @@ namespace AspNetCore.Mvc.Extensions
             services.AddSingleton<IMapper>(sp => sp.GetRequiredService<MapperConfiguration>().CreateMapper());
 
             return services;
-        }
-        #endregion
-
-        #region Order By Mapper
-        public static IServiceCollection ConfigureOrderByMapper(this IServiceCollection services, Action<OrderByMapperOptions> configure)
-        {
-            return services.Configure(configure);
-        }
-
-        public static IServiceCollection AddOrderByMapper(this IServiceCollection services)
-        {
-            return services.AddSingleton<IOrderByMapper, OrderByMapper>();
-        }
-
-        public static IServiceCollection AddOrderByMapper(this IServiceCollection services, Action<OrderByMapperOptions> configure)
-        {
-            services.ConfigureOrderByMapper(configure);
-            return services.AddOrderByMapper();
         }
         #endregion
 

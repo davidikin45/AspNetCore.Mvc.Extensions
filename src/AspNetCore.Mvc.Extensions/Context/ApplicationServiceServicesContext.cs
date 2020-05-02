@@ -1,6 +1,6 @@
-﻿using AspNetCore.Mvc.Extensions.OrderByMapping;
-using AspNetCore.Mvc.Extensions.Users;
+﻿using AspNetCore.Mvc.Extensions.Users;
 using AspNetCore.Mvc.Extensions.Validation;
+using AspNetCore.Specification.OrderByMapping;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;

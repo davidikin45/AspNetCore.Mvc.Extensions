@@ -6,6 +6,7 @@ using AspNetCore.Mvc.Extensions.Cqrs;
 using AspNetCore.Mvc.Extensions.Helpers;
 using AspNetCore.Mvc.Extensions.UI;
 using AspNetCore.Mvc.Extensions.Validation;
+using AspNetCore.Specification.UI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

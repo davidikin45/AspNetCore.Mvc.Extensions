@@ -99,6 +99,7 @@ namespace AspNetCore.Mvc.Extensions.Data
             builder.RemovePluralizingTableNameConvention();
             builder.AddSoftDeleteFilter();
 
+            builder.AddEncryptedValues("password");
             builder.AddJsonValues();
             builder.AddCsvValues();
             builder.AddMultiLangaugeStringValues();

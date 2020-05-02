@@ -12,9 +12,8 @@ Explicit Loading for Existing Entity:
 .Entry(entity).Collection(s => s.Quotes).Query().Where(q => q.Quote.Contains("Happy")).ToList()
 .Entry(entity).Reference(s => s.Horse).Load()
 
-
-DbSet<Query>
-modelBuilder.Entity<Query>().HasNoKey().ToView("ViewName");
+DbSet<Query>. DbContext.Query<>() is obselete
+modelBuilder.Entity<Query>().HasNoKey().ToView("ViewName"); ModelBuilder.Query<> is obselete
 
 InMemory doesnt migrate until EnsureCreated is called
 

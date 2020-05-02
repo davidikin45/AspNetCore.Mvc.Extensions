@@ -197,7 +197,7 @@ namespace AspNetCore.Mvc.Extensions.IntegrationEvents
             {
                 var props = ea.BasicProperties;
                 var eventName = ea.RoutingKey;
-                var message = Encoding.UTF8.GetString(ea.Body);
+                var message = Encoding.UTF8.GetString(ea.Body.ToArray());
 
                 await ProcessEventAsync(eventName, message);
 

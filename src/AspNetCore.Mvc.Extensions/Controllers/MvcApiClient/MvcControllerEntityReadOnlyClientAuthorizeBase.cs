@@ -7,6 +7,7 @@ using AspNetCore.Mvc.Extensions.Email;
 using AspNetCore.Mvc.Extensions.Helpers;
 using AspNetCore.Mvc.Extensions.Settings;
 using AspNetCore.Mvc.Extensions.UI;
+using AspNetCore.Specification.UI;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

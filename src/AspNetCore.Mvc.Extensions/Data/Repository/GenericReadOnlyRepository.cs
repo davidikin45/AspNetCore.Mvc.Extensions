@@ -1,6 +1,6 @@
 ﻿using AspNetCore.Mvc.Extensions.Data.Helpers;
 using AspNetCore.Mvc.Extensions.Domain;
-using AspNetCore.Mvc.Extensions.Specification;
+using AspNetCore.Specification;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

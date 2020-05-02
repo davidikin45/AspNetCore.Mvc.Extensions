@@ -5,6 +5,7 @@ using AspNetCore.Mvc.Extensions.Data.Helpers;
 using AspNetCore.Mvc.Extensions.Dtos;
 using AspNetCore.Mvc.Extensions.Helpers;
 using AspNetCore.Mvc.Extensions.UI;
+using AspNetCore.Specification.UI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -46,7 +47,8 @@ namespace AspNetCore.Mvc.Extensions.Controllers.Mvc
         [Route("")]
         public virtual async Task<ActionResult> Index(int p = 1, int pageSize = 10, string orderBy = "Id desc", string search = "")
         {
-            if (!UIHelper.ValidFilterFor<TDto>(HttpContext.Request.Query))
+            var spec = UserFilterSpecification.Create<TDto>(HttpContext.Request.Query);
+            if (!spec.IsValid)
             {
                 return HandleReadException();
             }
@@ -55,7 +57,7 @@ namespace AspNetCore.Mvc.Extensions.Controllers.Mvc
 
             try
             {
-                var dataTask = Service.SearchAsync(cts.Token, null, search, UIHelper.GetFilter<TDto>(HttpContext.Request.Query), orderBy, p, pageSize, false, null);
+                var dataTask = Service.SearchAsync(cts.Token, null, search, spec.ToExpression(), orderBy, p, pageSize, false, null);
 
                 await TaskHelper.WhenAllOrException(cts, dataTask);
 

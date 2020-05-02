@@ -1,10 +1,11 @@
 ﻿using AspNetCore.Mvc.Extensions.Authorization;
 using AspNetCore.Mvc.Extensions.Context;
 using AspNetCore.Mvc.Extensions.Mapping;
-using AspNetCore.Mvc.Extensions.OrderByMapping;
 using AspNetCore.Mvc.Extensions.Users;
 using AspNetCore.Mvc.Extensions.Validation;
 using AspNetCore.Mvc.Extensions.Validation.Errors;
+using AspNetCore.Specification;
+using AspNetCore.Specification.OrderByMapping;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;

@@ -1,7 +1,7 @@
 ﻿using AspNetCore.Mvc.Extensions.Data.Helpers;
 using AspNetCore.Mvc.Extensions.Data.Migrations;
 using AspNetCore.Mvc.Extensions.Logging;
-using AspNetCore.Mvc.Extensions.Specification;
+using AspNetCore.Specification.Data;
 using Autofac.AspNetCore.Extensions;
 using Autofac.AspNetCore.Extensions.Data;
 using EntityFrameworkCore.Initialization.Converters;
@@ -14,14 +14,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.Data
 {
-    public abstract class DbContextBase : DbContextTenantBase
+    public abstract class DbContextBase : DbContextTenantBase, IQueriesDbContext
     {
         protected DbContextBase(ITenantService tenantService)
             : base(tenantService)
@@ -110,11 +108,12 @@ namespace AspNetCore.Mvc.Extensions.Data
 
             //Add Seed Data for things like Enumerations > Lookup Tables. Migrations are generated for this data.
 
+            builder.AddEncryptedValues("password");
             builder.AddJsonValues();
             builder.AddCsvValues();
             builder.AddMultiLangaugeStringValues();
             builder.AddBackingFields();
-
+      
             BuildQueries(builder);
         }
 
@@ -184,6 +183,13 @@ namespace AspNetCore.Mvc.Extensions.Data
 
             await this.AuditAfterSaveChangesAsync(auditLogs, cancellationToken);
             return changes;
+        }
+        #endregion
+
+        #region Specification Query
+        public SpecificationDbQuery<TEntity> SpecificationQuery<TEntity>() where TEntity : class
+        {
+            return new SpecificationDbQuery<TEntity>(this);
         }
         #endregion
     }

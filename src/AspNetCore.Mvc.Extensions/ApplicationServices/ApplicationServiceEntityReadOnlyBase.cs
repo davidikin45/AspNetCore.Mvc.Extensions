@@ -2,10 +2,9 @@
 using AspNetCore.Mvc.Extensions.Data.Helpers;
 using AspNetCore.Mvc.Extensions.Data.Repository;
 using AspNetCore.Mvc.Extensions.Data.UnitOfWork;
-using AspNetCore.Mvc.Extensions.OrderByMapping;
-using AspNetCore.Mvc.Extensions.Specification;
-using AspNetCore.Mvc.Extensions.UI;
 using AspNetCore.Mvc.Extensions.Validation.Errors;
+using AspNetCore.Specification;
+using AspNetCore.Specification.OrderByMapping;
 using System;
 using System.Collections.Generic;
 using System.Linq;

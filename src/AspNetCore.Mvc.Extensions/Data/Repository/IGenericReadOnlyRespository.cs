@@ -1,5 +1,4 @@
-﻿using AspNetCore.Mvc.Extensions.Data.Helpers;
-using AspNetCore.Mvc.Extensions.Specification;
+﻿using AspNetCore.Specification;
 using System;
 using System.Collections.Generic;
 using System.Linq;
