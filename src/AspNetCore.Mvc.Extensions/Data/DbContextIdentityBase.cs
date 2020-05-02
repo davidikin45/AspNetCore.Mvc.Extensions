@@ -1,5 +1,6 @@
 ﻿using AspNetCore.Mvc.Extensions.Data.Helpers;
 using AspNetCore.Mvc.Extensions.Data.Migrations;
+using AspNetCore.Specification.Data;
 using Autofac.AspNetCore.Extensions;
 using Autofac.AspNetCore.Extensions.Data;
 using EntityFrameworkCore.Initialization.Converters;
@@ -15,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.Data
 {
-    public abstract class DbContextIdentityBase<TUser> : DbContextIdentityTenantBase<TUser> where TUser : IdentityUser
+    public abstract class DbContextIdentityBase<TUser> : DbContextIdentityTenantBase<TUser>, IQueriesDbContext where TUser : IdentityUser
     {
         protected DbContextIdentityBase(ITenantService tenantService)
             :base(tenantService)
@@ -162,6 +163,13 @@ namespace AspNetCore.Mvc.Extensions.Data
             var changes = await base.SaveChangesAsync(cancellationToken);
             await this.AuditAfterSaveChangesAsync(auditLogs, cancellationToken);
             return changes;
+        }
+        #endregion
+
+        #region Specification Query
+        public SpecificationDbQuery<TEntity> SpecificationQuery<TEntity>() where TEntity : class
+        {
+            return new SpecificationDbQuery<TEntity>(this);
         }
         #endregion
     }
