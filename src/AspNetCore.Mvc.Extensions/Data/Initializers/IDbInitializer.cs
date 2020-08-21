@@ -7,6 +7,5 @@ namespace AspNetCore.Mvc.Extensions.Data.Initializers
     {
         Task InitializeAsync(string connectionString, CancellationToken cancellationToken);
         Task InitializeSchemaAsync(string connectionString, CancellationToken cancellationToken);
-        Task InitializeDataAsync(string context, string tenantId, CancellationToken cancellationToken);
     }
 }
