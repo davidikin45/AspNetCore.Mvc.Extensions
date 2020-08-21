@@ -12,9 +12,9 @@
     <RepositoryUrl>https://github.com/davidikin45/AspNetCore.Mvc.Extensions</RepositoryUrl>
     <PackageTags>ASP.NET Core Extensions Mvc</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.42</Version>
-    <FileVersion>1.0.42.0</FileVersion>
-    <AssemblyVersion>1.0.42.0</AssemblyVersion>
+    <Version>1.0.43</Version>
+    <FileVersion>1.0.43.0</FileVersion>
+    <AssemblyVersion>1.0.43.0</AssemblyVersion>
     <LangVersion>latest</LangVersion>
     <UserSecretsId>a241189c-8727-4327-b8e3-49397ed423c8</UserSecretsId>
     <ApplicationIcon />

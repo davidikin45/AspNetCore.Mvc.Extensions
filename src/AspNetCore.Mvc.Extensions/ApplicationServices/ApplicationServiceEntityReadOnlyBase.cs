@@ -19,7 +19,7 @@ namespace AspNetCore.Mvc.Extensions.Application
           where TDto : class
           where TUnitOfWork : IUnitOfWork
     {
-        protected virtual IUnitOfWork UnitOfWork { get; }
+        protected virtual TUnitOfWork UnitOfWork { get; }
         protected virtual IGenericRepository<TEntity> Repository => UnitOfWork.Repository<TEntity>();
 
         public ApplicationServiceEntityReadOnlyBase(ApplicationervicesContext context, TUnitOfWork unitOfWork)
