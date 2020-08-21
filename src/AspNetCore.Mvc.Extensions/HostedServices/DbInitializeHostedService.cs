@@ -9,9 +9,9 @@ namespace AspNetCore.Mvc.Extensions.HostedServices
     public class DbInitializeHostedService<TDbContext> : IHostedService
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly Action<TDbContext> _configure;
+        private readonly Action<IServiceProvider, TDbContext> _configure;
 
-        public DbInitializeHostedService(IServiceProvider serviceProvider, Action<TDbContext> configure)
+        public DbInitializeHostedService(IServiceProvider serviceProvider, Action<IServiceProvider, TDbContext> configure)
         {
             _serviceProvider = serviceProvider;
             _configure = configure;
@@ -22,7 +22,7 @@ namespace AspNetCore.Mvc.Extensions.HostedServices
             using (var scope = _serviceProvider.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<TDbContext>();
-                _configure(db);
+                _configure(scope.ServiceProvider, db);
             }
 
             return Task.CompletedTask;

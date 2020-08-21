@@ -1431,7 +1431,7 @@ namespace AspNetCore.Mvc.Extensions
           .AddTaskExecutingServer();
         }
 
-        public static IServiceCollection AddDbInitializeStartupTask<TDbContext>(this IServiceCollection services, Action<TDbContext> configure, int order = 0)
+        public static IServiceCollection AddDbInitializeStartupTask<TDbContext>(this IServiceCollection services, Action<IServiceProvider, TDbContext> configure, int order = 0)
         where TDbContext : class
         {
             _sharedContext.RegisterTask();
@@ -1441,7 +1441,7 @@ namespace AspNetCore.Mvc.Extensions
           .AddTaskExecutingServer();
         }
 
-        public static IServiceCollection AddDbInitializeHostedService<TDbContext>(this IServiceCollection services, Action<TDbContext> configure)
+        public static IServiceCollection AddDbInitializeHostedService<TDbContext>(this IServiceCollection services, Action<IServiceProvider, TDbContext> configure)
         where TDbContext : class
         {
             return services.AddHostedService<IHostedService>(sp => new DbInitializeHostedService<TDbContext>(sp, configure));

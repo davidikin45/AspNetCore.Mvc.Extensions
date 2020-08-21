@@ -9,9 +9,9 @@ namespace AspNetCore.Mvc.Extensions.StartupTasks
         where TDbContext : class
     {
         public override int Order { get; }
-        private readonly Action<TDbContext> _configure;
+        private readonly Action<IServiceProvider, TDbContext> _configure;
 
-        public DbInitializeStartupTask(IServiceProvider serviceProvider, Action<TDbContext> configure, int order = 0)
+        public DbInitializeStartupTask(IServiceProvider serviceProvider, Action<IServiceProvider, TDbContext> configure, int order = 0)
             :base(serviceProvider)
         {
             Order = 0;
@@ -21,7 +21,7 @@ namespace AspNetCore.Mvc.Extensions.StartupTasks
         protected override Task ExecuteAsync(IServiceProvider scopedServiceProvider, CancellationToken stoppingToken)
         {
             var context = scopedServiceProvider.GetRequiredService<TDbContext>();
-            _configure(context);
+            _configure(scopedServiceProvider, context);
             return Task.CompletedTask;
         }
     }
