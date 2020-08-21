@@ -1431,7 +1431,7 @@ namespace AspNetCore.Mvc.Extensions
           .AddTaskExecutingServer();
         }
 
-        public static IServiceCollection AddDbInitializeStartupTask<TDbContext>(this IServiceCollection services, Action<IServiceProvider, TDbContext> configure, int order = 0)
+        public static IServiceCollection AddDbStartupTask<TDbContext>(this IServiceCollection services, Action<IServiceProvider, TDbContext> configure, int order = 0)
         where TDbContext : class
         {
             _sharedContext.RegisterTask();
