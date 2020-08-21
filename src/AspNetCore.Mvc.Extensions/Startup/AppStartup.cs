@@ -3,6 +3,8 @@ using AspNetCore.Mvc.Extensions.ApiClient;
 using AspNetCore.Mvc.Extensions.Attributes.Validation;
 using AspNetCore.Mvc.Extensions.Authentication;
 using AspNetCore.Mvc.Extensions.Authorization;
+using AspNetCore.Mvc.Extensions.Authorization.PolicyProviders;
+using AspNetCore.Mvc.Extensions.Authorization.Requirements;
 using AspNetCore.Mvc.Extensions.Context;
 using AspNetCore.Mvc.Extensions.Conventions.Display;
 using AspNetCore.Mvc.Extensions.Cqrs;
@@ -339,6 +341,8 @@ namespace AspNetCore.Mvc.Extensions
         public abstract void ConfigureOrderByMapper(OrderByMapperOptions options);
 
         #region Settings
+        //Dictionary must use string key!
+        //https://andrewlock.net/how-to-use-the-ioptions-pattern-for-configuration-in-asp-net-core-rc2/
         public virtual void ConfigureSettingsServices(IServiceCollection services)
         {
             Logger.LogInformation("Configuring Settings");
@@ -570,6 +574,7 @@ namespace AspNetCore.Mvc.Extensions
         #region Data Protection
         public virtual void ConfigureDataProtectionServices(IServiceCollection services)
         {
+            //https://jakeydocs.readthedocs.io/en/latest/security/data-protection/implementation/key-encryption-at-rest.html
             //https://edi.wang/post/2019/1/15/caveats-in-aspnet-core-data-protection -- Encryption
             //https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?view=aspnetcore-2.2
             //keys are persisted to the %LOCALAPPDATA%\ASP.NET\DataProtection-Keys folder. 
@@ -592,11 +597,35 @@ namespace AspNetCore.Mvc.Extensions
                 ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
             })
             .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
-            //.ProtectKeysWithDpapi()
+            //.ProtectKeysWithDpapi()  // only the local user account can decrypt the keys
+            //.ProtectKeysWithDpapi(protectToLocalMachine: true); all user accounts on the machine can decrypt the keys
             //.PersistKeysToFileSystem(new DirectoryInfo(@"C:\keys"))
             //.PersistKeysToFileSystem(new DirectoryInfo(@"\\server\share\directory\"))
             //.ProtectKeysWithCertificate(new X509Certificate2("certificate.pfx", "password"))
             //.SetApplicationName("web-app"); //salt
+
+            //Load Balanced
+            //var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback));
+
+            //var keyBundle = keyVaultClient.GetKeyAsync($"https://{keyVaultName}.vault.azure.net/", "DataProtectionKey")
+            //    .ConfigureAwait(false).GetAwaiter().GetResult();
+            //var keyIdentifier = keyBundle.KeyIdentifier.Identifier;
+
+            //var storageCredentials = new StorageCredentials(
+            //    Configuration.GetValue<string>("DataProtection:StorageAccountName"),
+            //    Configuration.GetValue<string>("DataProtection:StorageKey"));
+            //var cloudStorageAccount = new CloudStorageAccount(storageCredentials, useHttps: true);
+            //var cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
+            //var cloudBlobContainer = cloudBlobClient.GetContainerReference("dataprotectionkeys");
+
+            // optional - provision the container automatically
+            //await container.CreateIfNotExistsAsync();
+
+            //services.AddDataProtection(options => { options.ApplicationDiscriminator = "willow"; })
+            //    .PersistKeysToAzureBlobStorage(cloudBlobContainer, "keys.xml") //appends to find instead of creating new each time
+            //    .SetApplicationName("Application")
+            //    .SetDefaultKeyLifetime(TimeSpan.FromDays(30))
+            //    .ProtectKeysWithAzureKeyVault(keyVaultClient, keyIdentifier);
         }
         #endregion
 
@@ -921,7 +950,8 @@ namespace AspNetCore.Mvc.Extensions
 
                 options.AddPolicy("HealthCheckPolicy", policyBuilder =>
                 {
-                    policyBuilder.RequireClaim("client_policy", "healthChecks");
+                    //policyBuilder.RequireClaim("client_policy", "healthChecks");
+                    policyBuilder.AllowAnonymous();
                 });
             });
 
@@ -930,7 +960,7 @@ namespace AspNetCore.Mvc.Extensions
             services.AddSingleton<IAuthorizationHandler, AnonymousAuthorizationHandler>();
             //Scope name as policy
             //https://www.jerriepelser.com/blog/creating-dynamic-authorization-policies-aspnet-core/
-            services.AddSingleton<IAuthorizationPolicyProvider, AuthorizationPolicyProvider>();
+            services.AddSingleton<IAuthorizationPolicyProvider, ScopeAndAnonymousAuthorizationPolicyProvider>();
             //services.AddSingleton<IAuthorizationPolicyProvider, ScopeAuthorizationPolicyProvider>();
         }
         #endregion
@@ -1140,8 +1170,20 @@ namespace AspNetCore.Mvc.Extensions
                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                 options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                 options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
-                options.JsonSerializerOptions.Converters.Add(new DynamicJsonConverter());
+                //options.JsonSerializerOptions.Converters.Add(new DynamicJsonConverter()); //dynamic serialization/deserialization seems to work fine in 3.1
             });
+
+            // Workaround: https://github.com/dotnet/runtime/issues/31094#issuecomment-543342051
+            //JsonSerializer.Serialize
+            //POCO a = JsonSerializer.Deserialize<POCO>(jsonString) or object o = JsonSerializer.Deserialize<dynamic>(jsonString)
+            var defaultJsonSerializerOptions = ((JsonSerializerOptions)typeof(JsonSerializerOptions).GetField("s_defaultOptions", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic).GetValue(null));
+            defaultJsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            defaultJsonSerializerOptions.WriteIndented = defaultSettings.Formatting == Formatting.Indented;
+            defaultJsonSerializerOptions.IgnoreNullValues = defaultSettings.DefaultValueHandling == DefaultValueHandling.Ignore;
+            defaultJsonSerializerOptions.IgnoreReadOnlyProperties = false;
+            defaultJsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            defaultJsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            defaultJsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
 
             var mvc = services.AddMvc(options =>
             {
@@ -1757,6 +1799,7 @@ namespace AspNetCore.Mvc.Extensions
             //.ConfigureHttpClient(c => c.BaseAddress = new Uri("https://api.example.com"));
         }
 
+        //Transient
         public abstract void AddHttpClients(IServiceCollection services);
         #endregion
 

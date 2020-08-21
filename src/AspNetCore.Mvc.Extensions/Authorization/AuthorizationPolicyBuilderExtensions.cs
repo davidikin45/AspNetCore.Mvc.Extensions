@@ -15,5 +15,11 @@ namespace AspNetCore.Mvc.Extensions.Authorization
             builder.Requirements.Add(new ScopeAuthorizationRequirement(scope));
             return builder;
         }
+
+        public static AuthorizationPolicyBuilder AllowAnonymous(this AuthorizationPolicyBuilder builder)
+        {
+            builder.Requirements.Add(new AnonymousAuthorizationRequirement());
+            return builder;
+        }
     }
 }

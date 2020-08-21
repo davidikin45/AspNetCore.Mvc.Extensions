@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace AspNetCore.Mvc.Extensions.Json
 {
+    //dynamic serialization/deserialization seems to work fine in 3.1
     /// <summary>
     /// Temp Dynamic Converter
     /// by:tchivs@live.cn

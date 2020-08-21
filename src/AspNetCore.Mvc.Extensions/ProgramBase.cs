@@ -177,7 +177,7 @@ namespace AspNetCore.Mvc.Extensions
             //.NET Core 2.2 
             //https://nblumhardt.com/2019/10/serilog-in-aspnetcore-3/?fbclid=IwAR2SZoIsGjtTfwCd5bEG9n0mpnbo-3ERVCYZk6snBDnbIHwKC5dYbIoj_vY
             //.UseSerilog()
-
+            //UseAzureAppServices() Azure Logging
             .UseStartup<TStartup>();
         }
 

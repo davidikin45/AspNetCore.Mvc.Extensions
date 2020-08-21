@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AspNetCore.Mvc.Extensions.Authorization.Requirements;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,14 +7,16 @@ using Microsoft.Extensions.Options;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Mvc.Extensions.Authorization
+namespace AspNetCore.Mvc.Extensions.Authorization.PolicyProviders
 {
-    public class AuthorizationPolicyProvider : DefaultAuthorizationPolicyProvider
+    //https://www.jerriepelser.com/blog/creating-dynamic-authorization-policies-aspnet-core/
+    // Extremely useful so you don't have to create policies for each scope you wish to check for.
+    public class ScopeAndAnonymousAuthorizationPolicyProvider : DefaultAuthorizationPolicyProvider
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly AuthorizationOptions _options;
 
-        public AuthorizationPolicyProvider(IOptions<AuthorizationOptions> options, IHttpContextAccessor httpContextAccessor) : base(options)
+        public ScopeAndAnonymousAuthorizationPolicyProvider(IOptions<AuthorizationOptions> options, IHttpContextAccessor httpContextAccessor) : base(options)
         {
             _options = options.Value;
             _httpContextAccessor = httpContextAccessor;
@@ -30,6 +33,8 @@ namespace AspNetCore.Mvc.Extensions.Authorization
             if (policy == null)
             {
                 bool allowAnonymousAccess = false;
+
+                //e.g check if anonymous allows for one of the passed scopes. full, create, read, read-if-owner, update, update-if-owner, delete, delete-if-owner, collectionId.create, collectionId.read, collectionId.read-if-owner, collectionId.update, collectionId.update-if-owner, collectionId.delete, collectionId.delete-if-owner
                 var role = await roleManager.FindByNameAsync("anonymous");
                 if (role != null)
                 {

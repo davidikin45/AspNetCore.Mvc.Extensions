@@ -23,16 +23,18 @@ namespace AspNetCore.Mvc.Extensions.Cqrs.Decorators.Command
         {
             try
             {
-                _unitOfWorks.ToList().ForEach(uow => uow.AutoDetectChangesEnabled = false);
-                _unitOfWorks.ToList().ForEach(uow => uow.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking);
+                _unitOfWorks.ToList().ForEach(uow => uow.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking); //performance
+                _unitOfWorks.ToList().ForEach(uow => uow.AutoDetectChangesEnabled = false); //safety net for update
+                _unitOfWorks.ToList().ForEach(uow => uow.CommitingChanges = true); //safety net for update
 
                 Result<TResult> result = await _handler.HandleAsync(queryName, query, cancellationToken);
                 return result;
             }
             finally
             {
-                _unitOfWorks.ToList().ForEach(uow => uow.AutoDetectChangesEnabled = true);
                 _unitOfWorks.ToList().ForEach(uow => uow.QueryTrackingBehavior = QueryTrackingBehavior.TrackAll);
+                _unitOfWorks.ToList().ForEach(uow => uow.AutoDetectChangesEnabled = true);
+                _unitOfWorks.ToList().ForEach(uow => uow.CommitingChanges = false);
             }
         }
     }

@@ -7,58 +7,58 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Mvc.Extensions.Data.Repository
+namespace AspNetCore.Mvc.Extensions.Data.SingleRepository
 {
-    public interface IGenericReadOnlyRepository<TEntity>
-         where TEntity : class
-    {
-        IReadOnlyList<TEntity> SQLQuery(string query, params object[] paramaters);
-        IReadOnlyList<TEntity> SQLQuery(FormattableString query);
-        Task<IReadOnlyList<TEntity>> SQLQueryAsync(string query, params object[] paramaters);
-        Task<IReadOnlyList<TEntity>> SQLQueryAsync(FormattableString query);
 
-        IReadOnlyList<TEntity> GetAll(
+    public interface IReadOnlyRepository
+    {
+        IReadOnlyList<TEntity> SQLQuery<TEntity>(string query, params object[] paramaters) where TEntity : class;
+        IReadOnlyList<TEntity> SQLQuery<TEntity>(FormattableString query) where TEntity : class;
+        Task<IReadOnlyList<TEntity>> SQLQueryAsync<TEntity>(string query, params object[] paramaters) where TEntity : class;
+        Task<IReadOnlyList<TEntity>> SQLQueryAsync<TEntity>(FormattableString query) where TEntity : class;
+
+        IReadOnlyList<TEntity> GetAll<TEntity>(
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
             int? skip = null,
             int? take = null,
             bool getFullGraph = false,
-            params Expression<Func<TEntity, Object>>[] includeProperties);
+            params Expression<Func<TEntity, Object>>[] includeProperties) where TEntity : class;
 
-        Task<IReadOnlyList<TEntity>> GetAllAsync(
+        Task<IReadOnlyList<TEntity>> GetAllAsync<TEntity>(
                 CancellationToken cancellationToken,
                 Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
                 int? skip = null,
                 int? take = null,
                 bool getFullGraph = false,
                 params Expression<Func<TEntity, Object>>[] includeProperties)
-                ;
+                 where TEntity : class;
 
-        IReadOnlyList<TEntity> GetAllNoTracking(
+        IReadOnlyList<TEntity> GetAllNoTracking<TEntity>(
           Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
           int? skip = null,
           int? take = null,
           bool getFullGraph = false,
-          params Expression<Func<TEntity, Object>>[] includeProperties);
+          params Expression<Func<TEntity, Object>>[] includeProperties) where TEntity : class;
 
-        Task<IReadOnlyList<TEntity>> GetAllNoTrackingAsync(
+        Task<IReadOnlyList<TEntity>> GetAllNoTrackingAsync<TEntity>(
                  CancellationToken cancellationToken,
                 Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
                 int? skip = null,
                 int? take = null,
                 bool getFullGraph = false,
                 params Expression<Func<TEntity, Object>>[] includeProperties)
-                ;
+                 where TEntity : class;
 
-        CountList<TEntity> Search(
+        CountList<TEntity> Search<TEntity>(
            Expression<Func<TEntity, bool>> filter = null,
            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
            int? skip = null,
            int? take = null,
            bool getFullGraph = false,
            params Expression<Func<TEntity, Object>>[] includeProperties)
-           ;
+           where TEntity : class;
 
-        Task<CountList<TEntity>> SearchAsync(
+        Task<CountList<TEntity>> SearchAsync<TEntity>(
             CancellationToken cancellationToken,
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
@@ -66,18 +66,18 @@ namespace AspNetCore.Mvc.Extensions.Data.Repository
             int? take = null,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        CountList<TEntity> SearchNoTracking(
+        CountList<TEntity> SearchNoTracking<TEntity>(
        Expression<Func<TEntity, bool>> filter = null,
        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
        int? skip = null,
        int? take = null,
         bool getFullGraph = false,
        params Expression<Func<TEntity, Object>>[] includeProperties)
-       ;
+       where TEntity : class;
 
-        Task<CountList<TEntity>> SearchNoTrackingAsync(
+        Task<CountList<TEntity>> SearchNoTrackingAsync<TEntity>(
             CancellationToken cancellationToken,
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
@@ -85,34 +85,35 @@ namespace AspNetCore.Mvc.Extensions.Data.Repository
             int? take = null,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        Expression<Func<TEntity, bool>> PredicateEntityById(object id);
-        Expression<Func<TEntity, bool>> PredicateEntityByIds(IEnumerable<object> ids);
-        Expression<Func<TEntity, bool>> PredicateEntityByStringContains(string values);
-        Expression<Func<TEntity, bool>> PredicateEntityByOwner(string ownedBy);
-        Expression<Func<TEntity, bool>> And(Expression<Func<TEntity, bool>> leftExpression, Expression<Func<TEntity, bool>> rightExpression);
-        Expression<Func<TEntity, bool>> Or(Expression<Func<TEntity, bool>> leftExpression, Expression<Func<TEntity, bool>> rightExpression);
+        Expression<Func<TEntity, bool>> PredicateEntityById<TEntity>(object id);
+        Expression<Func<TEntity, bool>> PredicateEntityById<TEntity>(IEnumerable<object> ids);
+        Expression<Func<TEntity, bool>> PredicateEntityByStringContains<TEntity>(string values);
+        Expression<Func<TEntity, bool>> And<TEntity>(Expression<Func<TEntity, bool>> leftExpression, Expression<Func<TEntity, bool>> rightExpression);
+        Expression<Func<TEntity, bool>> Or<TEntity>(Expression<Func<TEntity, bool>> leftExpression, Expression<Func<TEntity, bool>> rightExpression);
 
-       SpecificationDbQuery<TEntity> SpecificationQuery();
-       SpecificationDbQuery<TEntity> SpecificationQuery(
-          IncludeSpecification<TEntity> includeSpecification,
-          FilterSpecification<TEntity> filterSpecification,
-          OrderBySpecification<TEntity> orderBySpecification,
-          int? skip = null,
-          int? take = null,
-          bool getFullGraph = false);
+        SpecificationDbQuery<TEntity> SpecificationQuery<TEntity>() where TEntity : class;
 
-        IReadOnlyList<TEntity> Get(
+        SpecificationDbQuery<TEntity> SpecificationQuery<TEntity>(
+         IncludeSpecification<TEntity> includeSpecification,
+         FilterSpecification<TEntity> filterSpecification,
+         OrderBySpecification<TEntity> orderBySpecification,
+         int? skip = null,
+         int? take = null,
+         bool getFullGraph = false) where TEntity : class;
+
+
+       IReadOnlyList<TEntity> Get<TEntity>(
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
             int? skip = null,
             int? take = null,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        Task<IReadOnlyList<TEntity>> GetAsync(
+        Task<IReadOnlyList<TEntity>> GetAsync<TEntity>(
             CancellationToken cancellationToken,
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
@@ -120,18 +121,18 @@ namespace AspNetCore.Mvc.Extensions.Data.Repository
             int? take = null,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        IReadOnlyList<TEntity> GetNoTracking(
+        IReadOnlyList<TEntity> GetNoTracking<TEntity>(
           Expression<Func<TEntity, bool>> filter = null,
           Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
           int? skip = null,
           int? take = null,
           bool getFullGraph = false,
           params Expression<Func<TEntity, Object>>[] includeProperties)
-          ;
+          where TEntity : class;
 
-        Task<IReadOnlyList<TEntity>> GetNoTrackingAsync(
+        Task<IReadOnlyList<TEntity>> GetNoTrackingAsync<TEntity>(
             CancellationToken cancellationToken,
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
@@ -139,174 +140,172 @@ namespace AspNetCore.Mvc.Extensions.Data.Repository
             int? take = null,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        TEntity GetOne(
+        TEntity GetOne<TEntity>(
             Expression<Func<TEntity, bool>> filter = null,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        Task<TEntity> GetOneAsync(
+        Task<TEntity> GetOneAsync<TEntity>(
             CancellationToken cancellationToken,
             Expression<Func<TEntity, bool>> filter = null,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        TEntity GetOneNoTracking(
+        TEntity GetOneNoTracking<TEntity>(
         Expression<Func<TEntity, bool>> filter = null,
         bool getFullGraph = false,
         params Expression<Func<TEntity, Object>>[] includeProperties)
-        ;
+        where TEntity : class;
 
-        Task<TEntity> GetOneNoTrackingAsync(
+        Task<TEntity> GetOneNoTrackingAsync<TEntity>(
             CancellationToken cancellationToken,
             Expression<Func<TEntity, bool>> filter = null,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        TEntity GetFirst(
+        TEntity GetFirst<TEntity>(
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        Task<TEntity> GetFirstAsync(
+        Task<TEntity> GetFirstAsync<TEntity>(
             CancellationToken cancellationToken,
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        TEntity GetFirstNoTracking(
+        TEntity GetFirstNoTracking<TEntity>(
           Expression<Func<TEntity, bool>> filter = null,
           Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
           bool getFullGraph = false,
           params Expression<Func<TEntity, Object>>[] includeProperties)
-          ;
+          where TEntity : class;
 
-        Task<TEntity> GetFirstNoTrackingAsync(
+        Task<TEntity> GetFirstNoTrackingAsync<TEntity>(
             CancellationToken cancellationToken,
             Expression<Func<TEntity, bool>> filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        TEntity GetById(object id,
+        TEntity GetById<TEntity>(object id,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        Task<TEntity> GetByIdAsync(
+        Task<TEntity> GetByIdAsync<TEntity>(
             CancellationToken cancellationToken,
             object id,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
 
-        TEntity GetByIdNoTracking(
+        TEntity GetByIdNoTracking<TEntity>(
             object id,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-          ;
+          where TEntity : class;
 
-        Task<TEntity> GetByIdNoTrackingAsync(CancellationToken cancellationToken,
+        Task<TEntity> GetByIdNoTrackingAsync<TEntity>(CancellationToken cancellationToken,
             object id,
             bool getFullGraph = false,
             params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        (TEntity Entity, int TotalCount) GetByIdWithPagedCollectionProperty(object id,
+        (TEntity Entity, int TotalCount) GetByIdWithPagedCollectionProperty<TEntity>(object id,
       string collectionExpression,
       string search = "",
       LambdaExpression filter = null,
       string orderBy = null,
       int? skip = null,
-      int? take = null);
+      int? take = null) where TEntity : class;
 
-        Task<(TEntity Entity, int TotalCount)> GetByIdWithPagedCollectionPropertyAsync(CancellationToken cancellationToken,
+        Task<(TEntity Entity, int TotalCount)> GetByIdWithPagedCollectionPropertyAsync<TEntity>(CancellationToken cancellationToken,
             object id,
             string collectionExpression,
             string search = "",
             LambdaExpression filter = null,
             string orderBy = null,
             int? skip = null,
-            int? take = null);
+            int? take = null) where TEntity : class;
 
-        IReadOnlyList<TEntity> GetByIds(IEnumerable<object> ids,
+        IReadOnlyList<TEntity> GetByIds<TEntity>(IEnumerable<object> ids,
          bool getFullGraph = false,
          params Expression<Func<TEntity, Object>>[] includeProperties)
-           ;
+           where TEntity : class;
 
-        Task<IReadOnlyList<TEntity>> GetByIdsAsync(CancellationToken cancellationToken,
+        Task<IReadOnlyList<TEntity>> GetByIdsAsync<TEntity>(CancellationToken cancellationToken,
             IEnumerable<object> ids,
          bool getFullGraph = false,
          params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        IReadOnlyList<TEntity> GetByIdsNoTracking(IEnumerable<object> ids,
+        IReadOnlyList<TEntity> GetByIdsNoTracking<TEntity>(IEnumerable<object> ids,
          bool getFullGraph = false,
          params Expression<Func<TEntity, Object>>[] includeProperties)
-       ;
+       where TEntity : class;
 
-        Task<IReadOnlyList<TEntity>> GetByIdsNoTrackingAsync(CancellationToken cancellationToken,
+        Task<IReadOnlyList<TEntity>> GetByIdsNoTrackingAsync<TEntity>(CancellationToken cancellationToken,
             IEnumerable<object> ids,
          bool getFullGraph = false,
          params Expression<Func<TEntity, Object>>[] includeProperties)
-            ;
+            where TEntity : class;
 
-        int GetCount(Expression<Func<TEntity, bool>> filter = null)
-            ;
+        int GetCount<TEntity>(Expression<Func<TEntity, bool>> filter = null)
+            where TEntity : class;
 
-        Task<int> GetCountAsync(CancellationToken cancellationToken,
+        Task<int> GetCountAsync<TEntity>(CancellationToken cancellationToken,
             Expression<Func<TEntity, bool>> filter = null)
-            ;
+            where TEntity : class;
 
-        bool Exists(Expression<Func<TEntity, bool>> filter = null)
-            ;
+        bool Exists<TEntity>(Expression<Func<TEntity, bool>> filter = null)
+            where TEntity : class;
 
-        Task<bool> ExistsAsync(CancellationToken cancellationToken,
+        Task<bool> ExistsAsync<TEntity>(CancellationToken cancellationToken,
             Expression<Func<TEntity, bool>> filter = null)
-            ;
+            where TEntity : class;
 
-        bool ExistsNoTracking(Expression<Func<TEntity, bool>> filter = null)
-          ;
+        bool ExistsNoTracking<TEntity>(Expression<Func<TEntity, bool>> filter = null)
+          where TEntity : class;
 
-        Task<bool> ExistsNoTrackingAsync(CancellationToken cancellationToken,
+        Task<bool> ExistsNoTrackingAsync<TEntity>(CancellationToken cancellationToken,
             Expression<Func<TEntity, bool>> filter = null)
-            ;
+            where TEntity : class;
 
-        bool Exists(object id)
-         ;
+        bool Exists<TEntity>(object id)
+         where TEntity : class;
 
-        Task<bool> ExistsAsync(CancellationToken cancellationToken, object id)
-           ;
+        Task<bool> ExistsAsync<TEntity>(CancellationToken cancellationToken, object id)
+           where TEntity : class;
 
-        bool ExistsNoTracking(object id)
-        ;
+        bool ExistsNoTracking<TEntity>(object id)
+       where TEntity : class;
 
-        Task<bool> ExistsNoTrackingAsync(CancellationToken cancellationToken, object id)
-           ;
+        Task<bool> ExistsNoTrackingAsync<TEntity>(CancellationToken cancellationToken, object id)
+           where TEntity : class;
 
-        bool ExistsById(object id)
-        ;
+        bool ExistsById<TEntity>(object id) where TEntity : class;
 
-        Task<bool> ExistsByIdAsync(CancellationToken cancellationToken,
+        Task<bool> ExistsByIdAsync<TEntity>(CancellationToken cancellationToken, object id)
+            where TEntity : class;
+
+        bool ExistsByIdNoTracking<TEntity>(object id)
+          where TEntity : class;
+
+        Task<bool> ExistsByIdNoTrackingAsync<TEntity>(CancellationToken cancellationToken,
             object id)
-            ;
-
-        bool ExistsByIdNoTracking(object id)
-          ;
-
-        Task<bool> ExistsByIdNoTrackingAsync(CancellationToken cancellationToken,
-            object id)
-            ;
+            where TEntity : class;
 
     }
 }

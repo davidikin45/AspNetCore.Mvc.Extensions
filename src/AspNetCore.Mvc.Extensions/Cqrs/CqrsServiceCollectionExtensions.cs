@@ -179,6 +179,7 @@ namespace AspNetCore.Mvc.Extensions.Cqrs
             {
                 pipeline = attributes
                .Select(x => ToDecorator(x)).Where(x => x != null)
+               .Concat(new[] { new QueryLogAttribute() })
                .Concat(new[] { new ReadOnlyAttribute()})
                .Concat(new[] { new QueryValidatorAttribute() })
                .Concat(new[] { new CqrsDecoratorAttribute(handlerType) })
@@ -189,6 +190,7 @@ namespace AspNetCore.Mvc.Extensions.Cqrs
             {
                 pipeline = attributes
                .Select(x => ToDecorator(x)).Where(x => x!= null)
+               .Concat(new[] { new CommandLogAttribute() })
                .Concat(new[] { new CommandValidatorAttribute() })
                .Concat(new[] { new CqrsDecoratorAttribute(handlerType) })
                .Reverse()

@@ -4,8 +4,10 @@ using Microsoft.Extensions.Options;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Mvc.Extensions.Authorization
+namespace AspNetCore.Mvc.Extensions.Authorization.PolicyProviders
 {
+    //https://www.jerriepelser.com/blog/creating-dynamic-authorization-policies-aspnet-core/
+    // Extremely useful so you don't have to create policies for each scope you wish to check for.
     // policy is a collection of requirements which must ALL be satisfied. But you can certainly have a single requirement that can succeeds in several different ways.
     public class ScopeAuthorizationPolicyProvider : DefaultAuthorizationPolicyProvider
     {

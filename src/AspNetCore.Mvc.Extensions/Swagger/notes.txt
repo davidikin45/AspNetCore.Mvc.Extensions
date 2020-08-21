@@ -9,9 +9,10 @@ Microsoft.AspNetCore.Mvc.Api.Analyzers
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 OR
 [ApiConventionType(typeof(DefaultApiConventions))] on base controller
-Only work if you use the default naming conventions of api actions.
+Only work if you use the default naming conventions of api actions. e.g Create, Delete, Edit, Find, Get, Post, Put, Update
 OR
 [assembly: ApiConventionType(typeof(DefaultApiConventions))] above startup namespace
+https://www.talkingdotnet.com/asp-net-core-2-2-api-analyzers/
 
 Microsoft.AspNetCore.Mvc.Versioning
 Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer

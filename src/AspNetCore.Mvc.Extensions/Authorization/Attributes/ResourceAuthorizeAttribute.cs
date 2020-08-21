@@ -48,9 +48,11 @@ namespace AspNetCore.Mvc.Extensions.Authorization
 
                         if (!string.IsNullOrWhiteSpace(collectionId))
                         {
+                            //e.g must have update or collectionId.update
                             resourceOperation = resourceOperation + "," + collectionId + "." + operation;
                         }
 
+                        //Calls the AuthorizationPolicyProvider
                         var authorizationResult = await _authorizationService.AuthorizeAsync(context.HttpContext.User, resourceOperation);
                         if (authorizationResult.Succeeded)
                         {

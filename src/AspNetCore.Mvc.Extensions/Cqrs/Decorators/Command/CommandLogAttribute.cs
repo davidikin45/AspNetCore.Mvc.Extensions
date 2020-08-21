@@ -3,10 +3,10 @@
 namespace AspNetCore.Mvc.Extensions.Cqrs.Decorators.Command
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
-    public sealed class AuditLogAttribute : CqrsDecoratorAttribute
+    public sealed class CommandLogAttribute : CqrsDecoratorAttribute
     {
-        public AuditLogAttribute()
-            :base(typeof(AuditLoggingDecorator<,>))
+        public CommandLogAttribute()
+            :base(typeof(CommandLoggingDecorator<,>))
         {
         }
     }

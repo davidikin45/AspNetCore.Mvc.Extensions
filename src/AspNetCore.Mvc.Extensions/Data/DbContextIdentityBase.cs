@@ -115,10 +115,12 @@ namespace AspNetCore.Mvc.Extensions.Data
             builder.Entity<IdentityUserToken<string>>().ToTable("UserToken");
             builder.Entity<IdentityRoleClaim<string>>().ToTable("RoleClaim");
 
-            BuildQueries(builder);
+            AddKeylessEntities(builder);
         }
 
-        public abstract void BuildQueries(ModelBuilder builder);
+        //[Keyless] EF Core 5.0
+        //https://docs.microsoft.com/en-us/ef/core/modeling/keyless-entity-types?tabs=data-annotations
+        public abstract void AddKeylessEntities(ModelBuilder builder);
 
         #region Migrate
         public void Migrate()

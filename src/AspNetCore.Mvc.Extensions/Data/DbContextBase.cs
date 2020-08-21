@@ -38,12 +38,17 @@ namespace AspNetCore.Mvc.Extensions.Data
             set { ChangeTracker.LazyLoadingEnabled = value; }
         }
 
+        //Scans tracked entities. 
+        //For Add its important for child entities
+        //For Update it detects changes without needing to call Context.Update
         public bool AutoDetectChangesEnabled
         {
             get { return ChangeTracker.AutoDetectChangesEnabled; }
             set { ChangeTracker.AutoDetectChangesEnabled = value; }
         }
 
+        //Finds are always tracked.
+        //Only reveleant to IQueryable
         public QueryTrackingBehavior DefaultQueryTrackingBehavior
         {
             get { return ChangeTracker.QueryTrackingBehavior; }
@@ -114,10 +119,12 @@ namespace AspNetCore.Mvc.Extensions.Data
             builder.AddMultiLangaugeStringValues();
             builder.AddBackingFields();
       
-            BuildQueries(builder);
+            AddKeylessEntities(builder);
         }
 
-        public abstract void BuildQueries(ModelBuilder builder);
+        //[Keyless] EF Core 5.0
+        //https://docs.microsoft.com/en-us/ef/core/modeling/keyless-entity-types?tabs=data-annotations
+        public abstract void AddKeylessEntities(ModelBuilder builder);
 
         #region MSI Access Token
         //https://docs.microsoft.com/en-us/azure/app-service/app-service-web-tutorial-connect-msi
@@ -126,10 +133,6 @@ namespace AspNetCore.Mvc.Extensions.Data
             var accessToken = (new AzureServiceTokenProvider()).GetAccessTokenAsync("https://database.windows.net/").GetAwaiter().GetResult();
             return accessToken;
         }
-        #endregion
-
-        #region Seed
-        public abstract void Seed();
         #endregion
 
         #region Migrate
@@ -144,7 +147,7 @@ namespace AspNetCore.Mvc.Extensions.Data
         {
             this.SetTimestamps();
             var auditLogs = this.AuditBeforeSaveChanges();
-
+      
             var changes = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
 
             await this.AuditAfterSaveChangesAsync(auditLogs, cancellationToken);

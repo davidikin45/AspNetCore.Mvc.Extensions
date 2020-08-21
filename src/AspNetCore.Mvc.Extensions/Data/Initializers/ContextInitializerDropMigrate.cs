@@ -12,7 +12,6 @@ namespace AspNetCore.Mvc.Extensions.Data.Initializers
         public async Task InitializeAsync(TDbContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             await InitializeSchemaAsync(context, cancellationToken);
-            await InitializeDataAsync(context, null, cancellationToken);
         }
 
         public async Task InitializeSchemaAsync(TDbContext context, CancellationToken cancellationToken = default(CancellationToken))
@@ -25,21 +24,5 @@ namespace AspNetCore.Mvc.Extensions.Data.Initializers
             //Can only be used for sqlserver and sqlite. Throws exception for InMemory
             await context.Database.MigrateAsync(cancellationToken);
         }
-
-        public async Task InitializeDataAsync(TDbContext context, string tenantId, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            Seed(context, tenantId);
-
-            await context.SaveChangesAsync(cancellationToken);
-
-            await OnSeedCompleteAsync(context);
-        }
-
-        public abstract void Seed(TDbContext context, string tenantId);
-        public virtual Task OnSeedCompleteAsync(TDbContext context)
-        {
-            return Task.CompletedTask;
-        }
-
     }
 }

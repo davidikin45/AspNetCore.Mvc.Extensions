@@ -35,6 +35,7 @@ using AutoMapper.EquivalencyExpression;
 using AutoMapper.Extensions.ExpressionMapping;
 using AutoMapper.QueryableExtensions;
 using Database.Initialization;
+using EntityFrameworkCore.Initialization.NoSql;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using GraphQL.Server.Ui.Voyager;
@@ -91,6 +92,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
 
@@ -1039,6 +1041,16 @@ namespace AspNetCore.Mvc.Extensions
         #endregion
 
         #region Hosted Services
+        public static IServiceCollection AddProcessingService<TWorkItem>(this IServiceCollection services, TimeSpan interval)
+        where TWorkItem : class, IScopedProcessingService
+        {
+            return services.AddTransient<IHostedService>(sp =>
+            {
+                var logger = sp.GetService<ILogger<IntervalHostedService<TWorkItem>>>();
+                return new IntervalHostedService<TWorkItem>(sp, logger, interval);
+            });
+        }
+
         public static IServiceCollection AddHostedServiceScoped<TWorkItem>(this IServiceCollection services, params object[] arguments)
             where TWorkItem : class, IScopedProcessingService
         {
@@ -1228,8 +1240,6 @@ namespace AspNetCore.Mvc.Extensions
         #endregion
 
         #region Azure Key Vault Config
-        //https://joonasw.net/view/azure-ad-managed-service-identity
-        //https://joonasw.net/view/aspnet-core-azure-keyvault-msi
         /// <summary>
         /// Uses the azure key vault. Looks for AppSettings.Json KeyVaultSettings > Name. Each environment should have a seperate vaultName. See https://joonasw.net/view/azure-ad-managed-service-identity for enabling MSI.
         /// </summary>
@@ -1248,14 +1258,25 @@ namespace AspNetCore.Mvc.Extensions
                     }
                 }
 
+                //https://joonasw.net/view/azure-ad-managed-service-identity
+                //https://joonasw.net/view/aspnet-core-azure-keyvault-msi
+                //https://anthonychu.ca/post/secrets-aspnet-core-key-vault-msi/
+                //https://kasunkodagoda.com/2018/04/28/using-managed-service-identity-to-access-azure-key-vault-from-azure-app-service/
+                //Enable Managed Service Identity on the Web App. Settings > Identity > System assigned > On
+                //Allow the generated Service Principal access to the Production Key Vault. Key Vault > Access Policies > Secret permissions > Get and List
+
+                //https://joonasw.net/view/aspnet-core-azure-keyvault-msi
                 //If used outside Azure, it will authenticate as the developer's user. It will try using Azure CLI 2.0 (install from here). The second option is AD Integrated Authentication.
                 //After installing the CLI, remember to run az login, and login to your Azure account before running the app.Another important thing is that you need to also select the subscription where the Key Vault is.So if you have access to more than one subscription, also run az account set - s "My Azure Subscription name or id"
                 //Then you need to make sure your user has access to a Key Vault(does not have to be the production vault...).
                 if (!string.IsNullOrWhiteSpace(vaultName) && (!useOnlyInProduction || ctx.HostingEnvironment.IsProduction()))
                 {
-                    //Section--Name
-                    var tokenProvider = new AzureServiceTokenProvider();
-                    var kvClient = new KeyVaultClient((authority, resource, scope) => tokenProvider.KeyVaultTokenCallback(authority, resource, scope));
+                    //Section:Name = Section--Name
+
+                    //Create Managed Service Identity (MSI) token provider
+                    //var tokenProvider = new AzureServiceTokenProvider();
+                    //var kvClient = new KeyVaultClient((authority, resource, scope) => tokenProvider.KeyVaultTokenCallback(authority, resource, scope));
+                    var kvClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback));
                     builder.AddAzureKeyVault($"https://{vaultName}.vault.azure.net", kvClient, new DefaultKeyVaultSecretManager());
                 }
             });
@@ -1276,14 +1297,24 @@ namespace AspNetCore.Mvc.Extensions
                     }
                 }
 
+                //https://joonasw.net/view/azure-ad-managed-service-identity
+                //https://joonasw.net/view/aspnet-core-azure-keyvault-msi
+                //https://anthonychu.ca/post/secrets-aspnet-core-key-vault-msi/
+                //https://kasunkodagoda.com/2018/04/28/using-managed-service-identity-to-access-azure-key-vault-from-azure-app-service/
+                //Enable Managed Service Identity on the Web App. Settings > Identity > System assigned > On
+                //Allow the generated Service Principal access to the Production Key Vault. Key Vault > Access Policies > Secret permissions > Get
+
                 //If used outside Azure, it will authenticate as the developer's user. It will try using Azure CLI 2.0 (install from here). The second option is AD Integrated Authentication.
                 //After installing the CLI, remember to run az login, and login to your Azure account before running the app.Another important thing is that you need to also select the subscription where the Key Vault is.So if you have access to more than one subscription, also run az account set - s "My Azure Subscription name or id"
                 //Then you need to make sure your user has access to a Key Vault(does not have to be the production vault...).
                 if (!string.IsNullOrWhiteSpace(vaultName) && (!useOnlyInProduction || ctx.HostingEnvironment.IsProduction()))
                 {
-                    //Section--Name
-                    var tokenProvider = new AzureServiceTokenProvider();
-                    var kvClient = new KeyVaultClient((authority, resource, scope) => tokenProvider.KeyVaultTokenCallback(authority, resource, scope));
+                    //Section:Name = Section--Name
+
+                    //Create Managed Service Identity (MSI) token provider
+                    //var tokenProvider = new AzureServiceTokenProvider();
+                    //var kvClient = new KeyVaultClient((authority, resource, scope) => tokenProvider.KeyVaultTokenCallback(authority, resource, scope));
+                    var kvClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback));
                     builder.AddAzureKeyVault($"https://{vaultName}.vault.azure.net", kvClient, new DefaultKeyVaultSecretManager());
                 }
             });
@@ -1391,13 +1422,29 @@ namespace AspNetCore.Mvc.Extensions
         }
 
         public static IServiceCollection AddDbStartupTask<TDbStartupTask>(this IServiceCollection services)
-      where TDbStartupTask : class, IDbStartupTask
+        where TDbStartupTask : class, IDbStartupTask
         {
             _sharedContext.RegisterTask();
 
             return services
           .AddTransient<IDbStartupTask, TDbStartupTask>()
           .AddTaskExecutingServer();
+        }
+
+        public static IServiceCollection AddDbInitializeStartupTask<TDbContext>(this IServiceCollection services, Action<TDbContext> configure, int order = 0)
+        where TDbContext : class
+        {
+            _sharedContext.RegisterTask();
+
+            return services
+          .AddTransient<IDbStartupTask>(sp => new DbInitializeStartupTask<TDbContext>(sp, configure, order))
+          .AddTaskExecutingServer();
+        }
+
+        public static IServiceCollection AddDbInitializeHostedService<TDbContext>(this IServiceCollection services, Action<TDbContext> configure)
+        where TDbContext : class
+        {
+            return services.AddHostedService<IHostedService>(sp => new DbInitializeHostedService<TDbContext>(sp, configure));
         }
 
         public static IServiceCollection AddDbStartupTasks(this IServiceCollection services, Action<StartupTaskOptions> setup = null)
@@ -1679,21 +1726,20 @@ namespace AspNetCore.Mvc.Extensions
         }
 
         public static void AddUnitOfWork<TUnitOfWorkImplementation>(this IServiceCollection services)
-        where TUnitOfWorkImplementation : UnitOfWorkBase
+        where TUnitOfWorkImplementation : class, IUnitOfWork
         {
             services.AddScoped<TUnitOfWorkImplementation>();
             services.AddScoped<IUnitOfWork>(sp => sp.GetService<TUnitOfWorkImplementation>());
         }
 
         public static void AddUnitOfWork<TUnitOfWork, TUnitOfWorkImplementation>(this IServiceCollection services)
-            where TUnitOfWork : class
-            where TUnitOfWorkImplementation : UnitOfWorkBase, TUnitOfWork
+            where TUnitOfWork : class, IUnitOfWork
+            where TUnitOfWorkImplementation: class, TUnitOfWork
         {
             services.AddScoped<TUnitOfWorkImplementation>();
             services.AddScoped<IUnitOfWork>(sp => sp.GetService<TUnitOfWorkImplementation>());
             services.AddScoped<TUnitOfWork>(sp => sp.GetService<TUnitOfWorkImplementation>());
         }
-
         #endregion
 
         #region MiniProfiler
@@ -2164,6 +2210,7 @@ namespace AspNetCore.Mvc.Extensions
                 //https://github.com/AutoMapper/AutoMapper.Extensions.ExpressionMapping
                 //AutoMapper.Extensions.ExpressionMapping
                 cfg.AddExpressionMapping();
+
                 //AutoMapper.Collection & Automapper.Collection.EntityFrameworkCore
                 //Allows a DTO model for owned Collection Types.
                 cfg.AddCollectionMappers();

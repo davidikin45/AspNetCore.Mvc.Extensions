@@ -19,7 +19,7 @@ namespace AspNetCore.Mvc.Extensions.Application
           where TDto : class
           where TUnitOfWork : IUnitOfWork
     {
-        protected virtual TUnitOfWork UnitOfWork { get; }
+        protected virtual IUnitOfWork UnitOfWork { get; }
         protected virtual IGenericRepository<TEntity> Repository => UnitOfWork.Repository<TEntity>();
 
         public ApplicationServiceEntityReadOnlyBase(ApplicationervicesContext context, TUnitOfWork unitOfWork)
@@ -129,7 +129,8 @@ namespace AspNetCore.Mvc.Extensions.Application
                 skip = (pageNo.Value - 1) * pageSize.Value;
             }
 
-            var entityList = Repository.Search(ownedBy, search, filterConverted, orderByConverted, skip, pageSize, GetFullGraph || getFullGraph, includesConverted);
+            filterConverted = Repository.And(Repository.And(filterConverted, Repository.PredicateEntityByOwner(ownedBy)), Repository.PredicateEntityByStringContains(search));
+            var entityList = Repository.Search(filterConverted, orderByConverted, skip, pageSize, GetFullGraph || getFullGraph, includesConverted);
 
             var entities = entityList.ToList();
 
@@ -176,7 +177,8 @@ namespace AspNetCore.Mvc.Extensions.Application
                 skip = (pageNo.Value - 1) * pageSize.Value;
             }
 
-            var entityList = await Repository.SearchAsync(cancellationToken, ownedBy, search, filterConverted, orderByConverted, skip, pageSize, GetFullGraph || getFullGraph, includesConverted).ConfigureAwait(false);
+            filterConverted = Repository.And(Repository.And(filterConverted, Repository.PredicateEntityByOwner(ownedBy)), Repository.PredicateEntityByStringContains(search));
+            var entityList = await Repository.SearchAsync(cancellationToken, filterConverted, orderByConverted, skip, pageSize, GetFullGraph || getFullGraph, includesConverted).ConfigureAwait(false);
 
             var entities = entityList.ToList();
 
@@ -220,7 +222,7 @@ namespace AspNetCore.Mvc.Extensions.Application
                 skip = (pageNo.Value - 1) * pageSize.Value;
             }
 
-            var entityList = Repository.Search(includesConverted, filterConverted, orderByConverted, skip, pageSize, GetFullGraph || getFullGraph);
+            var entityList = Repository.SpecificationQuery(includesConverted, filterConverted, orderByConverted, skip, pageSize, GetFullGraph || getFullGraph).ToCountList();
 
             var entities = entityList.ToList();
 
@@ -263,7 +265,7 @@ namespace AspNetCore.Mvc.Extensions.Application
                 skip = (pageNo.Value - 1) * pageSize.Value;
             }
 
-            var entityList = await Repository.SearchAsync(includesConverted, filterConverted, orderByConverted, skip, pageSize, GetFullGraph || getFullGraph, cancellationToken).ConfigureAwait(false);
+            var entityList = await Repository.SpecificationQuery(includesConverted, filterConverted, orderByConverted, skip, pageSize, GetFullGraph || getFullGraph).ToCountListAsync(cancellationToken).ConfigureAwait(false);
 
             var entities = entityList.ToList();
 

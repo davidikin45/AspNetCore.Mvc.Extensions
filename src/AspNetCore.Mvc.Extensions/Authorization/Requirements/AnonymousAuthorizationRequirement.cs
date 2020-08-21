@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Mvc.Extensions.Authorization
+namespace AspNetCore.Mvc.Extensions.Authorization.Requirements
 {
     public class AnonymousAuthorizationRequirement : IAuthorizationRequirement
     {

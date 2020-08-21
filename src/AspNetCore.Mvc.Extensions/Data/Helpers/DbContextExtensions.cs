@@ -164,9 +164,9 @@ namespace AspNetCore.Mvc.Extensions.Data.Helpers
 
         public static IQueryable Queryable(this DbContext context, Type entityType) =>
             (IQueryable)SetMethod.MakeGenericMethod(entityType).Invoke(context, null);
-#endregion
+        #endregion
 
-#region Collection Property
+        #region Collection Property
 
         //collection/id/collection2
         //collection/id/collection2/id2
@@ -265,12 +265,12 @@ namespace AspNetCore.Mvc.Extensions.Data.Helpers
                     query = (IQueryable)typeof(Utilities).GetMethod(nameof(Utilities.CreateSearchQuery)).MakeGenericMethod(collectionItemType).Invoke(null, new object[] { query, search });
                 }
 
-                if(filter != null)
+                if (filter != null)
                 {
                     query = (IQueryable)typeof(LamdaHelper).GetMethod(nameof(LamdaHelper.Where)).MakeGenericMethod(collectionItemType).Invoke(null, new object[] { query, filter });
                 }
 
-                var count =  await (Task<int>)(typeof(Utilities).GetMethod(nameof(Utilities.CountEFCoreAsync)).MakeGenericMethod(collectionItemType).Invoke(null, new object[] { query, cancellationToken }));
+                var count = await (Task<int>)(typeof(Utilities).GetMethod(nameof(Utilities.CountEFCoreAsync)).MakeGenericMethod(collectionItemType).Invoke(null, new object[] { query, cancellationToken }));
 
                 if (!string.IsNullOrWhiteSpace(orderBy))
                 {
@@ -290,7 +290,7 @@ namespace AspNetCore.Mvc.Extensions.Data.Helpers
                 await ((Task)(typeof(EntityFrameworkQueryableExtensions).GetMethod(nameof(EntityFrameworkQueryableExtensions.LoadAsync)).MakeGenericMethod(collectionItemType).Invoke(null, new object[] { query, cancellationToken }))).ConfigureAwait(false);
 
                 return count;
-            }     
+            }
 
             await ((Task)(typeof(EntityFrameworkQueryableExtensions).GetMethod(nameof(EntityFrameworkQueryableExtensions.LoadAsync)).MakeGenericMethod(collectionItemType).Invoke(null, new object[] { query, cancellationToken }))).ConfigureAwait(false);
 
@@ -309,9 +309,9 @@ namespace AspNetCore.Mvc.Extensions.Data.Helpers
 
             return 1;
         }
-#endregion
+        #endregion
 
-#region Local Entity Cache
+        #region Local Entity Cache
         public static bool EntityExistsLocal<TEntity>(this DbContext context, TEntity entity) where TEntity : class
         {
             return context.Set<TEntity>().Local.Any(x => Equals(x, entity));
@@ -347,9 +347,9 @@ namespace AspNetCore.Mvc.Extensions.Data.Helpers
         {
             return context.Set<TEntity>().Local.FirstOrDefault(x => Equals(x, entity));
         }
-#endregion
+        #endregion
 
-#region Entity By Object
+        #region Entity By Object
         public static bool EntityExists<TEntity>(this DbContext context, TEntity entity) where TEntity : class
         {
             var local = context.EntityExistsLocal(entity);
@@ -469,9 +469,9 @@ namespace AspNetCore.Mvc.Extensions.Data.Helpers
 
             return null;
         }
-#endregion
+        #endregion
 
-#region Entity By Id
+        #region Entity By Id
         public static bool EntityExistsById<TEntity>(this DbContext context, object id) where TEntity : class
         {
             var local = context.EntityExistsByIdLocal<TEntity>(id);
@@ -582,9 +582,9 @@ namespace AspNetCore.Mvc.Extensions.Data.Helpers
 
             return null;
         }
-#endregion
+        #endregion
 
-#region helpers
+        #region helpers
         private static bool HasProperty(this Type type, string propName)
         {
             return type.GetProperties().Any(p => p.Name.ToUpper() == propName.ToUpper());
@@ -629,6 +629,6 @@ namespace AspNetCore.Mvc.Extensions.Data.Helpers
             }
             return null;
         }
-#endregion
+        #endregion
     }
 }

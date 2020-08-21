@@ -1,28 +1,31 @@
-﻿using AspNetCore.Mvc.Extensions.Data.Helpers;
-using AspNetCore.Mvc.Extensions.Domain;
+﻿using AspNetCore.Mvc.Extensions.Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Mvc.Extensions.Data.Repository
+namespace AspNetCore.Mvc.Extensions.Data.SingleRepository
 {
-    //One per Aggregate Root
-    public class GenericRepository<TEntity> : GenericReadOnlyRepository<TEntity>, IGenericRepository<TEntity>
-   where TEntity : class
+    //services.AddScoped<IRepository, ApplicationRepository>();
+    public abstract class Repository : ReadOnlyRepository, IRepository
     {
-        public GenericRepository(DbContext context)
+        public Repository(DbContext context)
             : base(context)
         {
         }
 
         #region Upsert
         //https://docs.microsoft.com/en-us/ef/core/saving/disconnected-entities#saving-single-entities
-        public virtual TEntity AddOrUpdate(TEntity entity, string addedOrUpdatedBy)
+        public virtual TEntity AddOrUpdate<TEntity>(TEntity entity, string addedOrUpdatedBy) where TEntity : class
+        {
+            return (TEntity)AddOrUpdate(entity, addedOrUpdatedBy);
+        }
+
+        public virtual object AddOrUpdate(object entity, string addedOrUpdatedBy)
         {
             var updatedEntity = Update(entity, addedOrUpdatedBy);
             var auditableEntity = updatedEntity as IEntityAuditable;
-            if (auditableEntity != null && context.IsEntityStateAdded(updatedEntity))
+            if (auditableEntity != null && context.Entry(entity).State == EntityState.Added)
             {
                 auditableEntity.CreatedOn = DateTime.UtcNow;
                 auditableEntity.CreatedBy = addedOrUpdatedBy;
@@ -32,7 +35,12 @@ namespace AspNetCore.Mvc.Extensions.Data.Repository
         #endregion
 
         #region Insert
-        public virtual TEntity Add(TEntity entity, string addedBy)
+        public virtual TEntity Add<TEntity>(TEntity entity, string addedBy) where TEntity : class
+        {
+            return (TEntity)Add(entity, addedBy);
+        }
+
+        public virtual object Add(object entity, string addedBy)
         {
             var auditableEntity = entity as IEntityAuditable;
             if (auditableEntity != null)
@@ -49,12 +57,17 @@ namespace AspNetCore.Mvc.Extensions.Data.Repository
                 ownedEntity.OwnedBy = addedBy;
             }
 
-            return context.AddEntity(entity);
+            return context.Add(entity).Entity;
         }
         #endregion
 
         #region Update
-        public virtual TEntity Update(TEntity entity, string updatedBy)
+        public virtual TEntity Update<TEntity>(TEntity entity, string updatedBy) where TEntity : class
+        {
+            return (TEntity)Update(entity, updatedBy);
+        }
+
+        public virtual object Update(object entity, string updatedBy)
         {
             var auditableEntity = entity as IEntityAuditable;
             if (auditableEntity != null)
@@ -63,10 +76,10 @@ namespace AspNetCore.Mvc.Extensions.Data.Repository
                 auditableEntity.UpdatedBy = updatedBy;
             }
 
-            if(context.IsEntityStateDetached(entity))
+            if (context.Entry(entity).State == EntityState.Detached)
             {
                 //In disconnected mode the entire graph will be added/updated. 
-                return context.UpdateEntity(entity);
+                return context.Update(entity).Entity;
             }
             else
             {
@@ -77,13 +90,13 @@ namespace AspNetCore.Mvc.Extensions.Data.Repository
         #endregion
 
         #region Delete
-        public virtual void Delete(object id, string deletedBy)
+        public virtual void Delete<TEntity>(object id, string deletedBy) where TEntity : class
         {
-            TEntity entity = GetById(id); // For concurrency purposes need to get latest version
+            TEntity entity = GetById<TEntity>(id); // For concurrency purposes need to get latest version
             Delete(entity, deletedBy);
         }
 
-        public virtual void Delete(TEntity entity, string deletedBy)
+        public virtual void Delete(object entity, string deletedBy)
         {
             if(entity is IEntitySoftDelete)
             {
@@ -98,7 +111,7 @@ namespace AspNetCore.Mvc.Extensions.Data.Repository
                     auditableEntity.UpdatedOn = DateTime.UtcNow;
                     auditableEntity.UpdatedBy = deletedBy;
                 }
-                context.RemoveEntity(entity);
+                context.Remove(entity);
             }
         }
 
@@ -107,11 +120,12 @@ namespace AspNetCore.Mvc.Extensions.Data.Repository
             entity.IsDeleted = true;
             entity.DeletedBy = deletedBy;
             entity.DeletedOn = DateTime.UtcNow;
-            context.UpdateEntity((TEntity)entity);
+            context.Update(entity);
         }
         #endregion
 
         #region Save Changes
+        //If just using Repository require SaveChangesAsync, otherwise if also using UoW to a. wrap over multiple dbcontexts, b.Allow chained DbContext.Savechanges, only the first UoW completion will trigger DbContext.SaveChanges
         public virtual Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {
             return context.SaveChangesAsync(cancellationToken);

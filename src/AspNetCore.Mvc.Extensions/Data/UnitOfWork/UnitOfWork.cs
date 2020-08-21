@@ -13,9 +13,12 @@ using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.Data.UnitOfWork
 {
-    public abstract class UnitOfWorkBase : IUnitOfWork
+    //services.AddScoped<IUnitOfWork, AppUnitOfWork>();
+    //Only save changes if we're not a nested scope. Otherwise, let the top-level scope decide when the changes should be saved.
+    public abstract class UnitOfWork : IUnitOfWork
     {
         public bool CommitingChanges { get; set; }
+
         protected readonly bool validateOnSave;
         protected readonly IValidationService validationService;
 
@@ -48,14 +51,14 @@ namespace AspNetCore.Mvc.Extensions.Data.UnitOfWork
             }
         }
 
-        public UnitOfWorkBase(bool validateOnSave, IValidationService validationService, params DbContext[] contexts)
+        public UnitOfWork(bool validateOnSave, IValidationService validationService, params DbContext[] contexts)
             : this(contexts)
         {
             this.validateOnSave = validateOnSave;
             this.validationService = validationService;
         }
 
-        public UnitOfWorkBase(params DbContext[] contexts)
+        public UnitOfWork(params DbContext[] contexts)
         {
             foreach (var context in contexts)
             {

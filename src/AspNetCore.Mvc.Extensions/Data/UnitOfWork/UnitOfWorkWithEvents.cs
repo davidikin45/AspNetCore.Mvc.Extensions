@@ -14,11 +14,12 @@ using System.Threading.Tasks;
 namespace AspNetCore.Mvc.Extensions.Data.UnitOfWork
 {
     //https://github.com/aspnet/EntityFrameworkCore/issues/9237
-    public abstract class UnitOfWorkWithEventsBase : UnitOfWorkBase
+    //services.AddScoped<IUnitOfWork, AppUnitOfWork>();
+    public abstract class UnitOfWorkWithEvents : UnitOfWork
     {
         protected List<(DbContext dbContext, DbContextDomainEventsEFCoreAdapter domainEvents)> contextsWithDomainEvents = new List<(DbContext dbContext, DbContextDomainEventsEFCoreAdapter domainEvents)>();
 
-        public UnitOfWorkWithEventsBase(bool validateOnSave, IValidationService validationService, IDomainEventBus domainEventBus, params DbContext[] contexts)
+        public UnitOfWorkWithEvents(bool validateOnSave, IValidationService validationService, IDomainEventBus domainEventBus, params DbContext[] contexts)
             : base(validateOnSave, validationService, contexts)
         {
             foreach (var context in contexts)

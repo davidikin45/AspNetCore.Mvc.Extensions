@@ -6,6 +6,8 @@ using System.Linq;
 
 namespace AspNetCore.Mvc.Extensions.Data.Attributes
 {
+    //AutoDetectChangesEnabled and QueryTrackingBehavior doesn't really help as can still Add to DbContext
+    //The best thing in query mode is disable tracking
     public class ReadOnlyAttribute : TypeFilterAttribute
     {
         public ReadOnlyAttribute() : base(typeof(ReadOnlyAttributeImpl))
@@ -22,16 +24,18 @@ namespace AspNetCore.Mvc.Extensions.Data.Attributes
 
             public override void OnActionExecuting(ActionExecutingContext context)
             {
-                _unitOfWorks.ToList().ForEach(uow => uow.AutoDetectChangesEnabled = false);
-                _unitOfWorks.ToList().ForEach(uow => uow.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking);
+                _unitOfWorks.ToList().ForEach(uow => uow.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking); //performance
+                _unitOfWorks.ToList().ForEach(uow => uow.AutoDetectChangesEnabled = false);  //safety net for update
+                _unitOfWorks.ToList().ForEach(uow => uow.CommitingChanges = true); //safety net for add/update
                 base.OnActionExecuting(context);
 
             }
 
             public override void OnActionExecuted(ActionExecutedContext context)
             {
-                _unitOfWorks.ToList().ForEach(uow => uow.AutoDetectChangesEnabled = true);
                 _unitOfWorks.ToList().ForEach(uow => uow.QueryTrackingBehavior = QueryTrackingBehavior.TrackAll);
+                _unitOfWorks.ToList().ForEach(uow => uow.AutoDetectChangesEnabled = true);
+                _unitOfWorks.ToList().ForEach(uow => uow.CommitingChanges = false);
                 base.OnActionExecuted(context);
             }
         }

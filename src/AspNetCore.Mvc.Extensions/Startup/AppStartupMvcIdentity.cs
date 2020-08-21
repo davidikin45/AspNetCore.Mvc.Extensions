@@ -84,11 +84,17 @@ namespace AspNetCore.Mvc.Extensions
                 userSettings.ForgotPasswordEmailConfirmationExpireHours,
                 userSettings.UserDetailsChangeLogoutMinutes);
 
+                //https://www.pluralsight.com/courses/cross-site-request-forgery-csrf-prevention-asp-dot-net-core-applications
+                //SameSite=Strict - Domain in URL bar equals the cookie’s domain (first-party) AND the link isn’t coming from a third-party
+                //SameSite=Lax - Domain in URL bar equals the cookie’s domain (first-party) - New default if SameSite is not set
+                //SameSite=None - No domain limitations and third-party cookies can fire - Previous default; now needs to specify 'None; Secure' for Chrome 80
+
                 services.ConfigureApplicationCookie(options =>
                 {
+                    //https://www.pluralsight.com/courses/cross-site-request-forgery-csrf-prevention-asp-dot-net-core-applications
                     options.LoginPath = "/Account/Login";
                     options.Cookie.Name = appSettings.CookieAuthName;
-                    options.Cookie.SameSite = SameSiteMode.Lax; //Lax to allow for OAuth otherwise SameSiteMode.Strict to prevent CSRF;
+                    options.Cookie.SameSite = SameSiteMode.Lax; //Lax to allow for OAuth otherwise. SameSiteMode.Strict to prevent CSRF; Lax is the new browser default.
                 });
 
                 services.ConfigureExternalCookie(options =>

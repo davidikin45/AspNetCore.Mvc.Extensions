@@ -1,5 +1,6 @@
 ﻿namespace AspNetCore.Mvc.Extensions
 {
+    //collectionid.operation
     public class ResourceCollectionsCore
     {
         public class Admin

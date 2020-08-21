@@ -1,4 +1,5 @@
 ﻿using AspNetCore.Mvc.Extensions.Validation;
+using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -12,11 +13,13 @@ namespace AspNetCore.Mvc.Extensions.Cqrs.Decorators.Command
     {
         private readonly ICommandHandler<TCommand, TResult> _handler;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IEnumerable<IValidator<TCommand>> _validators;
 
-        public CommandValidatorDecorator(ICommandHandler<TCommand, TResult> handler, IServiceProvider serviceProvider)
+        public CommandValidatorDecorator(ICommandHandler<TCommand, TResult> handler, IServiceProvider serviceProvider, IEnumerable<IValidator<TCommand>> validators)
         {
             _handler = handler;
             _serviceProvider = serviceProvider;
+            _validators = validators;
         }
 
         public Task<Result<TResult>> HandleAsync(string commandName, TCommand command, CancellationToken cancellationToken = default)
@@ -36,16 +39,28 @@ namespace AspNetCore.Mvc.Extensions.Cqrs.Decorators.Command
         //3. IValidatableObject Implementation
         public IEnumerable<ValidationResult> Validate(object o)
         {
-            var context = new ValidationContext(o, _serviceProvider, new Dictionary<object, object>());
+            var attributeValidationContext = new System.ComponentModel.DataAnnotations.ValidationContext(o, _serviceProvider, new Dictionary<object, object>());
 
             var validationResults = new List<ValidationResult>();
             var isValid = Validator.TryValidateObject(
-                context.ObjectInstance,
-                context,
+                attributeValidationContext.ObjectInstance,
+                attributeValidationContext,
                validationResults,
                validateAllProperties: true); // if true [Required] + Other attributes
 
-            return validationResults.Where(r => r != ValidationResult.Success);
+            var attributeValidationResults = validationResults.Where(r => r != ValidationResult.Success);
+
+            var fluentValidationContext = new FluentValidation.ValidationContext(o);
+
+            var fluentValidationFailures = _validators
+                .Select(v => v.Validate(fluentValidationContext))
+                .SelectMany(result => result.Errors)
+                .Where(f => f != null)
+                .ToList();
+
+            var fluentValidationResults = fluentValidationFailures.Select(f => new ValidationResult(f.ErrorMessage, new string[] { f.PropertyName }));
+
+            return attributeValidationResults.Concat(fluentValidationResults);
         }
     }
 }

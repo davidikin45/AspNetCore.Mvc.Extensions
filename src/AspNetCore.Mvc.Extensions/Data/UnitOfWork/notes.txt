@@ -1,0 +1,2 @@
+﻿Repo = Query Container + CUD
+UoW = Repo Container + Functionality for nested scopes + Multiple Dbs

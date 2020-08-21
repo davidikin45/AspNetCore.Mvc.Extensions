@@ -12,9 +12,9 @@
     <RepositoryUrl>https://github.com/davidikin45/AspNetCore.Mvc.Extensions</RepositoryUrl>
     <PackageTags>ASP.NET Core Extensions Mvc</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.41</Version>
-    <FileVersion>1.0.41.0</FileVersion>
-    <AssemblyVersion>1.0.41.0</AssemblyVersion>
+    <Version>1.0.42</Version>
+    <FileVersion>1.0.42.0</FileVersion>
+    <AssemblyVersion>1.0.42.0</AssemblyVersion>
     <LangVersion>latest</LangVersion>
     <UserSecretsId>a241189c-8727-4327-b8e3-49397ed423c8</UserSecretsId>
     <ApplicationIcon />
@@ -31,7 +31,7 @@
     <!--https://andrewlock.net/converting-a-netstandard-2-library-to-netcore-3/-->
     <PackageReference Include="AspNetCore.Mvc.SelectList" Version="1.1.14" />
     <PackageReference Include="AspNetCore.Mvc.UrlLocalization" Version="1.0.11" />
-    <PackageReference Include="AspNetCore.Specification" Version="1.0.1" />
+    <PackageReference Include="AspNetCore.Specification" Version="1.0.2" />
     <PackageReference Include="ClosedXML" Version="0.95.2" />
     <PackageReference Include="CsvHelper" Version="15.0.5" />
     <PackageReference Include="FluentValidation" Version="8.6.2" />
@@ -49,8 +49,8 @@
     <PackageReference Include="Ben.BlockingDetector" Version="0.0.3" />
     <PackageReference Include="BouncyCastle.NetCore" Version="1.8.6" />
 
-    <PackageReference Include="EasyNetQ" Version="5.0.4" />
-    <PackageReference Include="EntityFrameworkCore.Initialization" Version="2.0.5" />
+    <PackageReference Include="EasyNetQ" Version="5.1.1" />
+    <PackageReference Include="EntityFrameworkCore.Initialization" Version="2.0.6" />
     <PackageReference Include="GraphQL" Version="2.4.0" />
     <PackageReference Include="GraphQL.Server.Core" Version="3.4.0" />
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="3.4.0" />
@@ -77,7 +77,7 @@
     <PackageReference Include="MiniProfiler.EntityFrameworkCore" Version="4.1.0" />
     <PackageReference Include="MiniProfilerDb.Initialization" Version="1.0.9" />
     <PackageReference Include="NCrontab" Version="3.3.1" />
-    <PackageReference Include="NEST" Version="7.6.1" />
+    <PackageReference Include="NEST" Version="7.6.2" />
     <PackageReference Include="NetEscapades.AspNetCore.SecurityHeaders" Version="0.11.0" />
     <PackageReference Include="NetTopologySuite" Version="2.0.0" />
     <PackageReference Include="Polly" Version="7.2.1" />
@@ -92,12 +92,13 @@
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="1.0.1" />
-    <PackageReference Include="Serilog.Sinks.Elasticsearch" Version="8.0.1" />
+    <PackageReference Include="Serilog.Sinks.Elasticsearch" Version="8.1.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="4.0.0" />
     <PackageReference Include="StackifyMiddleware" Version="3.0.5.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.4.1" />
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
+    <PackageReference Include="System.Net.Http.Json" Version="3.2.1" />
     <PackageReference Include="System.Net.Ping" Version="4.3.0" />
     <PackageReference Include="TimeZoneConverter" Version="3.2.0" />
     <PackageReference Include="TimeZoneNames" Version="4.0.1" />

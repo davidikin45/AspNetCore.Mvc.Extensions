@@ -14,6 +14,7 @@ namespace AspNetCore.Mvc.Extensions.Authorization
                                                        OperationAuthorizationRequirement requirement,
                                                        IEntityOwned entity)
         {
+            //if the user has full access they can access entity
             if (context.User.Claims.Where(c => c.Type == JwtClaimTypes.Scope && c.Value == ResourceCollectionsCore.Admin.Scopes.Full).Count() > 0)
             {
                 context.Succeed(requirement);
