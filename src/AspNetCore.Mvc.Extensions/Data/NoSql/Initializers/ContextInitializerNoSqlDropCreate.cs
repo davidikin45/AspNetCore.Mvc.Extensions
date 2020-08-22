@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.Data.NoSql.Initializers
 {
-    public abstract class ContextInitializerNoSqlDropCreate<TDbContext> : IDbContextNoSqlInitializer<TDbContext>
+    public class ContextInitializerNoSqlDropCreate<TDbContext> : IDbContextNoSqlInitializer<TDbContext>
         where TDbContext : DbContextNoSql
     {
         public async Task InitializeAsync(TDbContext context, CancellationToken cancellationToken = default(CancellationToken))

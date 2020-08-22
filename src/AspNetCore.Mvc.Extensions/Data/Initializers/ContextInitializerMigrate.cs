@@ -1,12 +1,10 @@
-﻿using AspNetCore.Mvc.Extensions.Data.Helpers;
-using AspNetCore.Mvc.Extensions.Data.Initializers;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.Data.Initializers
 {
-    public abstract class ContextInitializerMigrate<TDbContext> : IDbContextInitializer<TDbContext>
+    public class ContextInitializerMigrate<TDbContext> : IDbContextInitializer<TDbContext>
          where TDbContext : DbContext
     {
   

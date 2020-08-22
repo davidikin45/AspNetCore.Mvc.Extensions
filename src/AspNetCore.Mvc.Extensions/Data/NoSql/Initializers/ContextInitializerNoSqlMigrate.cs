@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.Data.NoSql.Initializers
 {
-    public abstract class ContextInitializerNoSqlMigrate<TDbContext> : IDbContextNoSqlInitializer<TDbContext>
+    public class ContextInitializerNoSqlMigrate<TDbContext> : IDbContextNoSqlInitializer<TDbContext>
           where TDbContext : DbContextNoSql
     {
 

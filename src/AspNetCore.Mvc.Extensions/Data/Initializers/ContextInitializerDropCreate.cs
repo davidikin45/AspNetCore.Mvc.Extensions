@@ -1,12 +1,10 @@
-﻿using AspNetCore.Mvc.Extensions.Data.Helpers;
-using AspNetCore.Mvc.Extensions.Data.Initializers;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.Data.Initializers
 {
-    public abstract class ContextInitializerDropCreate<TDbContext> : IDbContextInitializer<TDbContext>
+    public class ContextInitializerDropCreate<TDbContext> : IDbContextInitializer<TDbContext>
         where TDbContext : DbContext
     {
         public async Task InitializeAsync(TDbContext context, CancellationToken cancellationToken = default(CancellationToken))
