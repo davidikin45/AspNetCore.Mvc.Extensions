@@ -56,6 +56,11 @@ namespace AspNetCore.Mvc.Extensions.Authorization
             return HasClaim(ClaimTypes.Role, roleName);
         }
 
+        public bool HasPermission(string permission)
+        {
+            return HasClaim("permission", permission);
+        }
+
         public bool HasScope(string scope)
         {
             return HasClaim("scope", scope);

@@ -5,10 +5,10 @@ namespace AspNetCore.Mvc.Extensions.Authorization
 {
     public static class AuthorizationPolicyBuilderExtensions
     {
-        public static AuthorizationPolicyBuilder RequireScope(this AuthorizationPolicyBuilder builder, params string[] scope)
-        {
-            return builder.RequireClaim("scope", scope);
-        }
+        //public static AuthorizationPolicyBuilder RequireScope(this AuthorizationPolicyBuilder builder, params string[] scope)
+        //{
+        //    return builder.RequireClaim("scope", scope);
+        //}
 
         public static AuthorizationPolicyBuilder RequireScopeRequirement(this AuthorizationPolicyBuilder builder, params string[] scope)
         {

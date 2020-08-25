@@ -1904,7 +1904,7 @@ namespace AspNetCore.Mvc.Extensions
             //https://github.com/IdentityServer/IdentityServer4.AccessTokenValidation does reference + JWT auth
 
             return authenticationBuilder.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-            {
+            {  
                 //cfg.Authority = "{yourAuthorizationServerAddress}";
                 //cfg.Audience = "{yourAudience}";
 

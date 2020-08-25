@@ -12,7 +12,6 @@ using AspNetCore.Mvc.Extensions.Email;
 using AspNetCore.Mvc.Extensions.Features;
 using AspNetCore.Mvc.Extensions.HealthChecks;
 using AspNetCore.Mvc.Extensions.IntegrationEvents;
-using AspNetCore.Mvc.Extensions.Json;
 using AspNetCore.Mvc.Extensions.Logging.Serilog;
 using AspNetCore.Mvc.Extensions.Middleware;
 using AspNetCore.Mvc.Extensions.Notifications;
@@ -43,7 +42,7 @@ using GraphQL.Server;
 using Hangfire.AspNetCore.Extensions;
 using Hangfire.AspNetCore.Multitenant;
 using IdentityModel;
-using IdentityServer4.AccessTokenValidation;
+using IdentityModel.AspNetCore.AccessTokenValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -60,6 +59,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -632,6 +632,7 @@ namespace AspNetCore.Mvc.Extensions
         #region Authentication
         public virtual void ConfigureAuthenticationServices(IServiceCollection services)
         {
+            //https://stackoverflow.com/questions/48351332/oauth-scopes-and-application-roles-permissions
             //https://docs.microsoft.com/en-us/aspnet/core/migration/1x-to-2x/identity-2x?view=aspnetcore-2.1#cookie-based-authentication
             //Define a default scheme in 2.0 if one of the following conditions is true:
             //You use the [Authorize] attribute or authorization policies without specifying schemes
@@ -651,6 +652,7 @@ namespace AspNetCore.Mvc.Extensions
 
             var authenticationBuilder = services.AddAuthentication();
 
+            // -- VALIDATION --
             //Local Jwt Authentication
             if (authenticationSettings.JwtToken.Enable)
             {
@@ -682,27 +684,50 @@ namespace AspNetCore.Mvc.Extensions
             }
 
             //Reference Token is an Access_Token that doesn't contain claims
-            //Remote Jwt Authentication + Ability to get claims via Reference Token
+            //Remote Jwt Authentication via introspection endpoint (.well-known/openid-configuration) + Ability to get claims via Reference Token
+            //https://leastprivilege.com/2020/07/06/flexible-access-token-validation-in-asp-net-core/
             if (authenticationSettings.OpenIdConnectJwtToken.Enable)
             {
                 Logger.LogInformation("Configuring IdentityServer JWT Authentication");
 
                 services.Configure<AuthenticationOptions>(options =>
                 {
-                    options.DefaultScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
                 });
 
                 //scheme
                 authenticationBuilder
-                 .AddIdentityServerAuthentication(options =>
+                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options => {
+                    options.Authority = "https://localhost:44318/"; //base-address of your identityserver
+                    options.Audience = "api"; //name of the API resource. checks if the token has a matching audience (or short aud) claim. scopes are not validated automatically.
+                    
+                    // if token does not contain a dot, it is a reference token
+                    options.ForwardDefaultSelector = Selector.ForwardReferenceToken("introspection");
+                })
+                .AddOAuth2Introspection("introspection", options =>
                 {
-                    options.Authority = "https://localhost:44318/";
-                    options.ApiName = "api";
-                    options.ApiSecret = "apisecret"; //Only need this if AccessTokenType = AccessTokenType.Reference
+                    options.Authority = "https://localhost:44318/";  //base-address of your identityserver
+                    options.ClientId = "api"; //name of the API resource. checks if the token has a matching audience (or short aud) claim. scopes are not validated automatically.
+                    options.ClientSecret = "apisecret";  //Only need this if AccessTokenType = AccessTokenType.Reference
                     options.EnableCaching = true; //Caches response from introspection endpoint.
+                    options.CacheDuration = TimeSpan.FromMinutes(10); // that's the default
                 });
-            }
+                // .AddIdentityServerAuthentication(options =>
+                //{
+                //    //base-address of your identityserver
+                //    options.Authority = "https://localhost:44318/";
+                //    options.ApiName = "api"; //name of the API resource. checks if the token has a matching audience (or short aud) claim. scopes are not validated automatically.
+                //    options.ApiSecret = "apisecret"; //Only need this if AccessTokenType = AccessTokenType.Reference
+                //    options.EnableCaching = true; //Caches response from introspection endpoint.
+                //    options.CacheDuration = TimeSpan.FromMinutes(10); // that's the default
+                //});
 
+                //https://docs.identityserver.io/en/3.1.0/topics/apis.html
+                //The ApiName property checks if the token has a matching audience (or short aud) claim.
+                //In IdentityServer you can also sub-divide APIs into multiple scopes. If you need that granularity you can use the ASP.NET Core authorization policy system to check for scopes.
+            }
+            
+            // -- LOGIN --
             //App > IDP > Access Token + RefreshToken > Cookie
             if (authenticationSettings.OpenIdConnect.Enable)
             {
@@ -932,7 +957,7 @@ namespace AspNetCore.Mvc.Extensions
                 .Build();
                 //other requirements suchas account open
 
-                //FallbackPolicy replaces  AuthorizeFilter as a global filter in MVC. This applies to all endpoints which don't have any authorization.
+                //FallbackPolicy replaces  AuthorizeFilter as a global filter in MVC. This applies to ALL endpoints which don't have any authorization.
                 if (authorizationSettings.UserMustBeAuthorizedByDefault)
                 {
                     //.NET Core 3.0
@@ -945,6 +970,7 @@ namespace AspNetCore.Mvc.Extensions
                 {
                     policyBuilder.RequireAuthenticatedUser();
                     policyBuilder.RequireRole("Admin");
+                    //policyBuilder.RequireScope("scope2", "scope3"); //IdentityModel.AspNetCore.AccessTokenValidation
                     //policyBuilder.AddRequirements();
                 });
 
@@ -953,6 +979,7 @@ namespace AspNetCore.Mvc.Extensions
                     //policyBuilder.RequireClaim("client_policy", "healthChecks");
                     policyBuilder.AllowAnonymous();
                 });
+                //options.AddScopePolicy
             });
 
             //https://docs.microsoft.com/en-us/aspnet/core/security/authorization/resourcebased?view=aspnetcore-2.1&tabs=aspnetcore2x
@@ -1187,7 +1214,6 @@ namespace AspNetCore.Mvc.Extensions
 
             var mvc = services.AddMvc(options =>
             {
-
                 //.NET Core 2.2 - Versioning Fix until .NET Core 3.0
                 //https://docs.microsoft.com/en-us/aspnet/core/fundamentals/routing?view=aspnetcore-2.2
                 //options.EnableEndpointRouting = false;

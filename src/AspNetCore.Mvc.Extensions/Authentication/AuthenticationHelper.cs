@@ -23,7 +23,7 @@ namespace AspNetCore.Mvc.Extensions.Authentication
                 }
             }
 
-            //Add role scopes.
+            //Add role permissions.
             foreach (var roleName in roles)
             {
                 var role = await roleManager.FindByNameAsync(roleName);

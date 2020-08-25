@@ -42,7 +42,7 @@ namespace AspNetCore.Mvc.Extensions.Data
             var roles = GetRolePermissions(context);
 
             CreateRoles(context, roles);
-            CreateRolePermissions(context, roles);
+            CreateRoleScopes(context, roles);
 
             var users = GetUserRoles(context);
             CreateUsers(context, users);
@@ -66,7 +66,7 @@ namespace AspNetCore.Mvc.Extensions.Data
             context.Roles.RemoveRange(remove);
         }
 
-        protected virtual void CreateRolePermissions(DbContextIdentityBase<TUser> context, IEnumerable<SeedRole> roles)
+        protected virtual void CreateRoleScopes(DbContextIdentityBase<TUser> context, IEnumerable<SeedRole> roles)
         {
             foreach (var role in roles)
             {

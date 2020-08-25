@@ -54,7 +54,7 @@ namespace AspNetCore.Mvc.Extensions.Authentication
                     var roles = rolesAndScopes.Roles;
                     var scopes = rolesAndScopes.Scopes;
 
-                    var claims = JwtTokenHelper.GetClaims(user.Id, user.UserName, roles, scopes.ToArray());
+                    var claims = JwtTokenHelper.GetClaims(user.Id, user.UserName, user.Email, roles, scopes.ToArray());
                     var identity = new ClaimsIdentity(claims, Scheme.Name);
                     return identity;
                 }

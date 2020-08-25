@@ -5,10 +5,8 @@ using AspNetCore.Mvc.Extensions.Email;
 using AspNetCore.Mvc.Extensions.Security;
 using AspNetCore.Mvc.Extensions.Settings;
 using AspNetCore.Mvc.Extensions.Users;
-using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -27,6 +25,7 @@ namespace AspNetCore.Mvc.Extensions.Controllers.Api.Authentication
         private readonly string _privateSigningCertificatePath;
         private readonly string _privateSigningCertificatePassword;
         private readonly string _localIssuer;
+        private readonly string _audience;
 
         private readonly string _passwordResetCallbackUrl;
 
@@ -58,6 +57,7 @@ namespace AspNetCore.Mvc.Extensions.Controllers.Api.Authentication
             _privateSigningCertificatePassword = tokenSettings.PrivateCertificatePasword;
 
             _localIssuer = tokenSettings.LocalIssuer;
+            _audience = tokenSettings.Audiences.Split(",").First().Trim();
             _tokenExpiryMinutes = tokenSettings.ExpiryMinutes;
         }
 
@@ -96,19 +96,19 @@ namespace AspNetCore.Mvc.Extensions.Controllers.Api.Authentication
             if (!string.IsNullOrWhiteSpace(_privateSigningKeyPath))
             {
                 var key = SigningKey.LoadPrivateRsaSigningKey(_privateSigningKeyPath);
-                var results = JwtTokenHelper.CreateJwtTokenSigningWithRsaSecurityKey(user.Id, user.UserName, roles, _tokenExpiryMinutes, key, _localIssuer, "api", scopes.ToArray());
+                var results = JwtTokenHelper.CreateJwtTokenSigningWithRsaSecurityKey(user.Id, user.UserName, user.Email, roles, _tokenExpiryMinutes, key, _localIssuer, _audience, scopes.ToArray());
                 return Created("", results);
             }
             else if (!string.IsNullOrWhiteSpace(_privateSigningCertificatePassword))
             {
                 var key = SigningKey.LoadPrivateSigningCertificate(_privateSigningCertificatePath, _privateSigningCertificatePassword);
-                var results = JwtTokenHelper.CreateJwtTokenSigningWithCertificateSecurityKey(user.Id, user.UserName, roles, _tokenExpiryMinutes, key, _localIssuer, "api", scopes.ToArray());
+                var results = JwtTokenHelper.CreateJwtTokenSigningWithCertificateSecurityKey(user.Id, user.UserName, user.Email, roles, _tokenExpiryMinutes, key, _localIssuer, _audience, scopes.ToArray());
                 return Created("", results);
             }
             else
             {
                 var key = SigningKey.LoadSymmetricSecurityKey(_privateSymmetricKey);
-                var results = JwtTokenHelper.CreateJwtTokenSigningWithKey(user.Id, user.UserName, roles, _tokenExpiryMinutes, key, _localIssuer, "api", scopes.ToArray());
+                var results = JwtTokenHelper.CreateJwtTokenSigningWithKey(user.Id, user.UserName, user.Email, roles, _tokenExpiryMinutes, key, _localIssuer, _audience, scopes.ToArray());
                 return Created("", results);
             }
         }

@@ -1,4 +1,5 @@
 ﻿using AspNetCore.Mvc.Extensions.Authorization.Requirements;
+using IdentityModel.AspNetCore.AccessTokenValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +10,8 @@ using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.Authorization.PolicyProviders
 {
+    //https://stackoverflow.com/questions/48351332/oauth-scopes-and-application-roles-permissions
+
     //https://www.jerriepelser.com/blog/creating-dynamic-authorization-policies-aspnet-core/
     // Extremely useful so you don't have to create policies for each scope you wish to check for.
     public class ScopeAndAnonymousAuthorizationPolicyProvider : DefaultAuthorizationPolicyProvider

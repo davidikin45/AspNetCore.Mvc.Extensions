@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.Authorization
@@ -51,6 +52,9 @@ namespace AspNetCore.Mvc.Extensions.Authorization
                             //e.g must have update or collectionId.update
                             resourceOperation = resourceOperation + "," + collectionId + "." + operation;
                         }
+
+                        var claims = resourceOperation.Split(",").Select(claimValue => new Claim("scope", claimValue));
+                        var hasClaim = claims.Any(claim => context.HttpContext.User.Claims.Any(c => c.Type == claim.Type && c.Value == claim.Value));
 
                         //Calls the AuthorizationPolicyProvider
                         var authorizationResult = await _authorizationService.AuthorizeAsync(context.HttpContext.User, resourceOperation);

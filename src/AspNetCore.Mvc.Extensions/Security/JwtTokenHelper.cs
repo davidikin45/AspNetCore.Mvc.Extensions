@@ -11,12 +11,13 @@ namespace AspNetCore.Mvc.Extensions.Security
     //https://www.carlrippon.com/asp-net-core-web-api-multi-tenant-jwts/
     public static class JwtTokenHelper
     {
-        public static List<Claim> GetClaims(string userId, string userName, IEnumerable<string> roles, params string[] scopes)
+        public static List<Claim> GetClaims(string userId, string userName, string email, IEnumerable<string> roles, params string[] scopes)
         {
             var claims = new List<Claim>()
                         {
                             new Claim(ClaimTypes.NameIdentifier, userId),
                             new Claim(ClaimTypes.Name, userName),
+                            new Claim(ClaimTypes.Email, email),
                             new Claim(JwtRegisteredClaimNames.Sub, userId),
                             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                             new Claim(JwtRegisteredClaimNames.UniqueName, userName)
@@ -38,9 +39,9 @@ namespace AspNetCore.Mvc.Extensions.Security
         }
 
         //Assymetric
-        public static JwtToken CreateJwtTokenSigningWithRsaSecurityKey(string userId, string userName, IEnumerable<string> roles, int? minuteExpiry, RsaSecurityKey key, string issuer, string audience, params string[] scopes)
+        public static JwtToken CreateJwtTokenSigningWithRsaSecurityKey(string userId, string userName, string email, IEnumerable<string> roles, int? minuteExpiry, RsaSecurityKey key, string issuer, string audience, params string[] scopes)
         {
-            var claims = GetClaims(userId, userName, roles, scopes);
+            var claims = GetClaims(userId, userName, email, roles, scopes);
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.RsaSha256);
 
@@ -48,9 +49,9 @@ namespace AspNetCore.Mvc.Extensions.Security
         }
 
         //Assymetric
-        public static JwtToken CreateJwtTokenSigningWithCertificateSecurityKey(string userId, string userName, IEnumerable<string> roles, int? minuteExpiry, X509SecurityKey key, string issuer, string audience, params string[] scopes)
+        public static JwtToken CreateJwtTokenSigningWithCertificateSecurityKey(string userId, string userName, string email, IEnumerable<string> roles, int? minuteExpiry, X509SecurityKey key, string issuer, string audience, params string[] scopes)
         {
-            var claims = GetClaims(userId, userName, roles, scopes);
+            var claims = GetClaims(userId, userName, email, roles, scopes);
             var creds = new X509SigningCredentials(key.Certificate, SecurityAlgorithms.RsaSha256); // JwtSecurityTokenHandler will serialize X509SigningCredentials kid=key.KeyId(Thumbprint) and x5t=key.X5t(cert hash), it wont serialize x5t for SigningCredentials
             creds.Key.KeyId = key.KeyId;
 
@@ -58,9 +59,9 @@ namespace AspNetCore.Mvc.Extensions.Security
         }
 
         //Symmetric
-        public static JwtToken CreateJwtTokenSigningWithKey(string userId, string userName, IEnumerable<string> roles, int? minuteExpiry, SymmetricSecurityKey key, string issuer, string audience, params string[] scopes)
+        public static JwtToken CreateJwtTokenSigningWithKey(string userId, string userName, string email, IEnumerable<string> roles, int? minuteExpiry, SymmetricSecurityKey key, string issuer, string audience, params string[] scopes)
         {
-            var claims = GetClaims(userId, userName, roles, scopes);
+            var claims = GetClaims(userId, userName, email, roles, scopes);
      
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

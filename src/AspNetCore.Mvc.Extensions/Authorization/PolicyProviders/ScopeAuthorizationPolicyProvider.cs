@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using IdentityModel.AspNetCore.AccessTokenValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.Authorization.PolicyProviders
 {
+    //https://auth0.com/docs/authorization/rbac/enable-role-based-access-control-for-apis
     //https://www.jerriepelser.com/blog/creating-dynamic-authorization-policies-aspnet-core/
     // Extremely useful so you don't have to create policies for each scope you wish to check for.
     // policy is a collection of requirements which must ALL be satisfied. But you can certainly have a single requirement that can succeeds in several different ways.
@@ -25,9 +27,9 @@ namespace AspNetCore.Mvc.Extensions.Authorization.PolicyProviders
 
             if (policy == null)
             {
-                var scopes = policyName.Split(',').Select(p => p.Trim()).ToList();
+                var scopes = policyName.Split(',').Select(p => p.Trim()).ToArray();
 
-                policy = new AuthorizationPolicyBuilder().RequireClaim("scope", scopes).Build();
+                policy = new AuthorizationPolicyBuilder().RequireScope(scopes).Build();
 
                 _options.AddPolicy(policyName, policy);
             }

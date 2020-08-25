@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace AspNetCore.Mvc.Extensions.Authorization
@@ -37,6 +38,9 @@ namespace AspNetCore.Mvc.Extensions.Authorization
 
                     if (context.ActionArguments.TryGetValue("action", out object value) && value is ActionDto action)
                     {
+                        var claim = new Claim("scope", action.Type);
+                        var hasClaim = context.HttpContext.User.Claims.Any(c => c.Type == claim.Type && c.Value == claim.Value);
+
                         var authorizationResult = await _authorizationService.AuthorizeAsync(context.HttpContext.User, action.Type);
                         if (authorizationResult.Succeeded)
                         {
@@ -46,6 +50,9 @@ namespace AspNetCore.Mvc.Extensions.Authorization
 
                     if (context.ActionArguments.TryGetValue("type", out object valueString) && valueString is string type)
                     {
+                        var claim = new Claim("scope", type);
+                        var hasClaim = context.HttpContext.User.Claims.Any(c => c.Type == claim.Type && c.Value == claim.Value);
+
                         var authorizationResult = await _authorizationService.AuthorizeAsync(context.HttpContext.User, type);
                         if (authorizationResult.Succeeded)
                         {
