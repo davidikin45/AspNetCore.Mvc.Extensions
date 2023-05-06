@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
@@ -99,7 +99,7 @@
     <PackageReference Include="Serilog.Sinks.Seq" Version="4.0.0" />
     <PackageReference Include="StackifyMiddleware" Version="3.0.5.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.4.1" />
-    <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
+    <PackageReference Include="System.Drawing.Common" Version="4.7.2" />
     <PackageReference Include="System.Net.Http.Json" Version="3.2.1" />
     <PackageReference Include="System.Net.Ping" Version="4.3.0" />
     <PackageReference Include="TimeZoneConverter" Version="3.2.0" />
